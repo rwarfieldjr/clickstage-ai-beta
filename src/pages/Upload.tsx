@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useCredits } from "@/hooks/use-credits";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
 import coastal from "@/assets/style-coastal.jpg";
 import scandinavian from "@/assets/style-scandinavian.jpg";
@@ -30,6 +31,7 @@ const Upload = () => {
   const [stylesDialogOpen, setStylesDialogOpen] = useState(false);
   const [selectedBundle, setSelectedBundle] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
+  const { credits } = useCredits(user);
 
   const styles = [
     { id: "modern-farmhouse", name: "Modern Farmhouse", image: modernFarmhouse, description: "Blend rustic charm with modern comfort" },
@@ -200,6 +202,7 @@ const Upload = () => {
           contactInfo: contactInfo,
           files: uploadedFiles,
           stagingStyle: stagingStyle,
+          photosCount: bundle.photos, // Send the number of credits to be added
         },
       });
 
@@ -233,6 +236,7 @@ const Upload = () => {
               <CardTitle className="text-2xl">Upload Your Photos</CardTitle>
               <CardDescription>
                 Upload property photos and select your preferred staging style
+                {user && <span className="block mt-2 font-medium text-accent">Available Credits: {credits}</span>}
               </CardDescription>
             </CardHeader>
             <CardContent>

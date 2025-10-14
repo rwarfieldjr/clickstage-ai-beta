@@ -1,15 +1,17 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Upload, DollarSign, Mail, LayoutDashboard, LogOut, Image, HelpCircle, LayoutGrid, Users } from "lucide-react";
+import { Home, Upload, DollarSign, Mail, LayoutDashboard, LogOut, Image, HelpCircle, LayoutGrid, Users, Coins } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import cameraLogo from "@/assets/camera-logo-new.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useCredits } from "@/hooks/use-credits";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
+  const { credits } = useCredits(user);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -70,6 +72,10 @@ const Navbar = () => {
             <ThemeToggle />
             {user ? (
               <>
+                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-accent/10 rounded-lg border border-accent/20">
+                  <Coins className="w-4 h-4 text-accent" />
+                  <span className="text-sm font-medium text-accent">{credits}</span>
+                </div>
                 <Link to="/dashboard">
                   <Button variant="outline" size="sm" className="flex items-center gap-2">
                     <LayoutGrid className="w-4 h-4" />

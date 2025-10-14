@@ -27,8 +27,8 @@ serve(async (req) => {
     logStep("Function started");
 
     // Get request body
-    const { priceId, contactInfo, files, stagingStyle } = await req.json();
-    logStep("Request received", { priceId, hasContactInfo: !!contactInfo, fileCount: files?.length, stagingStyle });
+    const { priceId, contactInfo, files, stagingStyle, photosCount } = await req.json();
+    logStep("Request received", { priceId, hasContactInfo: !!contactInfo, fileCount: files?.length, stagingStyle, photosCount });
 
     if (!priceId) {
       throw new Error("Price ID is required");
@@ -84,6 +84,10 @@ serve(async (req) => {
 
     if (user?.id) {
       metadata.user_id = user.id;
+    }
+
+    if (photosCount) {
+      metadata.photos_count = photosCount.toString();
     }
 
     if (files && files.length > 0) {

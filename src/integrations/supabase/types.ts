@@ -14,9 +14,58 @@ export type Database = {
   }
   public: {
     Tables: {
+      credits_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          order_id: string | null
+          stripe_payment_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          stripe_payment_id?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          stripe_payment_id?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credits_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credits_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
+          credits_used: number | null
           id: string
           original_image_url: string
           staged_image_url: string | null
@@ -28,6 +77,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          credits_used?: number | null
           id?: string
           original_image_url: string
           staged_image_url?: string | null
@@ -39,6 +89,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          credits_used?: number | null
           id?: string
           original_image_url?: string
           staged_image_url?: string | null
@@ -96,6 +147,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          credits: number
           email: string
           id: string
           name: string | null
@@ -103,6 +155,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          credits?: number
           email: string
           id: string
           name?: string | null
@@ -110,6 +163,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          credits?: number
           email?: string
           id?: string
           name?: string | null

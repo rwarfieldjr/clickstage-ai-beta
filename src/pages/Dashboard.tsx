@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { format } from "date-fns";
+import { useCredits } from "@/hooks/use-credits";
 
 interface Order {
   id: string;
@@ -20,20 +21,45 @@ interface Order {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const { credits, refetchCredits } = useCredits(user);
 
   useEffect(() => {
+    const verifyPayment = async (sessionId: string) => {
+      try {
+        const { data, error } = await supabase.functions.invoke('verify-payment', {
+          body: { sessionId },
+        });
+
+        if (error) throw error;
+
+        if (data?.success) {
+          toast.success(`Payment successful! ${data.credits} credits added to your account.`);
+          refetchCredits();
+        }
+      } catch (error: any) {
+        console.error("Error verifying payment:", error);
+      }
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         navigate("/auth");
       } else {
         setUser(session.user);
         fetchOrders(session.user.id);
+
+        // Check if returning from payment
+        const sessionId = searchParams.get('session_id');
+        if (sessionId) {
+          verifyPayment(sessionId);
+        }
       }
     });
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   const fetchOrders = async (userId: string) => {
     try {
@@ -73,6 +99,19 @@ const Dashboard = () => {
 
       <main className="flex-1 py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
+          {/* Credits Card */}
+          <Card className="shadow-custom-lg mb-6 bg-gradient-to-r from-accent/10 to-accent/5 border-accent/20">
+            <CardHeader>
+              <CardTitle className="text-xl">Available Credits</CardTitle>
+              <CardDescription>
+                Each credit allows you to stage one photo
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-4xl font-bold text-accent">{credits} Credits</div>
+            </CardContent>
+          </Card>
+
           <Card className="shadow-custom-lg">
             <CardHeader>
               <CardTitle className="text-2xl">Your Orders</CardTitle>
