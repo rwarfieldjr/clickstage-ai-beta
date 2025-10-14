@@ -56,9 +56,12 @@ const Footer = () => {
 
         <div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} ClickStagePro. All rights reserved.</p>
-          <div className="mt-4">
+          <div className="mt-4 flex justify-center gap-6">
             <Link to="/privacy-policy" className="hover:text-accent transition-smooth">
               Privacy Policy
+            </Link>
+            <Link to="/terms-of-service" className="hover:text-accent transition-smooth">
+              Terms of Service
             </Link>
           </div>
         </div>
