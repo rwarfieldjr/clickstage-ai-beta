@@ -72,10 +72,6 @@ const Navbar = () => {
             <ThemeToggle />
             {user ? (
               <>
-                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-accent/10 rounded-lg border border-accent/20">
-                  <Coins className="w-4 h-4 text-accent" />
-                  <span className="text-sm font-medium text-accent">{credits}</span>
-                </div>
                 <Link to="/dashboard">
                   <Button variant="outline" size="sm" className="flex items-center gap-2">
                     <LayoutGrid className="w-4 h-4" />
