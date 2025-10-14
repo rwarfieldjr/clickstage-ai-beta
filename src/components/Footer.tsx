@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail } from "lucide-react";
-import cameraLogo from "@/assets/camera-logo.png";
+import cameraLogo from "@/assets/camera-logo-new.png";
 
 const Footer = () => {
   return (
@@ -12,7 +12,7 @@ const Footer = () => {
               <img 
                 src={cameraLogo} 
                 alt="ClickStagePro Logo" 
-                className="h-8 w-8"
+                className="h-8 w-8 logo-color-adaptive"
               />
               <h3 className="text-lg font-semibold text-primary">ClickStagePro</h3>
             </div>

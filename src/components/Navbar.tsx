@@ -4,7 +4,7 @@ import { Home, Upload, DollarSign, Mail, LayoutDashboard, LogOut, Image, HelpCir
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
-import cameraLogo from "@/assets/camera-logo.png";
+import cameraLogo from "@/assets/camera-logo-new.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Navbar = () => {
@@ -35,7 +35,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-1">
-            <img src={cameraLogo} alt="ClickStagePro" className="w-12 h-12" />
+            <img src={cameraLogo} alt="ClickStagePro" className="w-12 h-12 logo-color-adaptive" />
             <div className="text-2xl font-bold text-primary">ClickStagePro</div>
           </Link>
 

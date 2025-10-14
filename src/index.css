@@ -149,4 +149,14 @@ All colors MUST be HSL.
   .transition-smooth {
     transition: var(--transition-smooth);
   }
+  
+  .logo-color-adaptive {
+    /* In light mode, convert to dark navy (primary color) */
+    filter: brightness(0) saturate(100%) invert(12%) sepia(83%) saturate(3558%) hue-rotate(203deg) brightness(95%) contrast(101%);
+  }
+  
+  .dark .logo-color-adaptive {
+    /* In dark mode, convert to accent blue */
+    filter: brightness(0) saturate(100%) invert(48%) sepia(86%) saturate(2613%) hue-rotate(199deg) brightness(102%) contrast(101%);
+  }
 }
