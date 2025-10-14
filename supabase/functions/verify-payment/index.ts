@@ -1,11 +1,17 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Input validation schema
+const VerifyPaymentSchema = z.object({
+  sessionId: z.string().min(1).max(200),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -13,11 +19,18 @@ serve(async (req) => {
   }
 
   try {
-    const { sessionId } = await req.json();
-
-    if (!sessionId) {
-      throw new Error("Session ID is required");
+    // Parse and validate input
+    const body = await req.json();
+    const validation = VerifyPaymentSchema.safeParse(body);
+    
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ error: "Invalid session ID format" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
+
+    const { sessionId } = validation.data;
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",

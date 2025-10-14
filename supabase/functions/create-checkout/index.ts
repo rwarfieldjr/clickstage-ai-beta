@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,20 @@ const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
+
+// Input validation schema
+const CreateCheckoutSchema = z.object({
+  priceId: z.string().startsWith('price_').max(100),
+  contactInfo: z.object({
+    email: z.string().email().max(255),
+    firstName: z.string().max(100),
+    lastName: z.string().max(100),
+    phoneNumber: z.string().max(50).optional(),
+  }).optional(),
+  files: z.array(z.string().max(500)).max(100).optional(),
+  stagingStyle: z.string().max(50),
+  photosCount: z.number().int().positive().max(1000),
+});
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -26,13 +41,20 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    // Get request body
-    const { priceId, contactInfo, files, stagingStyle, photosCount } = await req.json();
-    logStep("Request received", { priceId, hasContactInfo: !!contactInfo, fileCount: files?.length, stagingStyle, photosCount });
-
-    if (!priceId) {
-      throw new Error("Price ID is required");
+    // Get and validate request body
+    const body = await req.json();
+    const validation = CreateCheckoutSchema.safeParse(body);
+    
+    if (!validation.success) {
+      logStep("Validation failed", { errors: validation.error.format() });
+      return new Response(
+        JSON.stringify({ error: "Invalid input parameters", details: validation.error.format() }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
+
+    const { priceId, contactInfo, files, stagingStyle, photosCount } = validation.data;
+    logStep("Request validated", { priceId, hasContactInfo: !!contactInfo, fileCount: files?.length, stagingStyle, photosCount });
 
     // Retrieve authenticated user
     const authHeader = req.headers.get("Authorization");
