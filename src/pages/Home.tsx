@@ -14,11 +14,14 @@ const Home = () => {
       <section className="gradient-hero text-white py-20 lg:py-32">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              Transform Your Real Estate Photos with AI Staging
+            <div className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8">
+              <span className="text-base md:text-lg text-white/90">Advanced AI Technology</span>
+            </div>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+              Transform Empty Properties with AI Virtual Staging
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-white/90">
-              Upload. Choose Your Style. Download Stunning Results.
+            <p className="text-lg md:text-xl mb-8 text-white/80 max-w-3xl mx-auto">
+              Powered by the latest AI breakthroughs in image generation - creating photorealistic staging that helps homes sell faster.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/upload">
