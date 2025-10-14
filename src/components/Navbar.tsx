@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Upload, DollarSign, Mail, LayoutDashboard, LogOut, Image, HelpCircle } from "lucide-react";
+import { Home, Upload, DollarSign, Mail, LayoutDashboard, LogOut, Image, HelpCircle, LayoutGrid } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
@@ -69,7 +69,10 @@ const Navbar = () => {
             {user ? (
               <>
                 <Link to="/dashboard">
-                  <Button variant="outline" size="sm">Dashboard</Button>
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <LayoutGrid className="w-4 h-4" />
+                    Dashboard
+                  </Button>
                 </Link>
                 <Button variant="ghost" size="sm" onClick={handleLogout}>
                   <LogOut className="w-4 h-4 mr-2" />
