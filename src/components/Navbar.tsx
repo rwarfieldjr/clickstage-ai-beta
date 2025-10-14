@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Upload, DollarSign, Mail, LayoutDashboard, LogOut } from "lucide-react";
+import { Home, Upload, DollarSign, Mail, LayoutDashboard, LogOut, Image } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
@@ -40,6 +40,10 @@ const Navbar = () => {
             <Link to="/" className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-smooth">
               <Home className="w-4 h-4" />
               Home
+            </Link>
+            <Link to="/portfolio" className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-smooth">
+              <Image className="w-4 h-4" />
+              Portfolio
             </Link>
             <Link to="/pricing" className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-smooth">
               <DollarSign className="w-4 h-4" />
