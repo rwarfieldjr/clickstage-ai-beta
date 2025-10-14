@@ -361,11 +361,23 @@ const Upload = () => {
                           />
                           <label
                             htmlFor={bundle.id}
-                            className="flex flex-col p-4 border-2 border-border rounded-xl cursor-pointer hover:border-accent transition-smooth peer-data-[state=checked]:border-accent peer-data-[state=checked]:bg-accent/5"
+                            className={`flex flex-col p-4 border-2 rounded-xl cursor-pointer transition-smooth ${
+                              selectedBundle === bundle.id
+                                ? 'border-accent bg-accent/5'
+                                : 'border-border hover:border-accent'
+                            }`}
                           >
                             <div className="flex items-center justify-between mb-2">
                               <span className="font-semibold text-lg">{bundle.name}</span>
-                              <div className="w-4 h-4 rounded-full border-2 border-border peer-data-[state=checked]:border-accent peer-data-[state=checked]:bg-accent" />
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-smooth ${
+                                selectedBundle === bundle.id
+                                  ? 'border-accent bg-accent'
+                                  : 'border-border'
+                              }`}>
+                                {selectedBundle === bundle.id && (
+                                  <div className="w-2 h-2 rounded-full bg-white" />
+                                )}
+                              </div>
                             </div>
                             <span className="text-2xl font-bold text-accent mb-1">{bundle.price}</span>
                             <span className="text-sm text-muted-foreground">{bundle.description}</span>
