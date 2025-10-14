@@ -116,6 +116,33 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Pricing Highlight Section */}
+      <section className="py-20 bg-gradient-to-b from-background to-muted dark:from-background dark:to-background/95">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Professional Staging at <span className="text-primary">Unbeatable Prices</span>
+            </h2>
+            <p className="text-xl md:text-2xl text-muted-foreground mb-10">
+              Pricing as low as <span className="text-primary font-semibold">$7.00 per Staged Photo</span>
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/pricing">
+                <Button size="lg" className="text-lg px-8">
+                  View All Pricing Plans
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+              <Link to="/auth">
+                <Button size="lg" variant="outline" className="text-lg px-8">
+                  Get Started Today
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* See the Transformation */}
       <section className="py-20 bg-gradient-to-b from-primary/95 to-primary/90">
         <div className="container mx-auto px-4">
