@@ -56,6 +56,11 @@ const Footer = () => {
 
         <div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} ClickStagePro. All rights reserved.</p>
+          <div className="mt-4">
+            <Link to="/privacy-policy" className="hover:text-accent transition-smooth">
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
