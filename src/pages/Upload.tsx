@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Upload as UploadIcon, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,6 +28,7 @@ const Upload = () => {
   const [stagingStyle, setStagingStyle] = useState("");
   const [previews, setPreviews] = useState<string[]>([]);
   const [stylesDialogOpen, setStylesDialogOpen] = useState(false);
+  const [selectedBundle, setSelectedBundle] = useState("");
 
   const styles = [
     { id: "modern-farmhouse", name: "Modern Farmhouse", image: modernFarmhouse, description: "Blend rustic charm with modern comfort" },
@@ -37,6 +39,14 @@ const Upload = () => {
     { id: "mountain-rustic", name: "Mountain Rustic", image: mountainRustic, description: "Cozy cabin retreat atmosphere" },
     { id: "transitional", name: "Transitional", image: transitional, description: "Perfect balance of traditional and modern" },
     { id: "japandi", name: "Japandi", image: japandi, description: "Japanese and Scandinavian fusion" },
+  ];
+
+  const bundles = [
+    { id: "single", name: "Single Photo", price: "$10", priceId: "price_1SD8lsIG3TLqP9yabBsx4jyZ", description: "Perfect for testing", photos: 1 },
+    { id: "5-photos", name: "5 Photos", price: "$45", priceId: "price_1SD8nJIG3TLqP9yaGAjd2WdP", description: "$9 per photo", photos: 5 },
+    { id: "10-photos", name: "10 Photos", price: "$85", priceId: "price_1SD8nNIG3TLqP9yazPngAINO", description: "$8.50 per photo", photos: 10 },
+    { id: "20-photos", name: "20 Photos", price: "$160", priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG", description: "$8 per photo", photos: 20 },
+    { id: "50-photos", name: "50 Photos", price: "$375", priceId: "price_1SD8nTIG3TLqP9yaTOhRMNFq", description: "$7.50 per photo", photos: 50 },
   ];
 
   useEffect(() => {
@@ -89,56 +99,63 @@ const Upload = () => {
       return;
     }
 
-    if (!user) {
-      toast.error("Please login first");
-      navigate("/auth");
+    if (!selectedBundle) {
+      toast.error("Please select a bundle");
       return;
     }
 
     setLoading(true);
 
     try {
-      // Upload files to storage
+      // Get contact info from localStorage (from place-order page)
+      const contactInfo = JSON.parse(localStorage.getItem('orderContactInfo') || '{}');
+      
+      // Find the selected bundle
+      const bundle = bundles.find(b => b.id === selectedBundle);
+      if (!bundle) {
+        throw new Error("Selected bundle not found");
+      }
+
+      // Upload files to storage first
       const uploadPromises = files.map(async (file) => {
         const fileExt = file.name.split(".").pop();
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        const fileName = `${user?.id || 'guest'}/${Date.now()}.${fileExt}`;
 
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from("uploads")
           .upload(fileName, file);
 
         if (uploadError) throw uploadError;
 
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from("uploads")
-          .getPublicUrl(fileName);
-
-        // Create order record
-        const { error: orderError } = await supabase
-          .from("orders")
-          .insert({
-            user_id: user.id,
-            original_image_url: urlData.publicUrl,
-            staging_style: stagingStyle,
-            status: "pending",
-          });
-
-        if (orderError) throw orderError;
-
-        return data;
+        return fileName;
       });
 
-      await Promise.all(uploadPromises);
+      const uploadedFiles = await Promise.all(uploadPromises);
 
-      toast.success("Files uploaded successfully! Redirecting to payment...");
-      
-      // In a real implementation, this would redirect to Stripe checkout
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 2000);
+      // Create checkout session
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          priceId: bundle.priceId,
+          contactInfo: contactInfo,
+          files: uploadedFiles,
+          stagingStyle: stagingStyle,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        toast.success("Redirecting to payment...");
+        // Open Stripe checkout in new tab
+        window.open(data.url, '_blank');
+        // Redirect to dashboard after a short delay
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1500);
+      }
     } catch (error: any) {
-      toast.error(error.message || "Failed to upload files");
+      console.error("Checkout error:", error);
+      toast.error(error.message || "Failed to process checkout");
     } finally {
       setLoading(false);
     }
@@ -265,6 +282,35 @@ const Upload = () => {
                       <SelectItem value="industrial">Industrial</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Bundle Selection */}
+                <div className="space-y-3">
+                  <Label>Select Package <span className="text-destructive">*</span></Label>
+                  <RadioGroup value={selectedBundle} onValueChange={setSelectedBundle}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {bundles.map((bundle) => (
+                        <div key={bundle.id} className="relative">
+                          <RadioGroupItem
+                            value={bundle.id}
+                            id={bundle.id}
+                            className="peer sr-only"
+                          />
+                          <label
+                            htmlFor={bundle.id}
+                            className="flex flex-col p-4 border-2 border-border rounded-xl cursor-pointer hover:border-accent transition-smooth peer-data-[state=checked]:border-accent peer-data-[state=checked]:bg-accent/5"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-semibold text-lg">{bundle.name}</span>
+                              <div className="w-4 h-4 rounded-full border-2 border-border peer-data-[state=checked]:border-accent peer-data-[state=checked]:bg-accent" />
+                            </div>
+                            <span className="text-2xl font-bold text-accent mb-1">{bundle.price}</span>
+                            <span className="text-sm text-muted-foreground">{bundle.description}</span>
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </RadioGroup>
                 </div>
 
                 <Button
