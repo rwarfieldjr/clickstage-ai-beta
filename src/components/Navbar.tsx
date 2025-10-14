@@ -1,17 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Upload, DollarSign, Mail, LayoutDashboard, LogOut, Image, HelpCircle, LayoutGrid, Users, Coins } from "lucide-react";
+import { Home, Upload, DollarSign, Mail, Image, HelpCircle, LayoutGrid, Users, UserCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import cameraLogo from "@/assets/camera-logo-new.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useCredits } from "@/hooks/use-credits";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
-  const { credits } = useCredits(user);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -26,11 +24,6 @@ const Navbar = () => {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
-  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -78,10 +71,12 @@ const Navbar = () => {
                     Portal
                   </Button>
                 </Link>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </Button>
+                <Link to="/account">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <UserCircle className="w-4 h-4" />
+                    Account
+                  </Button>
+                </Link>
               </>
             ) : (
               <>
