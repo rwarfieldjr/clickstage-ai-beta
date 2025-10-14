@@ -16,7 +16,7 @@ const formSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required").max(100, "First name must be less than 100 characters"),
   lastName: z.string().trim().min(1, "Last name is required").max(100, "Last name must be less than 100 characters"),
   email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
-  phoneNumber: z.string().trim().max(20, "Phone number must be less than 20 characters").optional(),
+  phoneNumber: z.string().trim().min(1, "Phone number is required").max(20, "Phone number must be less than 20 characters"),
   transactionalConsent: z.boolean().optional(),
   marketingConsent: z.boolean().optional(),
 });
@@ -140,11 +140,12 @@ const PlaceOrder = () => {
 
                 {/* Phone Number */}
                 <div className="space-y-2">
-                  <Label htmlFor="phoneNumber">Phone Number</Label>
+                  <Label htmlFor="phoneNumber">
+                    Phone Number <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="phoneNumber"
                     type="tel"
-                    placeholder="Optional"
                     {...register("phoneNumber")}
                     className={errors.phoneNumber ? "border-destructive" : ""}
                   />
