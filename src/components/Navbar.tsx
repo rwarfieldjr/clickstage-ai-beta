@@ -33,8 +33,8 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-3">
-            <img src={cameraLogo} alt="ClickStagePro" className="w-10 h-10" />
+          <Link to="/" className="flex items-center space-x-2">
+            <img src={cameraLogo} alt="ClickStagePro" className="w-12 h-12" />
             <div className="text-2xl font-bold text-primary">ClickStagePro</div>
           </Link>
 
