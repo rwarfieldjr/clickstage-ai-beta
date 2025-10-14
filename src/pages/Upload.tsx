@@ -158,6 +158,13 @@ const Upload = () => {
       return;
     }
 
+    // Check if uploaded photos exceed selected bundle limit
+    const bundle = bundles.find(b => b.id === selectedBundle);
+    if (bundle && files.length > bundle.photos) {
+      toast.error(`You have uploaded ${files.length} photos but selected the ${bundle.name} package. Please remove ${files.length - bundle.photos} photo${files.length - bundle.photos > 1 ? 's' : ''} or select a larger package.`);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -385,14 +392,31 @@ const Upload = () => {
                         </div>
                       ))}
                     </div>
-                  </RadioGroup>
+                   </RadioGroup>
+                   {selectedBundle && files.length > 0 && (() => {
+                     const bundle = bundles.find(b => b.id === selectedBundle);
+                     if (bundle && files.length > bundle.photos) {
+                       return (
+                         <div className="p-4 border-2 border-destructive/50 bg-destructive/10 rounded-xl">
+                           <p className="text-sm text-destructive font-medium">
+                             ⚠️ You have uploaded {files.length} photo{files.length > 1 ? 's' : ''} but selected the {bundle.name} package which allows only {bundle.photos} photo{bundle.photos > 1 ? 's' : ''}. 
+                             Please remove {files.length - bundle.photos} photo{files.length - bundle.photos > 1 ? 's' : ''} or select a larger package.
+                           </p>
+                         </div>
+                       );
+                     }
+                     return null;
+                   })()}
                 </div>
 
                 <Button
                   type="submit"
                   className="w-full bg-accent hover:bg-accent/90"
                   size="lg"
-                  disabled={loading}
+                  disabled={loading || (() => {
+                    const bundle = bundles.find(b => b.id === selectedBundle);
+                    return bundle && files.length > bundle.photos;
+                  })()}
                 >
                   {loading ? "Processing..." : "Continue to Payment"}
                 </Button>
