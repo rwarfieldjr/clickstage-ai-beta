@@ -33,11 +33,6 @@ const Home = () => {
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link to="/pricing">
-                <Button size="lg" variant="outline" className="text-lg px-8 border-white text-white hover:bg-white/10">
-                  View Pricing
-                </Button>
-              </Link>
             </div>
             
             {/* Statistics */}
