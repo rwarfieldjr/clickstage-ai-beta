@@ -19,6 +19,7 @@ const Home = () => {
           <div className="bg-cover bg-center" style={{ backgroundImage: `url(${livingBefore})` }}></div>
           <div className="bg-cover bg-center" style={{ backgroundImage: `url(${livingAfter})` }}></div>
         </div>
+        <div className="absolute inset-y-0 left-1/2 w-px bg-gray-300/30"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
