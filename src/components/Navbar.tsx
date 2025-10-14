@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import cameraLogo from "@/assets/camera-logo.png";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -62,6 +63,7 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center space-x-3">
+            <ThemeToggle />
             {user ? (
               <>
                 <Link to="/dashboard">
