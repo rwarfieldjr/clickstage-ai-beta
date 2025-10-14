@@ -23,8 +23,8 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8 mt-4">
-              <span className="text-base md:text-lg text-white/90">Advanced AI Technology</span>
+            <div className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8 mt-8">
+              <span className="text-sm md:text-base text-white/90">Advanced AI Technology</span>
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
               Transform Empty Properties with AI Virtual Staging
