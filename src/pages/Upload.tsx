@@ -191,13 +191,17 @@ const Upload = () => {
                     <SelectTrigger id="staging-style">
                       <SelectValue placeholder="Select a staging style" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="modern">Modern</SelectItem>
-                      <SelectItem value="farmhouse">Farmhouse</SelectItem>
+                    <SelectContent className="bg-background border-border z-50">
+                      <SelectItem value="modern-farmhouse">Modern Farmhouse</SelectItem>
                       <SelectItem value="coastal">Coastal</SelectItem>
-                      <SelectItem value="luxury">Luxury</SelectItem>
-                      <SelectItem value="minimalist">Minimalist</SelectItem>
-                      <SelectItem value="traditional">Traditional</SelectItem>
+                      <SelectItem value="scandinavian">Scandinavian</SelectItem>
+                      <SelectItem value="contemporary">Contemporary</SelectItem>
+                      <SelectItem value="mid-century-modern">Mid-Century Modern</SelectItem>
+                      <SelectItem value="shabby-chic">Shabby Chic</SelectItem>
+                      <SelectItem value="mountain-rustic">Mountain Rustic</SelectItem>
+                      <SelectItem value="transitional">Transitional</SelectItem>
+                      <SelectItem value="japandi">Japandi</SelectItem>
+                      <SelectItem value="industrial">Industrial</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
