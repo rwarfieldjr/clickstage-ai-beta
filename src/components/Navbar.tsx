@@ -62,7 +62,7 @@ const Navbar = () => {
             </Link>
             <Link to="/contact" className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-smooth">
               <Mail className="w-4 h-4" />
-              Contact
+              Contact Us
             </Link>
           </div>
 
