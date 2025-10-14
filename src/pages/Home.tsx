@@ -27,7 +27,7 @@ const Home = () => {
               Powered by the latest AI breakthroughs in image generation - creating photorealistic staging that helps homes sell faster.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/upload">
+              <Link to="/place-order">
                 <Button size="lg" variant="secondary" className="text-lg px-8">
                   Get Started
                   <ArrowRight className="ml-2 w-5 h-5" />
