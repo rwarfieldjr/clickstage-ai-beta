@@ -18,56 +18,79 @@ const Pricing = () => {
     });
   }, []);
 
-  const handleSelectPlan = (planName: string) => {
-    if (!user) {
-      toast.error("Please login to purchase a plan");
-      navigate("/auth");
-      return;
+  const handleSelectPlan = async (planName: string, priceId: string) => {
+    try {
+      toast.loading("Redirecting to checkout...");
+      
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { price_id: priceId },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      toast.error("Failed to create checkout session. Please try again.");
     }
-    // Stripe integration will be added here
-    toast.info(`${planName} plan selected. Stripe integration coming soon!`);
   };
 
   const pricingTiers = [
     {
-      name: "Starter",
-      price: "$24.95",
-      credits: 5,
-      features: [
-        "5 staging credits",
-        "All staging styles",
-        "High-resolution output",
-        "Email delivery",
-        "Dashboard access",
-      ],
+      name: "1 Photo",
+      price: "$10",
+      priceId: "price_1SD8lsIG3TLqP9yabBsx4jyZ",
+      credits: 1,
+      perPhoto: "$10 per photo",
+      description: "Try our service",
     },
     {
-      name: "Pro",
-      price: "$49.95",
-      credits: 15,
-      features: [
-        "15 staging credits",
-        "All staging styles",
-        "High-resolution output",
-        "Priority email delivery",
-        "Dashboard access",
-        "Save 33% vs pay-as-you-go",
-      ],
+      name: "5 Photos",
+      price: "$45",
+      priceId: "price_1SD8nJIG3TLqP9yaGAjd2WdP",
+      credits: 5,
+      perPhoto: "$9 per photo",
+      savings: "Save $5",
+      description: "Perfect for a single listing",
+    },
+    {
+      name: "10 Photos",
+      price: "$85",
+      priceId: "price_1SD8nNIG3TLqP9yazPngAIN0",
+      credits: 10,
+      perPhoto: "$8.5 per photo",
+      savings: "Save $15",
+      description: "Great for 2-3 listings",
       popular: true,
     },
     {
-      name: "Premium",
-      price: "$99.95",
-      credits: 35,
-      features: [
-        "35 staging credits",
-        "All staging styles",
-        "High-resolution output",
-        "Priority email delivery",
-        "Dashboard access",
-        "Save 43% vs pay-as-you-go",
-        "Bulk upload support",
-      ],
+      name: "20 Photos",
+      price: "$160",
+      priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG",
+      credits: 20,
+      perPhoto: "$8 per photo",
+      savings: "Save $40",
+      description: "Ideal for multiple projects",
+    },
+    {
+      name: "50 Photos",
+      price: "$375",
+      priceId: "price_1SD8nTIG3TLqP9yaT0hRMNFq",
+      credits: 50,
+      perPhoto: "$7.5 per photo",
+      savings: "Save $125",
+      description: "Perfect for agencies",
+    },
+    {
+      name: "100 Photos",
+      price: "$700",
+      priceId: "price_1SD8nWIG3TLqP9yaH0D0oIpW",
+      credits: 100,
+      perPhoto: "$7 per photo",
+      savings: "Save $300",
+      description: "Maximum value for teams",
     },
   ];
 
@@ -88,7 +111,7 @@ const Pricing = () => {
             </div>
 
             {/* Pricing Tiers */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {pricingTiers.map((tier) => (
                 <Card
                   key={tier.name}
@@ -106,50 +129,26 @@ const Pricing = () => {
                     <CardDescription className="text-3xl font-bold text-primary mt-2">
                       {tier.price}
                     </CardDescription>
-                    <p className="text-sm text-muted-foreground">{tier.credits} credits</p>
+                    <p className="text-sm text-muted-foreground">{tier.perPhoto}</p>
+                    {tier.savings && (
+                      <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                        {tier.savings}
+                      </p>
+                    )}
                   </CardHeader>
                   <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">{tier.description}</p>
                     <Button
-                      className="w-full mb-6 bg-accent hover:bg-accent/90"
+                      className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
-                      onClick={() => handleSelectPlan(tier.name)}
+                      onClick={() => handleSelectPlan(tier.name, tier.priceId)}
                     >
-                      Get Started
+                      Place Staging Order
                     </Button>
-                    <ul className="space-y-3">
-                      {tier.features.map((feature, index) => (
-                        <li key={index} className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-                          <span className="text-sm">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
                   </CardContent>
                 </Card>
               ))}
             </div>
-
-            {/* Pay As You Go */}
-            <Card className="shadow-custom-lg max-w-2xl mx-auto">
-              <CardHeader>
-                <CardTitle className="text-2xl">Pay As You Go</CardTitle>
-                <CardDescription className="text-3xl font-bold text-primary mt-2">
-                  $10 per image
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-6 text-muted-foreground">
-                  Perfect for one-time projects or testing our service. No commitment required.
-                </p>
-                <Button
-                  className="w-full bg-accent hover:bg-accent/90"
-                  size="lg"
-                  onClick={() => handleSelectPlan("Pay As You Go")}
-                >
-                  Upload Now
-                </Button>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </main>
