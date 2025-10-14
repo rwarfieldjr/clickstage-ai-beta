@@ -149,12 +149,4 @@ All colors MUST be HSL.
   .transition-smooth {
     transition: var(--transition-smooth);
   }
-  
-  .logo-adaptive {
-    filter: none;
-  }
-  
-  .dark .logo-adaptive {
-    filter: brightness(0) saturate(100%) invert(48%) sepia(86%) saturate(2613%) hue-rotate(199deg) brightness(102%) contrast(101%);
-  }
 }
