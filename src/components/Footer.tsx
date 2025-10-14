@@ -49,7 +49,7 @@ const Footer = () => {
             <h4 className="font-medium mb-4">Contact Us</h4>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Mail className="w-4 h-4" />
-              orders@clickstagepro.com
+              support@clickstagepro.com
             </div>
           </div>
         </div>

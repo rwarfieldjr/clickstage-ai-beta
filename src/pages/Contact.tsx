@@ -126,7 +126,7 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold mb-1">Email</h3>
                         <p className="text-muted-foreground">
-                          orders@clickstagepro.com
+                          support@clickstagepro.com
                         </p>
                       </div>
                     </div>
