@@ -140,7 +140,7 @@ const Upload = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* File Upload */}
                 <div className="space-y-2">
-                  <Label>Property Photos (JPEG or PNG)</Label>
+                  <Label>Property Photos (JPEG or PNG) <span className="text-destructive">*</span></Label>
                   <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center hover:border-accent transition-smooth cursor-pointer">
                     <input
                       type="file"
@@ -149,6 +149,7 @@ const Upload = () => {
                       accept="image/jpeg,image/png"
                       onChange={handleFileChange}
                       className="hidden"
+                      required
                     />
                     <label htmlFor="file-upload" className="cursor-pointer">
                       <UploadIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
@@ -186,8 +187,8 @@ const Upload = () => {
 
                 {/* Staging Style */}
                 <div className="space-y-2">
-                  <Label htmlFor="staging-style">Staging Style</Label>
-                  <Select value={stagingStyle} onValueChange={setStagingStyle}>
+                  <Label htmlFor="staging-style">Staging Style <span className="text-destructive">*</span></Label>
+                  <Select value={stagingStyle} onValueChange={setStagingStyle} required>
                     <SelectTrigger id="staging-style">
                       <SelectValue placeholder="Select a staging style" />
                     </SelectTrigger>
