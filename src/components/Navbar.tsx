@@ -64,10 +64,6 @@ const Navbar = () => {
               <HelpCircle className="w-4 h-4" />
               FAQ
             </Link>
-            <Link to="/contact" className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-smooth">
-              <Mail className="w-4 h-4" />
-              Contact Us
-            </Link>
           </div>
 
           <div className="flex items-center space-x-3">
