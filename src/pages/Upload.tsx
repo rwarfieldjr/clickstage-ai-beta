@@ -4,11 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Upload as UploadIcon, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
+import coastal from "@/assets/style-coastal.jpg";
+import scandinavian from "@/assets/style-scandinavian.jpg";
+import contemporary from "@/assets/style-contemporary.jpg";
+import midCentury from "@/assets/style-mid-century.jpg";
+import mountainRustic from "@/assets/style-mountain-rustic.jpg";
+import transitional from "@/assets/style-transitional.jpg";
+import japandi from "@/assets/style-japandi.jpg";
 
 const Upload = () => {
   const navigate = useNavigate();
@@ -17,6 +26,18 @@ const Upload = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [stagingStyle, setStagingStyle] = useState("");
   const [previews, setPreviews] = useState<string[]>([]);
+  const [stylesDialogOpen, setStylesDialogOpen] = useState(false);
+
+  const styles = [
+    { id: "modern-farmhouse", name: "Modern Farmhouse", image: modernFarmhouse, description: "Blend rustic charm with modern comfort" },
+    { id: "coastal", name: "Coastal", image: coastal, description: "Relaxed beachside living with light colors" },
+    { id: "scandinavian", name: "Scandinavian", image: scandinavian, description: "Minimalist Nordic design with clean lines" },
+    { id: "contemporary", name: "Contemporary", image: contemporary, description: "Current trends with sleek sophistication" },
+    { id: "mid-century-modern", name: "Mid-Century Modern", image: midCentury, description: "Retro 1950s-60s aesthetic" },
+    { id: "mountain-rustic", name: "Mountain Rustic", image: mountainRustic, description: "Cozy cabin retreat atmosphere" },
+    { id: "transitional", name: "Transitional", image: transitional, description: "Perfect balance of traditional and modern" },
+    { id: "japandi", name: "Japandi", image: japandi, description: "Japanese and Scandinavian fusion" },
+  ];
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -187,7 +208,46 @@ const Upload = () => {
 
                 {/* Staging Style */}
                 <div className="space-y-2">
-                  <Label htmlFor="staging-style">Staging Style <span className="text-destructive">*</span></Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="staging-style">Staging Style <span className="text-destructive">*</span></Label>
+                    <Dialog open={stylesDialogOpen} onOpenChange={setStylesDialogOpen}>
+                      <DialogTrigger asChild>
+                        <button
+                          type="button"
+                          className="text-sm text-accent hover:underline font-medium"
+                        >
+                          Click Here to See Styles
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle className="text-2xl">Available Staging Styles</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                          {styles.map((style) => (
+                            <div
+                              key={style.id}
+                              className="rounded-xl overflow-hidden border border-border hover:border-accent transition-smooth cursor-pointer"
+                              onClick={() => {
+                                setStagingStyle(style.id);
+                                setStylesDialogOpen(false);
+                              }}
+                            >
+                              <img
+                                src={style.image}
+                                alt={style.name}
+                                className="w-full h-48 object-cover"
+                              />
+                              <div className="p-4">
+                                <h3 className="text-lg font-semibold mb-2">{style.name}</h3>
+                                <p className="text-sm text-muted-foreground">{style.description}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                   <Select value={stagingStyle} onValueChange={setStagingStyle} required>
                     <SelectTrigger id="staging-style">
                       <SelectValue placeholder="Select a staging style" />
