@@ -11,12 +11,12 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LogOut, User, Mail, Lock, Clock, CreditCard, Coins } from "lucide-react";
-import { useCredits } from "@/hooks/use-credits";
 
 const AccountSettings = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [credits, setCredits] = useState(0);
   const [profile, setProfile] = useState({
     name: "",
     email: "",
@@ -26,7 +26,6 @@ const AccountSettings = () => {
     newPassword: "",
     confirmPassword: "",
   });
-  const { credits, refetchCredits } = useCredits(user);
 
   useEffect(() => {
     loadUser();
@@ -53,6 +52,19 @@ const AccountSettings = () => {
         email: profileData.email || "",
         timezone: profileData.timezone || "UTC",
       });
+      setCredits(profileData.credits || 0);
+    }
+  };
+
+  const refetchCredits = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("credits")
+      .eq("id", user.id)
+      .single();
+    if (data) {
+      setCredits(data.credits || 0);
     }
   };
 
@@ -128,6 +140,10 @@ const AccountSettings = () => {
 
       if (data?.url) {
         window.open(data.url, "_blank");
+        // Refetch credits after a delay to allow payment processing
+        setTimeout(() => {
+          refetchCredits();
+        }, 2000);
       }
     } catch (error: any) {
       toast.error(error.message);
