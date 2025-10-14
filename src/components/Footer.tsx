@@ -12,7 +12,7 @@ const Footer = () => {
               <img 
                 src={cameraLogo} 
                 alt="ClickStagePro Logo" 
-                className="h-8 w-8 logo-color-adaptive"
+                className="h-8 w-8"
               />
               <h3 className="text-lg font-semibold text-primary">ClickStagePro</h3>
             </div>
