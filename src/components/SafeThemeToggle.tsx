@@ -1,29 +1,30 @@
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
-export function ThemeToggle() {
+export function SafeThemeToggle() {
   const [mounted, setMounted] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState<string>("light");
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    // Check initial theme from document class
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    setIsDark(isDarkMode);
   }, []);
 
-  // Use try-catch to safely access theme context
-  let theme = currentTheme;
-  let setTheme = (newTheme: string) => setCurrentTheme(newTheme);
-  
-  try {
-    const themeContext = useTheme();
-    if (themeContext) {
-      theme = themeContext.theme || "light";
-      setTheme = themeContext.setTheme;
+  const toggleTheme = () => {
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+    
+    if (newTheme) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
-  } catch (error) {
-    console.warn("Theme context not available, using fallback");
-  }
+  };
 
   if (!mounted) {
     return (
@@ -37,10 +38,10 @@ export function ThemeToggle() {
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={toggleTheme}
       className="w-9 h-9"
     >
-      {theme === "dark" ? (
+      {isDark ? (
         <Sun className="h-5 w-5 transition-all" />
       ) : (
         <Moon className="h-5 w-5 transition-all" />
