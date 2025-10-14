@@ -63,7 +63,6 @@ const Pricing = () => {
       perPhoto: "$8.5 per photo",
       savings: "Save $15",
       description: "Great for 2-3 listings",
-      popular: true,
     },
     {
       name: "20 Photos",
@@ -73,6 +72,7 @@ const Pricing = () => {
       perPhoto: "$8 per photo",
       savings: "Save $40",
       description: "Ideal for multiple projects",
+      popular: true,
     },
     {
       name: "50 Photos",
