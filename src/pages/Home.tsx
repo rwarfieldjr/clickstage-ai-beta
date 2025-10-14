@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Upload, Palette, Download, CheckCircle } from "lucide-react";
+import { ArrowRight, Upload, Palette, Download, CheckCircle, Clock, Users, Award } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import heroBackground from "@/assets/hero-background.png";
@@ -51,6 +51,62 @@ const Home = () => {
               <div className="text-center">
                 <div className="text-4xl md:text-5xl font-bold mb-2">24-48h</div>
                 <div className="text-white/80 text-sm md:text-base">Delivery</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why Choose AI Virtual Staging */}
+      <section className="py-20 bg-gradient-to-b from-primary to-primary/95">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-white">
+              Why Choose AI Virtual Staging?
+            </h2>
+            <p className="text-center text-white/70 mb-12 text-lg">
+              Transform empty properties into buyer's dreams with cutting-edge technology
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 text-center hover:bg-white/10 transition-smooth">
+                <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3 text-white">Sell 73% Faster</h3>
+                <p className="text-white/70 text-sm">
+                  Staged homes sell significantly faster than empty properties
+                </p>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 text-center hover:bg-white/10 transition-smooth">
+                <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3 text-white">Rush Delivery Available</h3>
+                <p className="text-white/70 text-sm">
+                  Get your professionally staged photos back quickly with our rush service
+                </p>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 text-center hover:bg-white/10 transition-smooth">
+                <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3 text-white">Expert Designers</h3>
+                <p className="text-white/70 text-sm">
+                  Our team of interior designers creates stunning, market-ready spaces
+                </p>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 text-center hover:bg-white/10 transition-smooth">
+                <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Award className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3 text-white">Premium Quality</h3>
+                <p className="text-white/70 text-sm">
+                  Photorealistic staging that looks indistinguishable from real furniture
+                </p>
               </div>
             </div>
           </div>
