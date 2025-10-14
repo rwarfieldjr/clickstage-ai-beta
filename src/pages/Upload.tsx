@@ -29,6 +29,7 @@ const Upload = () => {
   const [previews, setPreviews] = useState<string[]>([]);
   const [stylesDialogOpen, setStylesDialogOpen] = useState(false);
   const [selectedBundle, setSelectedBundle] = useState("");
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const styles = [
     { id: "modern-farmhouse", name: "Modern Farmhouse", image: modernFarmhouse, description: "Blend rustic charm with modern comfort" },
@@ -97,6 +98,46 @@ const Upload = () => {
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
     setPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const validFiles = droppedFiles.filter(
+      (file) => file.type === "image/jpeg" || file.type === "image/png"
+    );
+
+    if (validFiles.length !== droppedFiles.length) {
+      toast.error("Only JPEG and PNG files are allowed");
+    }
+
+    if (validFiles.length > 0) {
+      setFiles((prev) => [...prev, ...validFiles]);
+
+      // Create previews
+      validFiles.forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviews((prev) => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -192,7 +233,16 @@ const Upload = () => {
                 {/* File Upload */}
                 <div className="space-y-2">
                   <Label>Property Photos (JPEG or PNG) <span className="text-destructive">*</span></Label>
-                  <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center hover:border-accent transition-smooth cursor-pointer">
+                  <div 
+                    className={`border-2 border-dashed rounded-2xl p-8 text-center transition-smooth cursor-pointer ${
+                      isDragOver 
+                        ? 'border-accent bg-accent/10' 
+                        : 'border-border hover:border-accent'
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
                     <input
                       type="file"
                       id="file-upload"
@@ -202,7 +252,7 @@ const Upload = () => {
                       className="hidden"
                       required
                     />
-                    <label htmlFor="file-upload" className="cursor-pointer">
+                    <label htmlFor="file-upload" className="cursor-pointer block">
                       <UploadIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                       <p className="text-lg font-medium mb-2">
                         Drop files here or click to upload
