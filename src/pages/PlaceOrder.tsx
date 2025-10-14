@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +27,15 @@ const PlaceOrder = () => {
   const navigate = useNavigate();
   const [transactionalConsent, setTransactionalConsent] = useState(false);
   const [marketingConsent, setMarketingConsent] = useState(false);
+  const [selectedBundle, setSelectedBundle] = useState<any>(null);
+
+  useEffect(() => {
+    // Get selected bundle from localStorage
+    const bundleData = localStorage.getItem('selectedBundle');
+    if (bundleData) {
+      setSelectedBundle(JSON.parse(bundleData));
+    }
+  }, []);
 
   const {
     register,
@@ -43,6 +52,7 @@ const PlaceOrder = () => {
         ...data,
         transactionalConsent,
         marketingConsent,
+        selectedBundle, // Include bundle info
       }));
       
       toast.success("Contact information saved!");

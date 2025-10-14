@@ -18,23 +18,16 @@ const Pricing = () => {
     });
   }, []);
 
-  const handleSelectPlan = async (planName: string, priceId: string) => {
-    try {
-      toast.loading("Redirecting to checkout...");
-      
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { price_id: priceId },
-      });
-
-      if (error) throw error;
-
-      if (data?.url) {
-        window.open(data.url, "_blank");
-      }
-    } catch (error) {
-      console.error("Error creating checkout session:", error);
-      toast.error("Failed to create checkout session. Please try again.");
-    }
+  const handleSelectPlan = async (planName: string, priceId: string, credits: number) => {
+    // Store selected bundle info in localStorage
+    localStorage.setItem('selectedBundle', JSON.stringify({
+      name: planName,
+      priceId: priceId,
+      credits: credits,
+    }));
+    
+    // Navigate to place-order page
+    navigate('/place-order');
   };
 
   const pricingTiers = [
@@ -141,9 +134,9 @@ const Pricing = () => {
                     <Button
                       className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
-                      onClick={() => handleSelectPlan(tier.name, tier.priceId)}
+                      onClick={() => handleSelectPlan(tier.name, tier.priceId, tier.credits)}
                     >
-                      Place Staging Order
+                      Select {tier.name} Bundle
                     </Button>
                   </CardContent>
                 </Card>

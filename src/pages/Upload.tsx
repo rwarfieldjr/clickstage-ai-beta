@@ -47,17 +47,30 @@ const Upload = () => {
     { id: "10-photos", name: "10 Photos", price: "$85", priceId: "price_1SD8nNIG3TLqP9yazPngAINO", description: "$8.50 per photo", photos: 10 },
     { id: "20-photos", name: "20 Photos", price: "$160", priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG", description: "$8 per photo", photos: 20 },
     { id: "50-photos", name: "50 Photos", price: "$375", priceId: "price_1SD8nTIG3TLqP9yaTOhRMNFq", description: "$7.50 per photo", photos: 50 },
+    { id: "100-photos", name: "100 Photos", price: "$700", priceId: "price_1SD8nWIG3TLqP9yaH0D0oIpW", description: "$7 per photo", photos: 100 },
   ];
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
-        navigate("/auth");
+        // Allow guest checkout, don't redirect
       } else {
         setUser(session.user);
       }
     });
-  }, [navigate]);
+
+    // Get selected bundle from localStorage and find matching bundle by priceId
+    const orderData = localStorage.getItem('orderContactInfo');
+    if (orderData) {
+      const parsedData = JSON.parse(orderData);
+      if (parsedData.selectedBundle && parsedData.selectedBundle.priceId) {
+        const matchingBundle = bundles.find(b => b.priceId === parsedData.selectedBundle.priceId);
+        if (matchingBundle) {
+          setSelectedBundle(matchingBundle.id);
+        }
+      }
+    }
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
