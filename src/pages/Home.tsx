@@ -46,7 +46,7 @@ const Home = () => {
                 <div className="text-white/80 text-sm md:text-base">Higher Offers</div>
               </div>
               <div className="text-center">
-                <div className="text-4xl md:text-5xl font-bold mb-2">24-48h</div>
+                <div className="text-4xl md:text-5xl font-bold mb-2">24hrs</div>
                 <div className="text-white/80 text-sm md:text-base">Delivery</div>
               </div>
             </div>
