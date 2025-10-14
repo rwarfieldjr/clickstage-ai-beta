@@ -166,8 +166,8 @@ const Home = () => {
                 <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center mb-4">
                   <Upload className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">1. Upload Photos</h3>
-                <p className="text-muted-foreground">
+                <h3 className="text-xl font-semibold mb-3 text-foreground">1. Upload Photos</h3>
+                <p className="text-foreground/70">
                   Upload your property photos in JPEG or PNG format. Drag and drop for easy uploading.
                 </p>
               </CardContent>
@@ -178,8 +178,8 @@ const Home = () => {
                 <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center mb-4">
                   <Palette className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">2. Choose Style</h3>
-                <p className="text-muted-foreground">
+                <h3 className="text-xl font-semibold mb-3 text-foreground">2. Choose Style</h3>
+                <p className="text-foreground/70">
                   Select from Modern, Farmhouse, Coastal, Luxury, and more staging styles.
                 </p>
               </CardContent>
@@ -190,8 +190,8 @@ const Home = () => {
                 <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center mb-4">
                   <Download className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">3. Get Results</h3>
-                <p className="text-muted-foreground">
+                <h3 className="text-xl font-semibold mb-3 text-foreground">3. Get Results</h3>
+                <p className="text-foreground/70">
                   Receive your professionally staged images by email and in your dashboard.
                 </p>
               </CardContent>
