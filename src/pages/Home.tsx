@@ -5,7 +5,7 @@ import { ArrowRight, Upload, Palette, Download, CheckCircle, Clock, Users, Award
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import heroBackground from "@/assets/hero-background-new.png";
-import livingBefore from "@/assets/hero-before.png";
+import livingBefore from "@/assets/hero-before-new.png";
 import livingAfter from "@/assets/hero-after.png";
 
 const Home = () => {
