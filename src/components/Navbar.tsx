@@ -53,12 +53,6 @@ const Navbar = () => {
               <HelpCircle className="w-4 h-4" />
               FAQ
             </Link>
-            {user && (
-              <Link to="/upload" className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-smooth">
-                <Upload className="w-4 h-4" />
-                Upload
-              </Link>
-            )}
             <Link to="/contact" className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-smooth">
               <Mail className="w-4 h-4" />
               Contact
