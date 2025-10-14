@@ -74,7 +74,7 @@ const Home = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="bg-white dark:bg-white/5 backdrop-blur-sm border border-border dark:border-white/10 rounded-xl p-6 text-center hover:shadow-lg dark:hover:bg-white/10 transition-smooth">
                 <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-6 h-6 text-accent" />
+                  <CheckCircle className="w-6 h-6 text-accent dark:text-white" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3 text-foreground dark:text-white">Sell 73% Faster</h3>
                 <p className="text-muted-foreground dark:text-white/70 text-sm">
@@ -84,7 +84,7 @@ const Home = () => {
 
               <div className="bg-white dark:bg-white/5 backdrop-blur-sm border border-border dark:border-white/10 rounded-xl p-6 text-center hover:shadow-lg dark:hover:bg-white/10 transition-smooth">
                 <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Clock className="w-6 h-6 text-accent" />
+                  <Clock className="w-6 h-6 text-accent dark:text-white" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3 text-foreground dark:text-white">Rush Delivery Available</h3>
                 <p className="text-muted-foreground dark:text-white/70 text-sm">
@@ -94,7 +94,7 @@ const Home = () => {
 
               <div className="bg-white dark:bg-white/5 backdrop-blur-sm border border-border dark:border-white/10 rounded-xl p-6 text-center hover:shadow-lg dark:hover:bg-white/10 transition-smooth">
                 <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-6 h-6 text-accent" />
+                  <Users className="w-6 h-6 text-accent dark:text-white" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3 text-foreground dark:text-white">Expert Designers</h3>
                 <p className="text-muted-foreground dark:text-white/70 text-sm">
@@ -104,7 +104,7 @@ const Home = () => {
 
               <div className="bg-white dark:bg-white/5 backdrop-blur-sm border border-border dark:border-white/10 rounded-xl p-6 text-center hover:shadow-lg dark:hover:bg-white/10 transition-smooth">
                 <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Award className="w-6 h-6 text-accent" />
+                  <Award className="w-6 h-6 text-accent dark:text-white" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3 text-foreground dark:text-white">Premium Quality</h3>
                 <p className="text-muted-foreground dark:text-white/70 text-sm">
