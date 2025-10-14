@@ -35,8 +35,8 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-1">
-            <img src={cameraLogo} alt="ClickStagePro" className="w-16 h-16 bg-gray-200 dark:bg-gray-700 p-2.5 rounded-xl" />
-            <div className="text-2xl font-bold text-primary">ClickStagePro</div>
+            <img src={cameraLogo} alt="ClickStage Pro" className="w-16 h-16 bg-gray-200 dark:bg-gray-700 p-2.5 rounded-xl" />
+            <div className="text-2xl font-bold text-primary">ClickStage Pro</div>
           </Link>
 
           <div className="hidden md:flex items-center space-x-6">

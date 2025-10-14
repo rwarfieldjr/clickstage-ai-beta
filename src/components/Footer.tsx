@@ -11,10 +11,10 @@ const Footer = () => {
             <div className="flex items-center space-x-1 mb-4">
               <img 
                 src={cameraLogo} 
-                alt="ClickStagePro Logo" 
+                alt="ClickStage Pro Logo" 
                 className="h-8 w-8 bg-gray-200 dark:bg-gray-700 p-1.5 rounded-lg"
               />
-              <h3 className="text-lg font-semibold text-primary">ClickStagePro</h3>
+              <h3 className="text-lg font-semibold text-primary">ClickStage Pro</h3>
             </div>
             <p className="text-sm text-muted-foreground">
               Transform your real estate photos with AI staging technology.
