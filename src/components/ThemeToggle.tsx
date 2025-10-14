@@ -1,29 +1,15 @@
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/hooks/use-theme";
 import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState<string>("light");
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Use try-catch to safely access theme context
-  let theme = currentTheme;
-  let setTheme = (newTheme: string) => setCurrentTheme(newTheme);
-  
-  try {
-    const themeContext = useTheme();
-    if (themeContext) {
-      theme = themeContext.theme || "light";
-      setTheme = themeContext.setTheme;
-    }
-  } catch (error) {
-    console.warn("Theme context not available, using fallback");
-  }
 
   if (!mounted) {
     return (
