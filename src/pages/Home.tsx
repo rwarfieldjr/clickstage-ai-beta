@@ -5,6 +5,8 @@ import { ArrowRight, Upload, Palette, Download, CheckCircle, Clock, Users, Award
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import heroBackground from "@/assets/hero-background.png";
+import livingBefore from "@/assets/portfolio-living-before.jpg";
+import livingAfter from "@/assets/portfolio-living-after.jpg";
 
 const Home = () => {
   return (
@@ -109,6 +111,44 @@ const Home = () => {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* See the Transformation */}
+      <section className="py-20 bg-gradient-to-b from-primary/95 to-primary/90">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
+              See the Transformation
+            </h2>
+            <p className="text-white/70 mb-12 text-lg max-w-3xl mx-auto">
+              See the dramatic transformation as we turn empty rooms into beautiful, staged spaces that sell faster
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="rounded-xl overflow-hidden shadow-custom-lg">
+                <img 
+                  src={livingBefore} 
+                  alt="Empty living room before staging" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="rounded-xl overflow-hidden shadow-custom-lg">
+                <img 
+                  src={livingAfter} 
+                  alt="Beautifully staged living room" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+            
+            <Link to="/portfolio">
+              <Button size="lg" className="bg-accent hover:bg-accent/90 text-white">
+                View More Examples
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
