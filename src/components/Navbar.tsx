@@ -48,6 +48,10 @@ const Navbar = () => {
               <Image className="w-4 h-4" />
               Portfolio
             </Link>
+            <Link to="/styles" className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-smooth">
+              <LayoutGrid className="w-4 h-4" />
+              Styles
+            </Link>
             <Link to="/pricing" className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-accent transition-smooth">
               <DollarSign className="w-4 h-4" />
               Pricing
