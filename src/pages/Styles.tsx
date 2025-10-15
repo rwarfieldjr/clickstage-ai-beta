@@ -2,6 +2,14 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { ZoomIn } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
 import coastal from "@/assets/style-coastal.jpg";
 import scandinavian from "@/assets/style-scandinavian.jpg";
@@ -55,6 +63,8 @@ const styles = [
 ];
 
 const Styles = () => {
+  const [selectedImage, setSelectedImage] = useState<{ name: string; image: string } | null>(null);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -78,12 +88,20 @@ const Styles = () => {
                 key={index}
                 className="group rounded-lg overflow-hidden bg-card border border-border transition-all hover:shadow-lg"
               >
-                <div className="aspect-video overflow-hidden">
+                <div 
+                  className="aspect-video overflow-hidden relative cursor-pointer"
+                  onClick={() => setSelectedImage({ name: style.name, image: style.image })}
+                >
                   <img
                     src={style.image}
                     alt={`${style.name} staging style example`}
                     className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="bg-white/90 rounded-full p-4 transform transition-transform group-hover:scale-110">
+                      <ZoomIn className="w-8 h-8 text-primary" />
+                    </div>
+                  </div>
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-semibold mb-3">{style.name}</h3>
@@ -111,6 +129,21 @@ const Styles = () => {
         </section>
       </main>
       <Footer />
+
+      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="max-w-5xl w-full">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{selectedImage?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full">
+            <img
+              src={selectedImage?.image}
+              alt={selectedImage?.name}
+              className="w-full h-auto rounded-lg"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
