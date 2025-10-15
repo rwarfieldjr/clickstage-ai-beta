@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail } from "lucide-react";
-import logoMain from "@/assets/logo-main.png";
+import logoMain from "@/assets/logo-primary.png";
 
 const Footer = () => {
   return (
@@ -12,7 +12,7 @@ const Footer = () => {
               <img 
                 src={logoMain} 
                 alt="ClickStage Pro - Virtual Staging Powered by AI" 
-                className="h-12 w-auto"
+                className="h-16 w-auto"
               />
             </div>
             <p className="text-sm text-muted-foreground">
