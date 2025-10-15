@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail } from "lucide-react";
-import cameraLogo from "@/assets/camera-logo-new.png";
+import logoMain from "@/assets/logo-main.png";
 
 const Footer = () => {
   return (
@@ -8,13 +8,12 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center space-x-1 mb-4">
+            <div className="mb-4">
               <img 
-                src={cameraLogo} 
-                alt="ClickStage Pro Logo" 
-                className="h-8 w-8 bg-gray-200 dark:bg-gray-700 p-1.5 rounded-lg"
+                src={logoMain} 
+                alt="ClickStage Pro - Virtual Staging Powered by AI" 
+                className="h-12 w-auto"
               />
-              <h3 className="text-lg font-semibold text-primary">ClickStage Pro</h3>
             </div>
             <p className="text-sm text-muted-foreground">
               Transform your real estate photos with AI staging technology.
