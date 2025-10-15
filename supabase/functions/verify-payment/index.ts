@@ -98,8 +98,14 @@ serve(async (req) => {
     );
   } catch (error: any) {
     console.error("Error verifying payment:", error);
+    
+    // Return sanitized error to client
+    const clientError = error?.message?.includes('validation')
+      ? error.message
+      : 'Payment verification failed. Please try again.';
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: clientError }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
