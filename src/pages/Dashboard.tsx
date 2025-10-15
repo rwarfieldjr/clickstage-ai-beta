@@ -28,7 +28,7 @@ const Dashboard = () => {
   const { credits, refetchCredits } = useCredits(user);
 
   useEffect(() => {
-    const verifyPayment = async (sessionId: string) => {
+    const verifyPayment = async (sessionId: string, userId: string) => {
       try {
         const { data, error } = await supabase.functions.invoke('verify-payment', {
           body: { sessionId },
@@ -38,10 +38,16 @@ const Dashboard = () => {
 
         if (data?.success) {
           toast.success(`Payment successful! ${data.credits} credits added to your account.`);
-          refetchCredits();
+          await refetchCredits();
+          await fetchOrders(userId);
+          // Remove session_id from URL
+          window.history.replaceState({}, '', '/dashboard');
+        } else {
+          toast.error("Payment verification failed. Please contact support.");
         }
       } catch (error: any) {
         console.error("Error verifying payment:", error);
+        toast.error("Payment verification failed. Please contact support.");
       }
     };
 
@@ -50,16 +56,17 @@ const Dashboard = () => {
         navigate("/auth");
       } else {
         setUser(session.user);
-        fetchOrders(session.user.id);
-
+        
         // Check if returning from payment
         const sessionId = searchParams.get('session_id');
         if (sessionId) {
-          verifyPayment(sessionId);
+          verifyPayment(sessionId, session.user.id);
+        } else {
+          fetchOrders(session.user.id);
         }
       }
     });
-  }, [navigate, searchParams]);
+  }, [navigate, searchParams, refetchCredits]);
 
   const fetchOrders = async (userId: string) => {
     try {

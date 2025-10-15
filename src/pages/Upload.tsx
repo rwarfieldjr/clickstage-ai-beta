@@ -211,12 +211,8 @@ const Upload = () => {
 
       if (data?.url) {
         toast.success("Redirecting to payment...");
-        // Open Stripe checkout in new tab
-        window.open(data.url, '_blank');
-        // Redirect to dashboard after a short delay
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 1500);
+        // Redirect to Stripe checkout in the same tab
+        window.location.href = data.url;
       }
     } catch (error: any) {
       console.error("Checkout error:", error);
