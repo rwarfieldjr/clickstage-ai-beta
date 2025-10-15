@@ -106,6 +106,10 @@ serve(async (req) => {
     // Store order metadata
     const metadata: any = {
       staging_style: stagingStyle,
+      customer_name: contactInfo?.firstName && contactInfo?.lastName 
+        ? `${contactInfo.firstName} ${contactInfo.lastName}`
+        : user.user_metadata?.name || user.email?.split('@')[0] || 'Customer',
+      customer_email: user.email || '',
     };
     
     if (contactInfo) {

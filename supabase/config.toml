@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.add-credits]
 verify_jwt = true
+
+[functions.send-order-notification]
+verify_jwt = false
+
+[functions.verify-payment]
+verify_jwt = false

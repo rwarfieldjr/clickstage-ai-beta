@@ -92,6 +92,33 @@ serve(async (req) => {
 
     console.log(`Added ${photosCount} credits to user ${userId}. New balance: ${newCredits}`);
 
+    // Send notification emails
+    try {
+      const notificationResponse = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-order-notification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+        },
+        body: JSON.stringify({
+          sessionId,
+          customerName: session.metadata?.customer_name || 'Customer',
+          customerEmail: session.customer_details?.email || session.metadata?.customer_email,
+          photosCount,
+          amountPaid: session.amount_total ? session.amount_total / 100 : 0,
+          files: session.metadata?.files ? JSON.parse(session.metadata.files) : [],
+          stagingStyle: session.metadata?.staging_style,
+        }),
+      });
+
+      if (!notificationResponse.ok) {
+        console.error('Failed to send notification emails:', await notificationResponse.text());
+      }
+    } catch (notificationError) {
+      console.error('Error sending notification emails:', notificationError);
+      // Don't fail the payment verification if email fails
+    }
+
     return new Response(
       JSON.stringify({ success: true, credits: newCredits }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
