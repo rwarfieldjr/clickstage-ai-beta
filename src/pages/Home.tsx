@@ -227,32 +227,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-primary">
-              Why Choose ClickStagePro?
-            </h2>
-            <div className="space-y-6">
-              {[
-                "Professional AI staging technology",
-                "Multiple style options to match your vision",
-                "Fast turnaround time",
-                "High-resolution output",
-                "Secure file handling",
-                "Easy-to-use dashboard",
-              ].map((feature, index) => (
-                <div key={index} className="flex items-center gap-4">
-                  <CheckCircle className="w-6 h-6 text-accent flex-shrink-0" />
-                  <p className="text-lg">{feature}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
