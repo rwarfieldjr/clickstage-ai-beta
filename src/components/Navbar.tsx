@@ -4,12 +4,15 @@ import { Home, Upload, DollarSign, Mail, Image, HelpCircle, LayoutGrid, Users, U
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
-import cameraLogo from "@/assets/camera-logo-new.png";
+import logoLight from "@/assets/logo-light.png";
+import logoDark from "@/assets/logo-dark.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useTheme } from "@/hooks/use-theme";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
+  const { theme } = useTheme();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -30,8 +33,11 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-1">
-            <img src={cameraLogo} alt="ClickStage Pro" className="w-16 h-16 bg-gray-200 dark:bg-gray-700 p-2.5 rounded-xl" />
-            <div className="text-2xl font-bold text-primary">ClickStage Pro</div>
+            <img 
+              src={theme === 'dark' ? logoDark : logoLight} 
+              alt="ClickStage Pro" 
+              className="h-12 w-auto"
+            />
           </Link>
 
           <div className="hidden md:flex items-center space-x-6">
