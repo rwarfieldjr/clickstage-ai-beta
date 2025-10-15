@@ -7,11 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Input validation schema
+// Input validation schema - userId removed, will use JWT identity
 const AddCreditsSchema = z.object({
   stripePaymentId: z.string().min(1).max(200),
   credits: z.number().int().positive().max(10000),
-  userId: z.string().uuid(),
 });
 
 serve(async (req) => {
@@ -55,15 +54,10 @@ serve(async (req) => {
       );
     }
 
-    const { stripePaymentId, credits, userId } = validation.data;
+    const { stripePaymentId, credits } = validation.data;
 
-    // Verify authenticated user matches userId
-    if (userData.user.id !== userId) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized: Cannot modify other users' credits" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
-      );
-    }
+    // Use userId from authenticated JWT only - never from request body
+    const userId = userData.user.id;
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",

@@ -119,8 +119,13 @@ const Auth = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={6}
+                    minLength={10}
                   />
+                  {isSignUp && (
+                    <p className="text-xs text-muted-foreground">
+                      Password must be at least 10 characters
+                    </p>
+                  )}
                 </div>
                 <Button
                   type="submit"
