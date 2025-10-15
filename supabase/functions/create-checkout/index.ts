@@ -56,26 +56,36 @@ serve(async (req) => {
     const { priceId, contactInfo, files, stagingStyle, photosCount } = validation.data;
     logStep("Request validated", { priceId, hasContactInfo: !!contactInfo, fileCount: files?.length, stagingStyle, photosCount });
 
-    // Retrieve authenticated user
+    // Require authentication - no guest checkout allowed
     const authHeader = req.headers.get("Authorization");
-    let user = null;
-    let customerEmail = contactInfo?.email;
-
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const { data } = await supabaseClient.auth.getUser(token);
-      user = data.user;
-      if (user?.email) {
-        customerEmail = user.email;
-        logStep("Authenticated user found", { userId: user.id, email: user.email });
-      }
-    } else {
-      logStep("Guest checkout", { email: customerEmail });
+    
+    if (!authHeader) {
+      logStep("Authentication required - no guest checkout");
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
     }
 
+    const token = authHeader.replace("Bearer ", "");
+    const { data, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError || !data.user) {
+      logStep("Invalid authentication token");
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    const user = data.user;
+    const customerEmail = user.email;
+    
     if (!customerEmail) {
-      throw new Error("Email is required for checkout");
+      throw new Error("User email not available");
     }
+
+    logStep("Authenticated user found", { userId: user.id, email: user.email });
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {

@@ -56,10 +56,11 @@ const Upload = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
-        // Allow guest checkout, don't redirect
-      } else {
-        setUser(session.user);
+        toast.error("Please log in to upload photos");
+        navigate("/auth");
+        return;
       }
+      setUser(session.user);
     });
 
     // Get selected bundle from localStorage and find matching bundle by priceId
@@ -182,7 +183,7 @@ const Upload = () => {
       // Upload files to storage first
       const uploadPromises = files.map(async (file) => {
         const fileExt = file.name.split(".").pop();
-        const fileName = `${user?.id || 'guest'}/${Date.now()}.${fileExt}`;
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from("uploads")
