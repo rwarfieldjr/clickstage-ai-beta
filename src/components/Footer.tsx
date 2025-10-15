@@ -12,7 +12,7 @@ const Footer = () => {
               <img 
                 src={logoMain} 
                 alt="ClickStage Pro - Virtual Staging Powered by AI" 
-                className="h-16 w-auto"
+                className="h-12 w-auto"
               />
             </div>
             <p className="text-sm text-muted-foreground">
