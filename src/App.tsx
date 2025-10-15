@@ -25,6 +25,8 @@ import AdminUserDetail from "./pages/admin/AdminUserDetail";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
 import AdminSettings from "./pages/admin/AdminSettings";
+import Blog from "./pages/Blog";
+import VirtualStagingGuide from "./pages/blog/VirtualStagingGuide";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +58,8 @@ const App = () => (
           <Route path="/admin/orders" element={<AdminOrders />} />
           <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/virtual-staging-complete-guide" element={<VirtualStagingGuide />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

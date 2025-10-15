@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CheckCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SEO } from "@/components/SEO";
+import { productSchema, breadcrumbSchema } from "@/data/schema";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +13,21 @@ import { toast } from "sonner";
 const Pricing = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      breadcrumbSchema([
+        { name: "Home", url: "/" },
+        { name: "Pricing", url: "/pricing" }
+      ]),
+      productSchema(1, 10),
+      productSchema(5, 45),
+      productSchema(10, 85),
+      productSchema(20, 160),
+      productSchema(50, 375)
+    ]
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -89,6 +106,13 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title="Virtual Staging Pricing - Affordable Packages for Real Estate Agents"
+        description="Professional virtual staging starting at $10 per photo. Flexible packages for real estate agents and photographers. No expiration, 24-hour turnaround, MLS-compliant."
+        canonical="/pricing"
+        keywords="virtual staging pricing, affordable virtual staging, virtual staging packages, real estate staging cost, cheap virtual staging"
+        schema={schema}
+      />
       <Navbar />
 
       <main className="flex-1 py-20">

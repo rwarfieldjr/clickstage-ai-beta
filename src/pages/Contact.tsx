@@ -8,8 +8,21 @@ import { Mail, MapPin, Phone } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SEO } from "@/components/SEO";
+import { localBusinessSchema, breadcrumbSchema } from "@/data/schema";
 
 const Contact = () => {
+  const schema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      localBusinessSchema,
+      breadcrumbSchema([
+        { name: "Home", url: "/" },
+        { name: "Contact", url: "/contact" }
+      ])
+    ]
+  };
+
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -46,6 +59,13 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title="Contact ClickStage Pro - Virtual Staging Support & Inquiries"
+        description="Get in touch with ClickStage Pro for virtual staging inquiries, support, or partnership opportunities. Based in Greenville, SC, serving real estate agents nationwide."
+        canonical="/contact"
+        keywords="contact virtual staging, ClickStage Pro contact, virtual staging support, real estate staging inquiries"
+        schema={schema}
+      />
       <Navbar />
 
       <main className="flex-1 py-20 bg-secondary/30">

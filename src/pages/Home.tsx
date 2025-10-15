@@ -4,13 +4,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Upload, Palette, Download, CheckCircle, Clock, Users, Award } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SEO } from "@/components/SEO";
+import { organizationSchema, serviceSchema } from "@/data/schema";
 import heroBackground from "@/assets/hero-background-new.png";
 import livingBefore from "@/assets/hero-before-new.png";
 import livingAfter from "@/assets/hero-after.png";
 
 const Home = () => {
+  const schema = {
+    "@context": "https://schema.org",
+    "@graph": [organizationSchema, serviceSchema]
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title="Virtual Staging Services for Real Estate Agents & Photographers"
+        description="Transform listing photos with AI-powered virtual staging. Perfect for real estate agents and photographers. Upload → Stage → Sell faster with ClickStage Pro."
+        canonical="/"
+        keywords="virtual staging, virtual staging services, AI virtual staging, virtual staging for real estate, virtual staging for photographers, real estate photo enhancement"
+        schema={schema}
+      />
       <Navbar />
 
       {/* Hero Section */}
@@ -27,10 +41,13 @@ const Home = () => {
               <span className="text-sm md:text-base text-white/90">Advanced AI Technology</span>
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              Transform Empty Properties with AI Virtual Staging
+              Virtual Staging That Sells Homes Faster
             </h1>
+            <h2 className="text-2xl md:text-3xl mb-6 text-white/90">
+              For Agents • For Photographers • For Teams
+            </h2>
             <p className="text-lg md:text-xl mb-8 text-white/80 max-w-3xl mx-auto">
-              Powered by the latest AI breakthroughs in image generation - creating photorealistic staging that helps homes sell faster.
+              AI-powered virtual staging designed for real estate professionals. Upload your listing photos and get photorealistic staged images in 24 hours. MLS-compliant and proven to sell homes faster.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/pricing">

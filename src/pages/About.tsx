@@ -4,8 +4,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, DollarSign, Users, Award, MapPin } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SEO } from "@/components/SEO";
+import { localBusinessSchema, breadcrumbSchema } from "@/data/schema";
 
 const About = () => {
+  const schema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      localBusinessSchema,
+      breadcrumbSchema([
+        { name: "Home", url: "/" },
+        { name: "About", url: "/about" }
+      ])
+    ]
+  };
+
   const values = [
     {
       icon: Users,
@@ -31,6 +44,13 @@ const About = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title="About ClickStage Pro - Virtual Staging by Real Estate Professionals"
+        description="Founded by a real estate agent in Greenville, SC. Learn about our mission to make professional virtual staging accessible and affordable for all agents."
+        canonical="/about"
+        keywords="about virtual staging, ClickStage Pro, virtual staging company, Greenville SC virtual staging, real estate technology"
+        schema={schema}
+      />
       <Navbar />
 
       {/* Hero Section */}

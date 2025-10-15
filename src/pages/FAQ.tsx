@@ -1,5 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SEO } from "@/components/SEO";
+import { faqSchema } from "@/data/schema";
 import {
   Accordion,
   AccordionContent,
@@ -16,8 +18,12 @@ const FAQ = () => {
       icon: DollarSign,
       questions: [
         {
-          q: "How much does it cost?",
+          q: "How much does virtual staging cost?",
           a: "We offer flexible pricing bundles starting at $10 for a single photo. Our most popular package is the 10-photo bundle at $85 ($8.50 per photo), which saves you $15. Check out our pricing page for all available options and bulk discounts."
+        },
+        {
+          q: "What is virtual staging?",
+          a: "Virtual staging is the digital process of furnishing and decorating empty property photos. Using AI and professional design software, we add realistic furniture, decor, and styling to showcase a home's potential to buyers. It's a cost-effective alternative to traditional physical staging."
         },
         {
           q: "Do credits roll over?",
@@ -139,8 +145,23 @@ const FAQ = () => {
     }
   ];
 
+  // Flatten all FAQs for schema
+  const allFAQs = faqCategories.flatMap(cat => cat.questions.map(q => ({
+    question: q.q,
+    answer: q.a
+  })));
+
+  const schema = faqSchema(allFAQs);
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title="Virtual Staging FAQ - Common Questions About Virtual Staging Services"
+        description="Get answers to common questions about virtual staging. Learn about pricing, turnaround time, MLS compliance, and how virtual staging works for real estate."
+        canonical="/faq"
+        keywords="virtual staging FAQ, virtual staging questions, how does virtual staging work, MLS virtual staging rules, virtual staging turnaround"
+        schema={schema}
+      />
       <Navbar />
 
       <main className="flex-1">

@@ -4,6 +4,8 @@ import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { SEO } from "@/components/SEO";
+import { breadcrumbSchema } from "@/data/schema";
 
 import bedroomBefore from "@/assets/portfolio-bedroom-before.jpg";
 import bedroomAfter from "@/assets/portfolio-bedroom-after.jpg";
@@ -13,6 +15,11 @@ import diningBefore from "@/assets/portfolio-dining-before.jpg";
 import diningAfter from "@/assets/portfolio-dining-after.jpg";
 
 const Portfolio = () => {
+  const schema = breadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Portfolio", url: "/portfolio" }
+  ]);
+
   const transformations = [
     {
       title: "Master Bedroom Transformation",
@@ -36,6 +43,13 @@ const Portfolio = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title="Before and After Virtual Staging Portfolio - Real Examples"
+        description="See stunning virtual staging transformations. Real before and after examples showing how AI-powered staging helps homes sell faster. Professional results for real estate."
+        canonical="/portfolio"
+        keywords="virtual staging before and after, virtual staging examples, real estate staging portfolio, staged vs unstaged, virtual staging transformations"
+        schema={schema}
+      />
       <Navbar />
 
       <main className="flex-1">
