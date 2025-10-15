@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SEO } from "@/components/SEO";
 
 const NotFound = () => {
   const location = useLocation();
@@ -14,6 +15,11 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title="Page Not Found"
+        description="The page you're looking for doesn't exist. Return to ClickStage Pro's homepage to explore our virtual staging services for real estate professionals."
+        canonical="/404"
+      />
       <Navbar />
       <main className="flex-1 flex items-center justify-center bg-secondary/30">
         <div className="text-center px-4">
