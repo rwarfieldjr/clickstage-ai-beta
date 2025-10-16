@@ -153,9 +153,15 @@ const Portfolio = () => {
               />
               <div className="mt-8 text-center">
                 <h3 className="text-2xl font-bold mb-3">Home Office Transformation</h3>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground mb-6">
                   Converting an empty room into a functional and inspiring home office that showcases the potential of every space
                 </p>
+                <Link to="/place-order">
+                  <Button size="lg" className="bg-accent hover:bg-accent/90">
+                    Place Staging Order
+                    <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
