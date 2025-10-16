@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -17,16 +16,12 @@ const formSchema = z.object({
   lastName: z.string().trim().min(1, "Last name is required").max(100, "Last name must be less than 100 characters"),
   email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
   phoneNumber: z.string().trim().min(1, "Phone number is required").max(20, "Phone number must be less than 20 characters"),
-  transactionalConsent: z.boolean().optional(),
-  marketingConsent: z.boolean().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 const PlaceOrder = () => {
   const navigate = useNavigate();
-  const [transactionalConsent, setTransactionalConsent] = useState(false);
-  const [marketingConsent, setMarketingConsent] = useState(false);
   const [selectedBundle, setSelectedBundle] = useState<any>(null);
 
   useEffect(() => {
@@ -54,8 +49,6 @@ const PlaceOrder = () => {
     // Store contact info for next step (upload photos)
     localStorage.setItem('orderContactInfo', JSON.stringify({
       ...data,
-      transactionalConsent,
-      marketingConsent,
       selectedBundle,
     }));
     
@@ -163,40 +156,6 @@ const PlaceOrder = () => {
                   {errors.phoneNumber && (
                     <p className="text-sm text-destructive">{errors.phoneNumber.message}</p>
                   )}
-                </div>
-
-                {/* Transactional Consent */}
-                <div className="flex items-start space-x-3">
-                  <Checkbox
-                    id="transactionalConsent"
-                    checked={transactionalConsent}
-                    onCheckedChange={(checked) => setTransactionalConsent(checked as boolean)}
-                  />
-                  <div className="grid gap-1.5 leading-none">
-                    <label
-                      htmlFor="transactionalConsent"
-                      className="text-sm leading-relaxed cursor-pointer"
-                    >
-                      By checking this box, I consent to receive transactional messages related to my account, orders, or services I have requested. These messages may include appointment reminders, order confirmations, and account notifications among others. Message frequency may vary. Message & Data rates may apply. Reply HELP for help or STOP to opt-out.
-                    </label>
-                  </div>
-                </div>
-
-                {/* Marketing Consent */}
-                <div className="flex items-start space-x-3">
-                  <Checkbox
-                    id="marketingConsent"
-                    checked={marketingConsent}
-                    onCheckedChange={(checked) => setMarketingConsent(checked as boolean)}
-                  />
-                  <div className="grid gap-1.5 leading-none">
-                    <label
-                      htmlFor="marketingConsent"
-                      className="text-sm leading-relaxed cursor-pointer"
-                    >
-                      By checking this box, I consent to receive marketing and promotional messages, including special offers, discounts, new product updates among others. Message frequency may vary. Message & Data rates may apply. Reply HELP for help or STOP to opt-out.
-                    </label>
-                  </div>
                 </div>
 
                 <Button
