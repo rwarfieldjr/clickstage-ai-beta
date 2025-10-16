@@ -72,12 +72,17 @@ const Portfolio = () => {
         <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
-              <BeforeAfterSlider
-                beforeImage={transformations[0].before}
-                afterImage={transformations[0].after}
-                beforeAlt="Empty master bedroom"
-                afterAlt="Staged master bedroom"
-              />
+              <div className="relative">
+                <BeforeAfterSlider
+                  beforeImage={transformations[0].before}
+                  afterImage={transformations[0].after}
+                  beforeAlt="Empty master bedroom"
+                  afterAlt="Staged master bedroom"
+                />
+                <div className="absolute -top-4 -right-4 text-sm text-muted-foreground italic">
+                  * Scandinavian style
+                </div>
+              </div>
               <div className="mt-8 text-center">
                 <h2 className="text-3xl font-bold mb-3">{transformations[0].title}</h2>
                 <p className="text-lg text-muted-foreground mb-6">
