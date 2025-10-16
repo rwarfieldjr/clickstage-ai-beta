@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEO } from "@/components/SEO";
@@ -174,6 +174,80 @@ const Pricing = () => {
                 </Card>
               ))}
             </div>
+
+            {/* Our Commitment Section */}
+            <section className="mt-20">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                  Our Commitment to You
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  We stand behind every photo we stage with industry-leading guarantees
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                <Card className="bg-card border-border">
+                  <CardContent className="pt-8 pb-8">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <RefreshCw className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold mb-3">Unlimited Revisions</h3>
+                        <p className="text-muted-foreground mb-6">
+                          Not happy with a result? We'll keep refining until it's perfect. No limits, no extra charges.
+                        </p>
+                      </div>
+                    </div>
+                    <ul className="space-y-3 ml-16">
+                      <li className="flex items-start gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <span className="text-muted-foreground">No revision limits</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <span className="text-muted-foreground">No extra charges</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <span className="text-muted-foreground">Fast turnaround on changes</span>
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-card border-border">
+                  <CardContent className="pt-8 pb-8">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold mb-3">100% Satisfaction Guarantee</h3>
+                        <p className="text-muted-foreground mb-6">
+                          We've got you. Message us within 30 days of purchase and we'll keep revising—free—until you love the results.
+                        </p>
+                      </div>
+                    </div>
+                    <ul className="space-y-3 ml-16">
+                      <li className="flex items-start gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <span className="text-muted-foreground">30-day guarantee window</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <span className="text-muted-foreground">Free unlimited revisions</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <span className="text-muted-foreground">Message us through your order</span>
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            </section>
           </div>
         </div>
       </main>
