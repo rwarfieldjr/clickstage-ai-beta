@@ -19,6 +19,8 @@ import declutterBefore from "@/assets/declutter-before.jpg";
 import declutterAfter from "@/assets/declutter-after.png";
 import bathroomBefore from "@/assets/bathroom-before.jpg";
 import bathroomAfter from "@/assets/bathroom-after.png";
+import paintBefore from "@/assets/paint-before.png";
+import paintAfter from "@/assets/paint-after.png";
 
 const Portfolio = () => {
   const schema = breadcrumbSchema([
@@ -62,6 +64,12 @@ const Portfolio = () => {
       description: "Adding tasteful decor touches transforms a plain bathroom into a spa-like retreat that appeals to buyers",
       before: bathroomBefore,
       after: bathroomAfter,
+    },
+    {
+      title: "Paint Transformation",
+      description: "Do you ever advise your clients to repaint a room or even the entire house? Want to show them what it would look like? Now you can! We can even match specific paint color codes!",
+      before: paintBefore,
+      after: paintAfter,
     },
   ];
 
@@ -232,6 +240,36 @@ const Portfolio = () => {
                 <h3 className="text-xl font-bold mb-2">{transformations[5].title}</h3>
                 <p className="text-muted-foreground text-sm">
                   {transformations[5].description}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Paint Section */}
+        <section className="py-16 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="rounded-lg overflow-hidden">
+                  <img 
+                    src={transformations[6].before} 
+                    alt="Living room with neutral paint"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="rounded-lg overflow-hidden">
+                  <img 
+                    src={transformations[6].after} 
+                    alt="Living room with blue paint transformation"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+              <div className="text-center">
+                <h3 className="text-xl font-bold mb-2">{transformations[6].title}</h3>
+                <p className="text-muted-foreground text-sm">
+                  {transformations[6].description}
                 </p>
               </div>
             </div>
