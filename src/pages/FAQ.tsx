@@ -53,7 +53,7 @@ const FAQ = () => {
         },
         {
           q: "What's included with each photo?",
-          a: "Each staged photo includes professional furniture placement, decor styling, appropriate lighting adjustments, and one round of minor revisions at no extra cost."
+          a: "Each staged photo includes professional furniture placement, decor styling, and unlimited photo revisions at no extra cost."
         },
         {
           q: "What counts as a 'minor revision'?",
