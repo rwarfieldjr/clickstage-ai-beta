@@ -34,10 +34,6 @@ const FAQ = () => {
           a: "No, one-time bundles never expire. Once you purchase a bundle, those credits stay in your account indefinitely until you use them for staging projects."
         },
         {
-          q: "Can I change my plan mid-cycle?",
-          a: "Yes, you can upgrade or downgrade your plan at any time. When upgrading, you'll be charged the prorated difference. When downgrading, the new rate will apply at your next billing cycle."
-        },
-        {
           q: "Can I share credits with my team?",
           a: "Team credit sharing is available on our Premium plan and above. Contact us to set up a team account where multiple users can access and use shared credits."
         }
