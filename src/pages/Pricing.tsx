@@ -147,17 +147,19 @@ const Pricing = () => {
                     <CardDescription className="text-3xl font-bold text-primary mt-2">
                       {tier.price}
                     </CardDescription>
-                    <p className="text-sm text-muted-foreground">{tier.perPhoto}</p>
-                    {tier.competitive && (
-                      <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                        {tier.competitive}
-                      </p>
-                    )}
-                    {tier.savings && (
-                      <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                        {tier.savings}
-                      </p>
-                    )}
+                    <div className="min-h-[4rem]">
+                      <p className="text-sm text-muted-foreground">{tier.perPhoto}</p>
+                      {tier.competitive && (
+                        <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                          {tier.competitive}
+                        </p>
+                      )}
+                      {tier.savings && (
+                        <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                          {tier.savings}
+                        </p>
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent className="flex-grow flex flex-col">
                     <p className="text-sm text-muted-foreground mb-4">{tier.description}</p>
