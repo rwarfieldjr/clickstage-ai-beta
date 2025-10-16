@@ -49,6 +49,11 @@ const PlaceOrder = () => {
   const onSubmit = async (data: FormData) => {
     try {
       // Save abandoned checkout to database
+      // Convert price string (e.g., "$45") to numeric value
+      const priceValue = selectedBundle?.price 
+        ? parseFloat(selectedBundle.price.replace('$', ''))
+        : null;
+
       const { data: checkoutData, error } = await supabase
         .from('abandoned_checkouts')
         .insert({
@@ -59,7 +64,7 @@ const PlaceOrder = () => {
           transactional_consent: transactionalConsent,
           marketing_consent: marketingConsent,
           bundle_name: selectedBundle?.name,
-          bundle_price: selectedBundle?.price,
+          bundle_price: priceValue,
           bundle_photos: selectedBundle?.photos,
         })
         .select()
