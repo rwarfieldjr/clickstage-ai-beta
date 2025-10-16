@@ -21,6 +21,8 @@ import bathroomBefore from "@/assets/bathroom-before.jpg";
 import bathroomAfter from "@/assets/bathroom-after.png";
 import paintBefore from "@/assets/paint-before.png";
 import paintAfter from "@/assets/paint-after.png";
+import apartmentBefore from "@/assets/apartment-before.jpg";
+import apartmentAfter from "@/assets/apartment-after.png";
 
 const Portfolio = () => {
   const schema = breadcrumbSchema([
@@ -70,6 +72,12 @@ const Portfolio = () => {
       description: "Do you ever advise your clients to repaint a room or even the entire house? Want to show them what it would look like? Now you can! We can even match specific paint color codes!",
       before: paintBefore,
       after: paintAfter,
+    },
+    {
+      title: "Apartment Staging Transformation",
+      description: "Help apartment managers lease vacant units faster with professional staging. Transform empty apartments into move-in ready spaces that attract quality tenants and command higher rents, reducing vacancy periods for property management companies.",
+      before: apartmentBefore,
+      after: apartmentAfter,
     },
   ];
 
@@ -270,6 +278,36 @@ const Portfolio = () => {
                 <h3 className="text-xl font-bold mb-2">{transformations[6].title}</h3>
                 <p className="text-muted-foreground text-sm">
                   {transformations[6].description}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Apartment Staging Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="rounded-lg overflow-hidden">
+                  <img 
+                    src={transformations[7].before} 
+                    alt="Empty apartment living room"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="rounded-lg overflow-hidden">
+                  <img 
+                    src={transformations[7].after} 
+                    alt="Staged apartment living room"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+              <div className="text-center">
+                <h3 className="text-xl font-bold mb-2">{transformations[7].title}</h3>
+                <p className="text-muted-foreground text-sm">
+                  {transformations[7].description}
                 </p>
               </div>
             </div>
