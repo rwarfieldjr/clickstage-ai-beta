@@ -263,17 +263,17 @@ const Home = () => {
               />
               
               <BeforeAfterSlider
-                beforeImage={livingBefore2}
-                afterImage={livingAfter2}
-                beforeAlt="Empty living room with fireplace before staging"
-                afterAlt="Beautifully staged living room with fireplace"
-              />
-              
-              <BeforeAfterSlider
                 beforeImage={bedroomBefore}
                 afterImage={bedroomAfter}
                 beforeAlt="Empty bedroom before staging"
                 afterAlt="Beautifully staged bedroom"
+              />
+              
+              <BeforeAfterSlider
+                beforeImage={livingBefore2}
+                afterImage={livingAfter2}
+                beforeAlt="Empty living room with fireplace before staging"
+                afterAlt="Beautifully staged living room with fireplace"
               />
             </div>
             
