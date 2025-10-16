@@ -3,9 +3,16 @@ import Footer from "@/components/Footer";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ZoomIn } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { breadcrumbSchema } from "@/data/schema";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import bedroomBefore from "@/assets/new-bedroom-before.jpg";
 import bedroomAfter from "@/assets/new-bedroom-after.png";
@@ -25,6 +32,8 @@ import apartmentBefore from "@/assets/apartment-before.jpg";
 import apartmentAfter from "@/assets/apartment-after.png";
 
 const Portfolio = () => {
+  const [selectedImage, setSelectedImage] = useState<{ title: string; image: string; type: 'before' | 'after' } | null>(null);
+
   const schema = breadcrumbSchema([
     { name: "Home", url: "/" },
     { name: "Portfolio", url: "/portfolio" }
@@ -190,27 +199,49 @@ const Portfolio = () => {
         <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="rounded-lg overflow-hidden">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold mb-3">{transformations[5].title}</h3>
+                <p className="text-muted-foreground">
+                  {transformations[5].description}
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div 
+                  className="group rounded-lg overflow-hidden relative cursor-pointer border border-border"
+                  onClick={() => setSelectedImage({ title: transformations[5].title, image: transformations[5].before, type: 'before' })}
+                >
                   <img 
                     src={transformations[5].before} 
                     alt="Plain bathroom before staging"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="bg-white/90 rounded-full p-3 transform transition-transform group-hover:scale-110">
+                      <ZoomIn className="w-6 h-6 text-primary" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-3 left-3 bg-background/90 px-3 py-1 rounded-full text-sm font-medium">
+                    Before
+                  </div>
                 </div>
-                <div className="rounded-lg overflow-hidden">
+                <div 
+                  className="group rounded-lg overflow-hidden relative cursor-pointer border border-border"
+                  onClick={() => setSelectedImage({ title: transformations[5].title, image: transformations[5].after, type: 'after' })}
+                >
                   <img 
                     src={transformations[5].after} 
                     alt="Styled bathroom after staging"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="bg-white/90 rounded-full p-3 transform transition-transform group-hover:scale-110">
+                      <ZoomIn className="w-6 h-6 text-primary" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-3 left-3 bg-background/90 px-3 py-1 rounded-full text-sm font-medium">
+                    After
+                  </div>
                 </div>
-              </div>
-              <div className="text-center">
-                <h3 className="text-xl font-bold mb-2">{transformations[5].title}</h3>
-                <p className="text-muted-foreground text-sm">
-                  {transformations[5].description}
-                </p>
               </div>
             </div>
           </div>
@@ -220,27 +251,49 @@ const Portfolio = () => {
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="rounded-lg overflow-hidden">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold mb-3">{transformations[6].title}</h3>
+                <p className="text-muted-foreground">
+                  {transformations[6].description}
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div 
+                  className="group rounded-lg overflow-hidden relative cursor-pointer border border-border"
+                  onClick={() => setSelectedImage({ title: transformations[6].title, image: transformations[6].before, type: 'before' })}
+                >
                   <img 
                     src={transformations[6].before} 
                     alt="Living room with neutral paint"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="bg-white/90 rounded-full p-3 transform transition-transform group-hover:scale-110">
+                      <ZoomIn className="w-6 h-6 text-primary" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-3 left-3 bg-background/90 px-3 py-1 rounded-full text-sm font-medium">
+                    Before
+                  </div>
                 </div>
-                <div className="rounded-lg overflow-hidden">
+                <div 
+                  className="group rounded-lg overflow-hidden relative cursor-pointer border border-border"
+                  onClick={() => setSelectedImage({ title: transformations[6].title, image: transformations[6].after, type: 'after' })}
+                >
                   <img 
                     src={transformations[6].after} 
                     alt="Living room with blue paint transformation"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="bg-white/90 rounded-full p-3 transform transition-transform group-hover:scale-110">
+                      <ZoomIn className="w-6 h-6 text-primary" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-3 left-3 bg-background/90 px-3 py-1 rounded-full text-sm font-medium">
+                    After
+                  </div>
                 </div>
-              </div>
-              <div className="text-center">
-                <h3 className="text-xl font-bold mb-2">{transformations[6].title}</h3>
-                <p className="text-muted-foreground text-sm">
-                  {transformations[6].description}
-                </p>
               </div>
             </div>
           </div>
@@ -250,27 +303,49 @@ const Portfolio = () => {
         <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="rounded-lg overflow-hidden">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold mb-3">{transformations[7].title}</h3>
+                <p className="text-muted-foreground">
+                  {transformations[7].description}
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div 
+                  className="group rounded-lg overflow-hidden relative cursor-pointer border border-border"
+                  onClick={() => setSelectedImage({ title: transformations[7].title, image: transformations[7].before, type: 'before' })}
+                >
                   <img 
                     src={transformations[7].before} 
                     alt="Empty apartment living room"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="bg-white/90 rounded-full p-3 transform transition-transform group-hover:scale-110">
+                      <ZoomIn className="w-6 h-6 text-primary" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-3 left-3 bg-background/90 px-3 py-1 rounded-full text-sm font-medium">
+                    Before
+                  </div>
                 </div>
-                <div className="rounded-lg overflow-hidden">
+                <div 
+                  className="group rounded-lg overflow-hidden relative cursor-pointer border border-border"
+                  onClick={() => setSelectedImage({ title: transformations[7].title, image: transformations[7].after, type: 'after' })}
+                >
                   <img 
                     src={transformations[7].after} 
                     alt="Staged apartment living room"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="bg-white/90 rounded-full p-3 transform transition-transform group-hover:scale-110">
+                      <ZoomIn className="w-6 h-6 text-primary" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-3 left-3 bg-background/90 px-3 py-1 rounded-full text-sm font-medium">
+                    After
+                  </div>
                 </div>
-              </div>
-              <div className="text-center">
-                <h3 className="text-xl font-bold mb-2">{transformations[7].title}</h3>
-                <p className="text-muted-foreground text-sm">
-                  {transformations[7].description}
-                </p>
               </div>
             </div>
           </div>
@@ -305,6 +380,23 @@ const Portfolio = () => {
       </main>
 
       <Footer />
+
+      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="max-w-5xl w-full">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              {selectedImage?.title} - {selectedImage?.type === 'before' ? 'Before' : 'After'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full">
+            <img
+              src={selectedImage?.image}
+              alt={`${selectedImage?.title} ${selectedImage?.type}`}
+              className="w-full h-auto rounded-lg"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
