@@ -15,6 +15,8 @@ import diningBefore from "@/assets/dining-room-before.jpg";
 import diningAfter from "@/assets/dining-room-after.png";
 import exteriorDay from "@/assets/exterior-day.jpg";
 import exteriorDusk from "@/assets/exterior-dusk.png";
+import declutterBefore from "@/assets/declutter-before.jpg";
+import declutterAfter from "@/assets/declutter-after.png";
 
 const Portfolio = () => {
   const schema = breadcrumbSchema([
@@ -46,6 +48,12 @@ const Portfolio = () => {
       description: "Dramatic exterior enhancement that transforms ordinary daytime photos into stunning twilight scenes with emotional appeal",
       before: exteriorDay,
       after: exteriorDusk,
+    },
+    {
+      title: "De-Clutter Transformation",
+      description: "Sometimes the clients forget or don't think to move items for before the photographer arrives. We can handle it with our De-Clutter option!",
+      before: declutterBefore,
+      after: declutterAfter,
     },
   ];
 
@@ -167,6 +175,32 @@ const Portfolio = () => {
                 <h3 className="text-2xl font-bold mb-3">{transformations[3].title}</h3>
                 <p className="text-muted-foreground">
                   {transformations[3].description}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* De-Clutter Section */}
+        <section className="py-16 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">Digital De-Cluttering</h2>
+                <p className="text-lg text-muted-foreground">
+                  Perfect for when clients forget to tidy up before the photographer arrives
+                </p>
+              </div>
+              <BeforeAfterSlider
+                beforeImage={transformations[4].before}
+                afterImage={transformations[4].after}
+                beforeAlt="Cluttered laundry room"
+                afterAlt="De-cluttered laundry room"
+              />
+              <div className="mt-8 text-center">
+                <h3 className="text-2xl font-bold mb-3">{transformations[4].title}</h3>
+                <p className="text-muted-foreground">
+                  {transformations[4].description}
                 </p>
               </div>
             </div>
