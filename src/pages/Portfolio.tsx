@@ -22,6 +22,8 @@ import diningBefore from "@/assets/dining-room-before.jpg";
 import diningAfter from "@/assets/dining-room-after.png";
 import portfolioLivingBefore from "@/assets/portfolio-living-before.jpg";
 import portfolioLivingAfter from "@/assets/portfolio-living-after.png";
+import studyBefore from "@/assets/study-before.jpg";
+import studyAfter from "@/assets/study-after.png";
 import exteriorDay from "@/assets/exterior-day.jpg";
 import exteriorDusk from "@/assets/exterior-dusk.png";
 import declutterBefore from "@/assets/declutter-before.jpg";
@@ -133,6 +135,26 @@ const Portfolio = () => {
                 <h3 className="text-2xl font-bold mb-3">Living Room Transformation</h3>
                 <p className="text-muted-foreground">
                   Transforming an empty living space into a warm, inviting area that helps buyers envision their ideal home
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Study/Office Transformation */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">
+              <BeforeAfterSlider
+                beforeImage={studyBefore}
+                afterImage={studyAfter}
+                beforeAlt="Empty study before staging"
+                afterAlt="Beautifully staged home office"
+              />
+              <div className="mt-8 text-center">
+                <h3 className="text-2xl font-bold mb-3">Home Office Transformation</h3>
+                <p className="text-muted-foreground">
+                  Converting an empty room into a functional and inspiring home office that showcases the potential of every space
                 </p>
               </div>
             </div>
