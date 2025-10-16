@@ -148,7 +148,7 @@ export type Database = {
           created_at: string
           credits_used: number | null
           id: string
-          order_number: number
+          order_number: string
           original_image_url: string
           staged_image_url: string | null
           staging_style: string
@@ -161,7 +161,7 @@ export type Database = {
           created_at?: string
           credits_used?: number | null
           id?: string
-          order_number?: number
+          order_number?: string
           original_image_url: string
           staged_image_url?: string | null
           staging_style: string
@@ -174,7 +174,7 @@ export type Database = {
           created_at?: string
           credits_used?: number | null
           id?: string
-          order_number?: number
+          order_number?: string
           original_image_url?: string
           staged_image_url?: string | null
           staging_style?: string
@@ -317,6 +317,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_order_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
