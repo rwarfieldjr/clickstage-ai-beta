@@ -9,8 +9,8 @@ import { breadcrumbSchema } from "@/data/schema";
 
 import bedroomBefore from "@/assets/new-bedroom-before.jpg";
 import bedroomAfter from "@/assets/new-bedroom-after.png";
-import livingBefore from "@/assets/portfolio-living-before.jpg";
-import livingAfter from "@/assets/portfolio-living-after.jpg";
+import livingBefore from "@/assets/living-room-before.jpg";
+import livingAfter from "@/assets/living-room-after.png";
 import diningBefore from "@/assets/portfolio-dining-before.jpg";
 import diningAfter from "@/assets/portfolio-dining-after.jpg";
 
@@ -28,8 +28,8 @@ const Portfolio = () => {
       after: bedroomAfter,
     },
     {
-      title: "Living Room & Kitchen Transformation",
-      description: "Converting an empty open-plan space into a warm, inviting living area that showcases the home's potential",
+      title: "Living Room Transformation",
+      description: "Transforming an empty living space into a warm, inviting area that helps buyers envision their ideal home",
       before: livingBefore,
       after: livingAfter,
     },
