@@ -45,11 +45,11 @@ const FAQ = () => {
       questions: [
         {
           q: "What's the standard turnaround time?",
-          a: "Standard turnaround is 24-48 hours from when you submit your photos. Most orders are completed within 24 hours during business days."
+          a: "Most orders are completed within 24 hours of when you submit your photos. We do have rush delivery available for same business day for $5 extra per photo. Check rush delivery at checkout for that option."
         },
         {
           q: "Do you offer rush delivery?",
-          a: "Yes! Rush delivery (12 hours or less) is available for an additional fee. Contact us before placing your order to arrange expedited service."
+          a: "Yes! Rush delivery (same business day) is available for an additional $5 per photo. Simply select the rush delivery option at checkout when placing your order."
         },
         {
           q: "What's included with each photo?",
