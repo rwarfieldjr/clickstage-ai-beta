@@ -9,6 +9,8 @@ import { organizationSchema, serviceSchema } from "@/data/schema";
 import heroBackground from "@/assets/hero-background-new.png";
 import livingBefore from "@/assets/hero-before-new.png";
 import livingAfter from "@/assets/hero-after.png";
+import livingBefore2 from "@/assets/living-room-before-2.jpg";
+import livingAfter2 from "@/assets/living-room-after-2.png";
 
 const Home = () => {
   const schema = {
@@ -183,6 +185,23 @@ const Home = () => {
                 <img 
                   src={livingAfter} 
                   alt="Beautifully staged living room" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="rounded-xl overflow-hidden shadow-custom-lg">
+                <img 
+                  src={livingBefore2} 
+                  alt="Empty living room with fireplace before staging" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="rounded-xl overflow-hidden shadow-custom-lg">
+                <img 
+                  src={livingAfter2} 
+                  alt="Beautifully staged living room with fireplace" 
                   className="w-full h-full object-cover"
                 />
               </div>
