@@ -10,6 +10,7 @@ const corsHeaders = {
 // Input validation schema
 const NotificationSchema = z.object({
   sessionId: z.string().min(1),
+  orderNumber: z.number().int().positive().optional(),
   customerName: z.string().min(1),
   customerEmail: z.string().email(),
   photosCount: z.number().int().positive(),
@@ -59,7 +60,10 @@ serve(async (req) => {
       );
     }
 
-    const { sessionId, customerName, customerEmail, photosCount, amountPaid, files, stagingStyle } = validation.data;
+    const { sessionId, orderNumber, customerName, customerEmail, photosCount, amountPaid, files, stagingStyle } = validation.data;
+    
+    // Use orderNumber if provided, otherwise fallback to sessionId slice
+    const displayOrderNumber = orderNumber || sessionId.slice(-20);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     
@@ -89,7 +93,7 @@ serve(async (req) => {
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;"><strong>Order Number:</strong></td>
-                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;">#${sessionId.slice(-20)}</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;">#${displayOrderNumber}</td>
               </tr>
               ${stagingStyle ? `
               <tr>
@@ -138,7 +142,7 @@ serve(async (req) => {
 
     await sendResendEmail(
       [customerEmail],
-      `Order Confirmation #${sessionId.slice(-20)} - ClickStage Pro`,
+      `Order Confirmation #${displayOrderNumber} - ClickStage Pro`,
       customerEmailHtml,
       "ClickStage Pro <onboarding@resend.dev>"
     );
@@ -151,7 +155,7 @@ serve(async (req) => {
         </div>
         
         <div style="padding: 30px; background: #1f2937; color: white;">
-          <h2 style="color: #fbbf24; margin-top: 0;">Order #${sessionId.slice(-20)}</h2>
+          <h2 style="color: #fbbf24; margin-top: 0;">Order #${displayOrderNumber}</h2>
           
           <div style="background: #374151; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <p style="margin: 5px 0;"><strong>Customer:</strong> ${customerName}</p>
@@ -196,7 +200,7 @@ serve(async (req) => {
 
     await sendResendEmail(
       ["rwarfieldjr@gmail.com", "RiaSiangioKW@gmail.com"],
-      `NEW ORDER #${sessionId.slice(-20)} - Action Required`,
+      `NEW ORDER #${displayOrderNumber} - Action Required`,
       adminEmailHtml,
       "ClickStage Pro Orders <onboarding@resend.dev>"
     );

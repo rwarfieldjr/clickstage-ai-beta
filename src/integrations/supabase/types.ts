@@ -145,6 +145,7 @@ export type Database = {
           created_at: string
           credits_used: number | null
           id: string
+          order_number: number
           original_image_url: string
           staged_image_url: string | null
           staging_style: string
@@ -157,6 +158,7 @@ export type Database = {
           created_at?: string
           credits_used?: number | null
           id?: string
+          order_number?: number
           original_image_url: string
           staged_image_url?: string | null
           staging_style: string
@@ -169,6 +171,7 @@ export type Database = {
           created_at?: string
           credits_used?: number | null
           id?: string
+          order_number?: number
           original_image_url?: string
           staged_image_url?: string | null
           staging_style?: string
