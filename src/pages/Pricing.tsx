@@ -166,7 +166,7 @@ const Pricing = () => {
                       size="lg"
                       onClick={() => handleSelectPlan(tier.name, tier.priceId, tier.credits)}
                     >
-                      Select {tier.name} Bundle
+                      Select {tier.name}
                     </Button>
                   </CardContent>
                 </Card>
