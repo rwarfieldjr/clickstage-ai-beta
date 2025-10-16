@@ -140,7 +140,7 @@ const About = () => {
               Join thousands of agents who trust ClickStagePro to make their properties stand out online.
             </p>
             <div className="flex justify-center">
-              <Link to="/place-order">
+              <Link to="/pricing">
                 <Button size="lg" className="text-lg px-8 bg-accent hover:bg-accent/90">
                   Place Staging Order
                   <ArrowRight className="ml-2 w-5 h-5" />
