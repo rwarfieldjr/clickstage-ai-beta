@@ -85,7 +85,7 @@ const About = () => {
               </p>
               
               <p className="text-lg text-foreground/80 leading-relaxed mb-6">
-                Big staging companies charge thousands of dollars and often price out smaller agents or homes. But with today's technology, there's no reason staging should be a luxury. Our virtual staging solutions give agents a powerful, affordable tool to compete at the highest level—without breaking the budget.
+                Large staging companies typically charge two or three times more — yet deliver a lower-quality product. But with today's technology, there's no reason staging should be a luxury. Our virtual staging solutions give agents a powerful, affordable tool to compete at the highest level—without breaking the budget.
               </p>
               
               <p className="text-lg text-foreground/80 leading-relaxed">
