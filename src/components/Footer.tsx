@@ -60,7 +60,27 @@ const Footer = () => {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/about" className="text-muted-foreground hover:text-accent transition-smooth">
-                  About Us
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link to="/portfolio" className="text-muted-foreground hover:text-accent transition-smooth">
+                  Portfolio
+                </Link>
+              </li>
+              <li>
+                <Link to="/styles" className="text-muted-foreground hover:text-accent transition-smooth">
+                  Styles
+                </Link>
+              </li>
+              <li>
+                <Link to="/pricing" className="text-muted-foreground hover:text-accent transition-smooth">
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link to="/faq" className="text-muted-foreground hover:text-accent transition-smooth">
+                  FAQ
                 </Link>
               </li>
               <li>
