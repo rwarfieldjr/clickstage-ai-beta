@@ -56,10 +56,6 @@ const FAQ = () => {
           a: "Each staged photo includes professional furniture placement, decor styling, and unlimited photo revisions at no extra cost."
         },
         {
-          q: "What counts as a 'minor revision'?",
-          a: "Minor revisions include adjusting furniture placement, changing decor items, or modifying colors. Major changes like completely different furniture styles or room layouts may require additional credits."
-        },
-        {
           q: "How do I submit photos?",
           a: "Simply log in to your dashboard, click 'Upload,' select your photos, choose your preferred staging style, and submit. You'll receive an email notification when your staged photos are ready."
         }
