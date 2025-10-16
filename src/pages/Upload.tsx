@@ -55,16 +55,7 @@ const Upload = () => {
   ];
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        toast.error("Please log in to upload photos");
-        navigate("/auth");
-        return;
-      }
-      setUser(session.user);
-    });
-
-    // Get selected bundle from localStorage and find matching bundle by priceId
+    // Check for selected bundle from localStorage (from place-order page)
     const orderData = localStorage.getItem('orderContactInfo');
     if (orderData) {
       const parsedData = JSON.parse(orderData);
@@ -75,6 +66,13 @@ const Upload = () => {
         }
       }
     }
+
+    // Check if user is already logged in (optional)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setUser(session.user);
+      }
+    });
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,7 +171,14 @@ const Upload = () => {
 
     try {
       // Get contact info from localStorage (from place-order page)
-      const contactInfo = JSON.parse(localStorage.getItem('orderContactInfo') || '{}');
+      const orderContactInfo = localStorage.getItem('orderContactInfo');
+      if (!orderContactInfo) {
+        toast.error("Please start from the pricing page to place an order");
+        navigate("/pricing");
+        return;
+      }
+      
+      const contactInfo = JSON.parse(orderContactInfo);
       
       // Find the selected bundle
       const bundle = bundles.find(b => b.id === selectedBundle);
@@ -181,10 +186,14 @@ const Upload = () => {
         throw new Error("Selected bundle not found");
       }
 
-      // Upload files to storage first
+      // Generate a unique session ID for this upload
+      const sessionId = crypto.randomUUID();
+
+      // Upload files to temporary storage (public bucket, anyone can upload)
+      toast.loading("Uploading photos...");
       const uploadPromises = files.map(async (file) => {
         const fileExt = file.name.split(".").pop();
-        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+        const fileName = `temp/${sessionId}/${crypto.randomUUID()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from("original-images")
@@ -196,15 +205,22 @@ const Upload = () => {
       });
 
       const uploadedFiles = await Promise.all(uploadPromises);
+      toast.dismiss();
 
-      // Create checkout session
+      // Create checkout session with file references
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           priceId: bundle.priceId,
-          contactInfo: contactInfo,
+          contactInfo: {
+            email: contactInfo.email,
+            firstName: contactInfo.firstName,
+            lastName: contactInfo.lastName,
+            phoneNumber: contactInfo.phoneNumber,
+          },
           files: uploadedFiles,
           stagingStyle: stagingStyle,
-          photosCount: bundle.photos, // Send the number of credits to be added
+          photosCount: bundle.photos,
+          sessionId: sessionId,
         },
       });
 
@@ -212,7 +228,6 @@ const Upload = () => {
 
       if (data?.url) {
         toast.success("Redirecting to payment...");
-        // Redirect to Stripe checkout in the same tab
         window.location.href = data.url;
       }
     } catch (error: any) {
@@ -231,9 +246,33 @@ const Upload = () => {
         <div className="container mx-auto px-4">
           <Card className="max-w-3xl mx-auto shadow-custom-lg">
             <CardHeader>
+              {/* Progress Steps */}
+              <div className="flex items-center justify-center gap-4 mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold">
+                    ✓
+                  </div>
+                  <span className="text-sm font-medium text-primary">Contact Info</span>
+                </div>
+                <div className="w-12 h-0.5 bg-border"></div>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center text-sm font-semibold">
+                    2
+                  </div>
+                  <span className="text-sm font-medium text-accent">Upload Photos</span>
+                </div>
+                <div className="w-12 h-0.5 bg-border"></div>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-semibold">
+                    3
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground">Payment</span>
+                </div>
+              </div>
+
               <CardTitle className="text-2xl">Upload Your Photos</CardTitle>
               <CardDescription>
-                Upload property photos and select your preferred staging style
+                Upload property photos and select your preferred staging style. You'll complete payment in the next step.
                 {user && <span className="block mt-2 font-medium text-accent">Available Credits: {credits}</span>}
               </CardDescription>
             </CardHeader>

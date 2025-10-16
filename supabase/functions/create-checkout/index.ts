@@ -25,6 +25,7 @@ const CreateCheckoutSchema = z.object({
   files: z.array(z.string().max(500)).max(100).optional(),
   stagingStyle: z.string().max(50).optional(),
   photosCount: z.number().int().positive().max(1000),
+  sessionId: z.string().uuid().optional(),
 });
 
 serve(async (req) => {
@@ -53,8 +54,8 @@ serve(async (req) => {
       );
     }
 
-    const { priceId, contactInfo, files, stagingStyle, photosCount } = validation.data;
-    logStep("Request validated", { priceId, hasContactInfo: !!contactInfo, fileCount: files?.length, stagingStyle, photosCount });
+    const { priceId, contactInfo, files, stagingStyle, photosCount, sessionId } = validation.data;
+    logStep("Request validated", { priceId, hasContactInfo: !!contactInfo, fileCount: files?.length, stagingStyle, photosCount, sessionId });
 
     // Support both authenticated and guest checkout
     const authHeader = req.headers.get("Authorization");
@@ -126,6 +127,10 @@ serve(async (req) => {
 
     if (photosCount) {
       metadata.photos_count = photosCount.toString();
+    }
+
+    if (sessionId) {
+      metadata.session_id = sessionId;
     }
 
     if (files && files.length > 0) {

@@ -80,33 +80,17 @@ const PlaceOrder = () => {
         return;
       }
 
-      // Create Stripe checkout session directly (guest checkout)
-      toast.loading("Creating checkout session...");
+      // Store contact info for next step (upload photos)
+      localStorage.setItem('orderContactInfo', JSON.stringify({
+        ...data,
+        transactionalConsent,
+        marketingConsent,
+        selectedBundle,
+        abandonedCheckoutId: checkoutData.id,
+      }));
       
-      const { data: checkoutSession, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
-        body: {
-          priceId: selectedBundle.priceId,
-          contactInfo: {
-            email: data.email,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            phoneNumber: data.phoneNumber,
-          },
-          photosCount: selectedBundle.photos,
-        },
-      });
-
-      if (checkoutError) {
-        console.error('Checkout error:', checkoutError);
-        toast.error("Failed to create checkout session. Please try again.");
-        return;
-      }
-
-      if (checkoutSession?.url) {
-        toast.success("Redirecting to payment...");
-        // Redirect to Stripe checkout
-        window.location.href = checkoutSession.url;
-      }
+      toast.success("Contact information saved!");
+      navigate("/upload");
     } catch (error) {
       console.error('Error in onSubmit:', error);
       toast.error("Something went wrong. Please try again.");
@@ -134,14 +118,14 @@ const PlaceOrder = () => {
                   <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-semibold">
                     2
                   </div>
-                  <span className="text-sm font-medium text-muted-foreground">Payment</span>
+                  <span className="text-sm font-medium text-muted-foreground">Upload Photos</span>
                 </div>
                 <div className="w-12 h-0.5 bg-border"></div>
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-semibold">
                     3
                   </div>
-                  <span className="text-sm font-medium text-muted-foreground">Upload Photos</span>
+                  <span className="text-sm font-medium text-muted-foreground">Payment</span>
                 </div>
               </div>
 
@@ -255,12 +239,8 @@ const PlaceOrder = () => {
                   size="lg"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Processing..." : "Continue to Payment"}
+                  {isSubmitting ? "Saving..." : "Continue to Upload Photos"}
                 </Button>
-                
-                <p className="text-sm text-muted-foreground text-center mt-4">
-                  After payment, you'll receive an email to create your account and upload photos.
-                </p>
               </form>
             </CardContent>
           </Card>
