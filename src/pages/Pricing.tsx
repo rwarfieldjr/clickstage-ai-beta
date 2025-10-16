@@ -51,7 +51,7 @@ const Pricing = () => {
     {
       name: "1 Photo",
       price: "$10",
-      priceId: "price_1SIy25IG3TLqP9yabrasHNux",
+      priceId: "price_1SD8lsIG3TLqP9yabBsx4jyZ",
       credits: 1,
       perPhoto: "$10 per photo",
       competitive: "Save 70% vs. our competition ($30 to $40 per photo)",
@@ -60,7 +60,7 @@ const Pricing = () => {
     {
       name: "5 Photos",
       price: "$45",
-      priceId: "price_1SIy2SIG3TLqP9yalgJm6Egl",
+      priceId: "price_1SD8nJIG3TLqP9yaGAjd2WdP",
       credits: 5,
       perPhoto: "$9 per photo",
       savings: "Bundle and Save $5",
@@ -69,7 +69,7 @@ const Pricing = () => {
     {
       name: "10 Photos",
       price: "$85",
-      priceId: "price_1SIy2jIG3TLqP9yaLIvyDUgS",
+      priceId: "price_1SD8nNIG3TLqP9yazPngAIN0",
       credits: 10,
       perPhoto: "$8.5 per photo",
       savings: "Bundle and Save $15",
@@ -78,7 +78,7 @@ const Pricing = () => {
     {
       name: "20 Photos",
       price: "$160",
-      priceId: "price_1SIy55IG3TLqP9yacrw68AyF",
+      priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG",
       credits: 20,
       perPhoto: "$8 per photo",
       savings: "Bundle and Save $40",
@@ -88,7 +88,7 @@ const Pricing = () => {
     {
       name: "50 Photos",
       price: "$375",
-      priceId: "price_1SIy5PIG3TLqP9yaQGtFWNvd",
+      priceId: "price_1SD8nTIG3TLqP9yaT0hRMNFq",
       credits: 50,
       perPhoto: "$7.5 per photo",
       savings: "Bundle and Save $125",
@@ -97,7 +97,7 @@ const Pricing = () => {
     {
       name: "100 Photos",
       price: "$700",
-      priceId: "price_1SIy5dIG3TLqP9ya5KOPiIAj",
+      priceId: "price_1SD8nWIG3TLqP9yaH0D0oIpW",
       credits: 100,
       perPhoto: "$7 per photo",
       savings: "Bundle and Save $300",
