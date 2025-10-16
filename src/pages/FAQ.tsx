@@ -26,12 +26,8 @@ const FAQ = () => {
           a: "Virtual staging is the digital process of furnishing and decorating empty property photos. Using AI and professional design software, we add realistic furniture, decor, and styling to showcase a home's potential to buyers. It's a cost-effective alternative to traditional physical staging."
         },
         {
-          q: "Do credits roll over?",
-          a: "Yes! All purchased credits remain in your account until you use them. There's no expiration date, so you can buy in bulk and save while using credits at your own pace."
-        },
-        {
-          q: "Do one-time bundles expire?",
-          a: "No, one-time bundles never expire. Once you purchase a bundle, those credits stay in your account indefinitely until you use them for staging projects."
+          q: "Do my credits expire?",
+          a: "Yes, photo credits are valid for 6 months on smaller bundles (1–10 photos) and 12 months on larger bundles (20–100 photos). You will receive email alerts before your credits expire."
         },
         {
           q: "Can I share credits with my team?",
