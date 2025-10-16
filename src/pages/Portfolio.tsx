@@ -11,8 +11,8 @@ import bedroomBefore from "@/assets/new-bedroom-before.jpg";
 import bedroomAfter from "@/assets/new-bedroom-after.png";
 import livingBefore from "@/assets/living-room-before.jpg";
 import livingAfter from "@/assets/living-room-after.png";
-import diningBefore from "@/assets/portfolio-dining-before.jpg";
-import diningAfter from "@/assets/portfolio-dining-after.jpg";
+import diningBefore from "@/assets/dining-room-before.jpg";
+import diningAfter from "@/assets/dining-room-after.png";
 
 const Portfolio = () => {
   const schema = breadcrumbSchema([
