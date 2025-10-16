@@ -13,6 +13,8 @@ import livingBefore from "@/assets/living-room-before.jpg";
 import livingAfter from "@/assets/living-room-after.png";
 import diningBefore from "@/assets/dining-room-before.jpg";
 import diningAfter from "@/assets/dining-room-after.png";
+import exteriorDay from "@/assets/exterior-day.jpg";
+import exteriorDusk from "@/assets/exterior-dusk.png";
 
 const Portfolio = () => {
   const schema = breadcrumbSchema([
@@ -38,6 +40,12 @@ const Portfolio = () => {
       description: "Transforming a bare dining space into an elegant entertaining area that helps buyers imagine hosting memorable gatherings",
       before: diningBefore,
       after: diningAfter,
+    },
+    {
+      title: "Day to Dusk Transformation",
+      description: "Dramatic exterior enhancement that transforms ordinary daytime photos into stunning twilight scenes with emotional appeal",
+      before: exteriorDay,
+      after: exteriorDusk,
     },
   ];
 
@@ -118,7 +126,7 @@ const Portfolio = () => {
               </div>
 
               <div className="space-y-16">
-                {transformations.slice(1).map((transformation, index) => (
+                {transformations.slice(1, 3).map((transformation, index) => (
                   <div key={index} className="space-y-6">
                     <BeforeAfterSlider
                       beforeImage={transformation.before}
@@ -134,6 +142,32 @@ const Portfolio = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Day to Dusk Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">Beyond Interior Staging</h2>
+                <p className="text-lg text-muted-foreground">
+                  Maximize curb appeal with our stunning day to dusk photo enhancements
+                </p>
+              </div>
+              <BeforeAfterSlider
+                beforeImage={transformations[3].before}
+                afterImage={transformations[3].after}
+                beforeAlt="Daytime exterior photo"
+                afterAlt="Dusk exterior photo with lighting"
+              />
+              <div className="mt-8 text-center">
+                <h3 className="text-2xl font-bold mb-3">{transformations[3].title}</h3>
+                <p className="text-muted-foreground">
+                  {transformations[3].description}
+                </p>
               </div>
             </div>
           </div>
