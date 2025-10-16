@@ -63,7 +63,7 @@ const Pricing = () => {
       priceId: "price_1SD8nJIG3TLqP9yaGAjd2WdP",
       credits: 5,
       perPhoto: "$9 per photo",
-      savings: "Save $5",
+      savings: "Bundle and Save $5",
       description: "Perfect for a single listing",
     },
     {
@@ -72,7 +72,7 @@ const Pricing = () => {
       priceId: "price_1SD8nNIG3TLqP9yazPngAIN0",
       credits: 10,
       perPhoto: "$8.5 per photo",
-      savings: "Save $15",
+      savings: "Bundle and Save $15",
       description: "Great for 2-3 listings",
     },
     {
@@ -81,7 +81,7 @@ const Pricing = () => {
       priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG",
       credits: 20,
       perPhoto: "$8 per photo",
-      savings: "Save $40",
+      savings: "Bundle and Save $40",
       description: "Ideal for multiple projects",
       popular: true,
     },
@@ -91,7 +91,7 @@ const Pricing = () => {
       priceId: "price_1SD8nTIG3TLqP9yaT0hRMNFq",
       credits: 50,
       perPhoto: "$7.5 per photo",
-      savings: "Save $125",
+      savings: "Bundle and Save $125",
       description: "Perfect for agencies",
     },
     {
@@ -100,7 +100,7 @@ const Pricing = () => {
       priceId: "price_1SD8nWIG3TLqP9yaH0D0oIpW",
       credits: 100,
       perPhoto: "$7 per photo",
-      savings: "Save $300",
+      savings: "Bundle and Save $300",
       description: "Maximum value for teams",
     },
   ];
