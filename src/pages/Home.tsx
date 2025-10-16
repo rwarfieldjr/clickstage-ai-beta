@@ -164,7 +164,7 @@ const Home = () => {
       </section>
 
       {/* Our Commitment Section */}
-      <section className="py-20 bg-gradient-to-b from-muted to-background dark:from-background/95 dark:to-background">
+      <section className="py-20 bg-muted/50">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
