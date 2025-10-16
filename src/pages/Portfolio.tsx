@@ -60,12 +60,9 @@ const Portfolio = () => {
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
                 Transformation <span className="text-accent">Portfolio</span>
               </h1>
-              <p className="text-xl text-muted-foreground mb-4">
+              <p className="text-xl text-muted-foreground mb-8">
                 See the dramatic impact of professional virtual staging. These real transformations 
                 showcase how empty rooms become buyer magnets that sell faster and for higher prices.
-              </p>
-              <p className="text-sm text-muted-foreground italic text-center">
-                * Scandinavian style
               </p>
             </div>
           </div>
@@ -75,12 +72,17 @@ const Portfolio = () => {
         <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
-              <BeforeAfterSlider
-                beforeImage={transformations[0].before}
-                afterImage={transformations[0].after}
-                beforeAlt="Empty master bedroom"
-                afterAlt="Staged master bedroom"
-              />
+              <div className="relative">
+                <BeforeAfterSlider
+                  beforeImage={transformations[0].before}
+                  afterImage={transformations[0].after}
+                  beforeAlt="Empty master bedroom"
+                  afterAlt="Staged master bedroom"
+                />
+                <p className="absolute -bottom-6 right-0 text-sm text-muted-foreground italic">
+                  * Scandinavian style
+                </p>
+              </div>
               <div className="mt-8 text-center">
                 <h2 className="text-3xl font-bold mb-3">{transformations[0].title}</h2>
                 <p className="text-lg text-muted-foreground mb-6">
