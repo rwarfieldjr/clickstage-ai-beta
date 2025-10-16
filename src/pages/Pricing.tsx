@@ -168,6 +168,11 @@ const Pricing = () => {
                         Credits expire 6 months after purchase.
                       </p>
                     )}
+                    {tier.credits >= 20 && (
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Credits expire 12 months after purchase.
+                      </p>
+                    )}
                     <Button
                       className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
