@@ -162,9 +162,9 @@ const Pricing = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="flex-grow flex flex-col">
-                    <p className="text-sm text-muted-foreground mb-4">{tier.description}</p>
+                    <p className="text-sm text-muted-foreground mt-auto mb-4">{tier.description}</p>
                     <Button
-                      className="w-full bg-accent hover:bg-accent/90 mt-auto"
+                      className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
                       onClick={() => handleSelectPlan(tier.name, tier.priceId, tier.credits)}
                     >
