@@ -7,8 +7,8 @@ import { ArrowRight } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { breadcrumbSchema } from "@/data/schema";
 
-import bedroomBefore from "@/assets/portfolio-bedroom-before.jpg";
-import bedroomAfter from "@/assets/portfolio-bedroom-after.jpg";
+import bedroomBefore from "@/assets/new-bedroom-before.jpg";
+import bedroomAfter from "@/assets/new-bedroom-after.png";
 import livingBefore from "@/assets/portfolio-living-before.jpg";
 import livingAfter from "@/assets/portfolio-living-after.jpg";
 import diningBefore from "@/assets/portfolio-dining-before.jpg";
