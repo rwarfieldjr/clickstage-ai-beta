@@ -79,11 +79,11 @@ const Portfolio = () => {
                   beforeAlt="Empty master bedroom"
                   afterAlt="Staged master bedroom"
                 />
-                <p className="absolute -bottom-6 right-0 text-sm text-muted-foreground italic">
+                <p className="absolute bottom-4 -right-4 text-sm text-muted-foreground italic">
                   * Scandinavian style
                 </p>
               </div>
-              <div className="mt-8 text-center">
+              <div className="mt-12 text-center">
                 <h2 className="text-3xl font-bold mb-3">{transformations[0].title}</h2>
                 <p className="text-lg text-muted-foreground mb-6">
                   {transformations[0].description}
