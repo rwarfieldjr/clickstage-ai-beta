@@ -227,8 +227,8 @@ const Upload = () => {
       if (error) throw error;
 
       if (data?.url) {
-        toast.success("Redirecting to payment...");
-        window.location.href = data.url;
+        toast.success("Opening payment page...");
+        window.open(data.url, '_blank');
       }
     } catch (error: any) {
       console.error("Checkout error:", error);
