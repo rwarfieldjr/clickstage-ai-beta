@@ -19,6 +19,32 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate the user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Authorization required" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    
+    if (userError || !userData.user) {
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    const authenticatedUserId = userData.user.id;
+
     // Parse and validate input
     const body = await req.json();
     const validation = VerifyPaymentSchema.safeParse(body);
@@ -49,7 +75,19 @@ serve(async (req) => {
     const photosCount = session.metadata?.photos_count ? parseInt(session.metadata.photos_count) : 0;
 
     if (!userId || !photosCount) {
-      throw new Error("Missing user ID or photos count in session metadata");
+      return new Response(
+        JSON.stringify({ error: "Invalid payment session data" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
+    // Verify the authenticated user matches the session metadata
+    if (authenticatedUserId !== userId) {
+      console.error(`Authentication mismatch: authenticated user ${authenticatedUserId} != session user ${userId}`);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized access to payment session" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+      );
     }
 
     const supabaseAdmin = createClient(
@@ -57,6 +95,29 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // Check if this session has already been processed
+    const { data: existingSession, error: checkError } = await supabaseAdmin
+      .from("processed_stripe_sessions")
+      .select("id, processed_at")
+      .eq("session_id", sessionId)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Error checking processed sessions:", checkError);
+      throw new Error("Failed to verify payment status");
+    }
+
+    if (existingSession) {
+      console.log(`Session ${sessionId} already processed at ${existingSession.processed_at}`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: "Payment already processed" 
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
 
     // Get current credits
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -89,6 +150,21 @@ serve(async (req) => {
       });
 
     if (transactionError) throw transactionError;
+
+    // Record this session as processed
+    const { error: trackingError } = await supabaseAdmin
+      .from("processed_stripe_sessions")
+      .insert({
+        session_id: sessionId,
+        user_id: userId,
+        payment_intent_id: session.payment_intent as string,
+        credits_added: photosCount,
+      });
+
+    if (trackingError) {
+      console.error("Error tracking processed session:", trackingError);
+      // Don't fail the entire operation if tracking fails
+    }
 
     // Create order records for each uploaded file
     const files = session.metadata?.files ? JSON.parse(session.metadata.files) : [];

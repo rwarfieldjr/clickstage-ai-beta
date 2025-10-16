@@ -225,6 +225,33 @@ export type Database = {
           },
         ]
       }
+      processed_stripe_sessions: {
+        Row: {
+          credits_added: number
+          id: string
+          payment_intent_id: string | null
+          processed_at: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          credits_added: number
+          id?: string
+          payment_intent_id?: string | null
+          processed_at?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          credits_added?: number
+          id?: string
+          payment_intent_id?: string | null
+          processed_at?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
