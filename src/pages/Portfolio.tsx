@@ -126,13 +126,6 @@ const Portfolio = () => {
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">Portfolio Gallery</h2>
-                <p className="text-lg text-muted-foreground">
-                  Explore more stunning transformations showcasing our versatility across different room types and design styles
-                </p>
-              </div>
-
               <div className="space-y-16">
                 {transformations.slice(1, 3).map((transformation, index) => (
                   <div key={index} className="space-y-6">
