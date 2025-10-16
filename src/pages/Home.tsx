@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Upload, Palette, Download, CheckCircle, Clock, Users, Award } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, serviceSchema } from "@/data/schema";
 import heroBackground from "@/assets/hero-background-new.png";
@@ -173,38 +174,20 @@ const Home = () => {
               See the dramatic transformation as we turn empty rooms into beautiful, staged spaces that sell faster
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="rounded-xl overflow-hidden shadow-custom-lg">
-                <img 
-                  src={livingBefore} 
-                  alt="Empty living room before staging" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="rounded-xl overflow-hidden shadow-custom-lg">
-                <img 
-                  src={livingAfter} 
-                  alt="Beautifully staged living room" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="rounded-xl overflow-hidden shadow-custom-lg">
-                <img 
-                  src={livingBefore2} 
-                  alt="Empty living room with fireplace before staging" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="rounded-xl overflow-hidden shadow-custom-lg">
-                <img 
-                  src={livingAfter2} 
-                  alt="Beautifully staged living room with fireplace" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
+            <div className="space-y-8 mb-8">
+              <BeforeAfterSlider
+                beforeImage={livingBefore}
+                afterImage={livingAfter}
+                beforeAlt="Empty living room before staging"
+                afterAlt="Beautifully staged living room"
+              />
+              
+              <BeforeAfterSlider
+                beforeImage={livingBefore2}
+                afterImage={livingAfter2}
+                beforeAlt="Empty living room with fireplace before staging"
+                afterAlt="Beautifully staged living room with fireplace"
+              />
             </div>
             
             <Link to="/portfolio">
