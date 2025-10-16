@@ -17,3 +17,12 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.add-admin]
+verify_jwt = true
+
+[functions.remove-admin]
+verify_jwt = true
+
+[functions.export-users]
+verify_jwt = true

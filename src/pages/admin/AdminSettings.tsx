@@ -72,20 +72,12 @@ export default function AdminSettings() {
     if (!newAdminEmail) return;
 
     try {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", newAdminEmail)
-        .single();
-
-      if (profileError) throw new Error("User not found");
-
-      const { error } = await supabase.from("user_roles").insert({
-        user_id: profile.id,
-        role: "admin",
+      const { data, error } = await supabase.functions.invoke("add-admin", {
+        body: { email: newAdminEmail },
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "Success",
@@ -97,7 +89,7 @@ export default function AdminSettings() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to add admin user",
         variant: "destructive",
       });
     }
@@ -105,9 +97,12 @@ export default function AdminSettings() {
 
   const handleRemoveAdmin = async (roleId: string) => {
     try {
-      const { error } = await supabase.from("user_roles").delete().eq("id", roleId);
+      const { data, error } = await supabase.functions.invoke("remove-admin", {
+        body: { roleId },
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "Success",
@@ -118,7 +113,7 @@ export default function AdminSettings() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to remove admin user",
         variant: "destructive",
       });
     }
@@ -126,15 +121,15 @@ export default function AdminSettings() {
 
   const handleExportUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("name, email, phone, credits, status, created_at");
+      const { data: response, error } = await supabase.functions.invoke("export-users");
 
       if (error) throw error;
+      if (response?.error) throw new Error(response.error);
 
+      const users = response.data || [];
       const csv = [
         ["Name", "Email", "Phone", "Credits", "Status", "Joined"],
-        ...data.map((user) => [
+        ...users.map((user: any) => [
           user.name,
           user.email,
           user.phone || "",
@@ -160,7 +155,7 @@ export default function AdminSettings() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to export user data",
         variant: "destructive",
       });
     }
