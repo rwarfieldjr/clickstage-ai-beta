@@ -87,10 +87,10 @@ const PlaceOrder = () => {
         body: {
           priceId: selectedBundle.priceId,
           contactInfo: {
-            ...data,
-            transactionalConsent,
-            marketingConsent,
-            abandonedCheckoutId: checkoutData.id,
+            email: data.email,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            phoneNumber: data.phoneNumber,
           },
           photosCount: selectedBundle.photos,
         },

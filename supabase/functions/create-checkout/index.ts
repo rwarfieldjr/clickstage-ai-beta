@@ -21,9 +21,9 @@ const CreateCheckoutSchema = z.object({
     firstName: z.string().max(100),
     lastName: z.string().max(100),
     phoneNumber: z.string().max(50).optional(),
-  }).optional(),
+  }),
   files: z.array(z.string().max(500)).max(100).optional(),
-  stagingStyle: z.string().max(50),
+  stagingStyle: z.string().max(50).optional(),
   photosCount: z.number().int().positive().max(1000),
 });
 
@@ -56,36 +56,35 @@ serve(async (req) => {
     const { priceId, contactInfo, files, stagingStyle, photosCount } = validation.data;
     logStep("Request validated", { priceId, hasContactInfo: !!contactInfo, fileCount: files?.length, stagingStyle, photosCount });
 
-    // Require authentication - no guest checkout allowed
+    // Support both authenticated and guest checkout
     const authHeader = req.headers.get("Authorization");
+    let user = null;
+    let customerEmail = null;
     
-    if (!authHeader) {
-      logStep("Authentication required - no guest checkout");
-      return new Response(
-        JSON.stringify({ error: "Authentication required" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
+    if (authHeader) {
+      // Try to authenticate if header is present
+      const token = authHeader.replace("Bearer ", "");
+      const { data, error: authError } = await supabaseClient.auth.getUser(token);
+      
+      if (data?.user) {
+        user = data.user;
+        customerEmail = user.email;
+        logStep("Authenticated user found", { userId: user.id, email: user.email });
+      }
     }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data, error: authError } = await supabaseClient.auth.getUser(token);
-    
-    if (authError || !data.user) {
-      logStep("Invalid authentication token");
-      return new Response(
-        JSON.stringify({ error: "Invalid authentication" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
-    }
-
-    const user = data.user;
-    const customerEmail = user.email;
-    
+    // For guest checkout, use email from contactInfo
     if (!customerEmail) {
-      throw new Error("User email not available");
+      if (!contactInfo?.email) {
+        logStep("Guest checkout requires email in contactInfo");
+        return new Response(
+          JSON.stringify({ error: "Email is required for checkout" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
+      customerEmail = contactInfo.email;
+      logStep("Guest checkout", { email: customerEmail });
     }
-
-    logStep("Authenticated user found", { userId: user.id, email: user.email });
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -105,16 +104,19 @@ serve(async (req) => {
 
     // Store order metadata
     const metadata: any = {
-      staging_style: stagingStyle,
-      customer_name: contactInfo?.firstName && contactInfo?.lastName 
+      customer_name: contactInfo.firstName && contactInfo.lastName 
         ? `${contactInfo.firstName} ${contactInfo.lastName}`
-        : user.user_metadata?.name || user.email?.split('@')[0] || 'Customer',
-      customer_email: user.email || '',
+        : user?.user_metadata?.name || customerEmail.split('@')[0] || 'Customer',
+      customer_email: customerEmail,
     };
     
-    if (contactInfo) {
-      metadata.first_name = contactInfo.firstName;
-      metadata.last_name = contactInfo.lastName;
+    if (stagingStyle) {
+      metadata.staging_style = stagingStyle;
+    }
+    
+    metadata.first_name = contactInfo.firstName;
+    metadata.last_name = contactInfo.lastName;
+    if (contactInfo.phoneNumber) {
       metadata.phone = contactInfo.phoneNumber;
     }
 
