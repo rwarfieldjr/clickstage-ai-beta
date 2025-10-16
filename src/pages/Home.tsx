@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Upload, Palette, Download, CheckCircle, Clock, Users, Award, RefreshCw } from "lucide-react";
+import { ArrowRight, Upload, Palette, Download, CheckCircle, Clock, Users, Award, RefreshCw, Package, ShoppingCart } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
@@ -284,13 +284,25 @@ const Home = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-primary">
             How It Works
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+            <Card className="shadow-custom-md border-0 gradient-card bg-white dark:bg-white">
+              <CardContent className="pt-6">
+                <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center mb-4">
+                  <Package className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3 text-gray-900">1. Choose Your Bundle</h3>
+                <p className="text-gray-600">
+                  Select the package that fits your needs, from single photos to bulk orders.
+                </p>
+              </CardContent>
+            </Card>
+
             <Card className="shadow-custom-md border-0 gradient-card bg-white dark:bg-white">
               <CardContent className="pt-6">
                 <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center mb-4">
                   <Upload className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-900">1. Upload Photos</h3>
+                <h3 className="text-xl font-semibold mb-3 text-gray-900">2. Upload Your Photos</h3>
                 <p className="text-gray-600">
                   Upload your property photos in JPEG or PNG format. Drag and drop for easy uploading.
                 </p>
@@ -302,7 +314,7 @@ const Home = () => {
                 <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center mb-4">
                   <Palette className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-900">2. Choose Style</h3>
+                <h3 className="text-xl font-semibold mb-3 text-gray-900">3. Choose Your Style</h3>
                 <p className="text-gray-600">
                   Select from Modern, Farmhouse, Coastal, Luxury, and more staging styles.
                 </p>
@@ -312,11 +324,11 @@ const Home = () => {
             <Card className="shadow-custom-md border-0 gradient-card bg-white dark:bg-white">
               <CardContent className="pt-6">
                 <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center mb-4">
-                  <Download className="w-6 h-6 text-white" />
+                  <ShoppingCart className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-900">3. Get Results</h3>
+                <h3 className="text-xl font-semibold mb-3 text-gray-900">4. Place Order</h3>
                 <p className="text-gray-600">
-                  Receive your professionally staged images by email and in your dashboard.
+                  Complete your order and receive your professionally staged images within 24 hours.
                 </p>
               </CardContent>
             </Card>
