@@ -147,7 +147,7 @@ const Pricing = () => {
                     <CardDescription className="text-3xl font-bold text-primary mt-2">
                       {tier.price}
                     </CardDescription>
-                    <div className="min-h-[4rem]">
+                    <div className="min-h-[5.5rem]">
                       <p className="text-sm text-muted-foreground">{tier.perPhoto}</p>
                       {tier.competitive && (
                         <p className="text-sm font-medium text-green-600 dark:text-green-400">
