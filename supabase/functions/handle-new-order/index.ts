@@ -10,9 +10,13 @@ const corsHeaders = {
 interface HandleNewOrderRequest {
   email: string;
   name: string;
-  bundle_name: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  staging_style?: string;
+  photos_count: number;
   total_amount: number;
-  photo_count: number;
+  files?: string[];
 }
 
 serve(async (req) => {
@@ -22,9 +26,19 @@ serve(async (req) => {
   }
 
   try {
-    const { email, name, bundle_name, total_amount, photo_count }: HandleNewOrderRequest = await req.json();
+    const { 
+      email, 
+      name, 
+      firstName, 
+      lastName, 
+      phone, 
+      staging_style, 
+      photos_count, 
+      total_amount,
+      files
+    }: HandleNewOrderRequest = await req.json();
 
-    console.log("Processing new order for:", email);
+    console.log("Processing new order notification for:", email);
 
     // Initialize Supabase admin client
     const supabaseAdmin = createClient(
@@ -39,26 +53,6 @@ serve(async (req) => {
     const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
     const userExists = existingUser?.users.some(u => u.email === email);
 
-    let actionLink = "";
-
-    if (!userExists) {
-      console.log("Creating new user:", email);
-      
-      // Create new user silently (no confirmation email)
-      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        user_metadata: { name },
-      });
-
-      if (createError) {
-        console.error("Error creating user:", createError);
-        throw createError;
-      }
-
-      console.log("User created successfully:", newUser.user?.id);
-    }
-
     // Generate magic link for password setup
     console.log("Generating magic link for:", email);
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
@@ -71,68 +65,159 @@ serve(async (req) => {
       throw linkError;
     }
 
-    actionLink = linkData.properties?.action_link || "";
+    const actionLink = linkData.properties?.action_link || "";
     console.log("Magic link generated successfully");
 
-    // Send welcome email with magic link
-    console.log("Sending welcome email to:", email);
-    const { data: emailData, error: emailError } = await resend.emails.send({
-      from: "ClickStagePro <onboarding@resend.dev>",
+    // Get order numbers for this customer
+    const { data: ordersData } = await supabaseAdmin
+      .from("orders")
+      .select("order_number")
+      .eq("user_id", existingUser?.users.find(u => u.email === email)?.id || "")
+      .order("created_at", { ascending: false })
+      .limit(photos_count);
+
+    const orderNumbers = ordersData?.map(o => o.order_number).join(", ") || "Processing";
+
+    // Send customer confirmation email
+    console.log("Sending customer email to:", email);
+    const { error: customerEmailError } = await resend.emails.send({
+      from: "ClickStagePro <orders@clickstagepro.com>",
       to: email,
-      subject: "Create Your ClickStagePro Account",
+      subject: "Thank You for Your Order!",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Hi ${name},</h2>
-          
-          <p style="color: #555; line-height: 1.6;">
-            Thank you for your order with <strong>ClickStagePro</strong>!
-          </p>
-          
-          <p style="color: #555; line-height: 1.6;">
-            Your photos are now in our staging queue and will be processed within 24 hours.
-          </p>
-          
-          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0; color: #333;">Order Summary</h3>
-            <ul style="color: #555; line-height: 1.8;">
-              <li><strong>Bundle:</strong> ${bundle_name}</li>
-              <li><strong>Total:</strong> $${(total_amount / 100).toFixed(2)}</li>
-              <li><strong>Photos Uploaded:</strong> ${photo_count}</li>
-            </ul>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; border-radius: 10px;">
+          <div style="background: white; border-radius: 8px; padding: 30px;">
+            <h1 style="color: #333; text-align: center; margin-bottom: 20px;">Thank You for Your Order!</h1>
+            <p style="color: #666; font-size: 16px; line-height: 1.6; text-align: center; margin-bottom: 30px;">
+              ClickStage Pro Virtual Staging
+            </p>
+            
+            <p style="color: #555; line-height: 1.6;">Hi ${name},</p>
+            
+            <p style="color: #555; line-height: 1.6;">
+              Thank you for choosing ClickStage Pro! We've received your order and our team will begin processing your virtual staging request right away.
+            </p>
+
+            <div style="background-color: #1a1a1a; color: white; padding: 25px; border-radius: 8px; margin: 25px 0;">
+              <h2 style="color: #667eea; margin-top: 0; margin-bottom: 15px;">Order Details</h2>
+              ${orderNumbers !== "Processing" ? `<p style="margin: 8px 0;"><strong>Order Number:</strong> ${orderNumbers}</p>` : ''}
+              ${staging_style ? `<p style="margin: 8px 0;"><strong>Staging Style:</strong> ${staging_style.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>` : ''}
+              <p style="margin: 8px 0;"><strong>Credit Pack:</strong> ${photos_count} credit${photos_count > 1 ? 's' : ''}</p>
+              <p style="margin: 8px 0;"><strong>Total Paid:</strong> $${(total_amount / 100).toFixed(2)}</p>
+            </div>
+
+            <div style="background-color: #f0f4ff; border-left: 4px solid #667eea; padding: 20px; margin: 25px 0;">
+              <h3 style="color: #333; margin-top: 0;">What Happens Next?</h3>
+              <ol style="color: #555; line-height: 1.8; padding-left: 20px;">
+                <li>Our team will review your uploaded photos</li>
+                <li>We'll create stunning virtually staged images</li>
+                <li>You'll receive your staged photos within 24-48 hours</li>
+                <li>Download your images from your account dashboard</li>
+              </ol>
+            </div>
+
+            ${!userExists ? `
+            <div style="text-align: center; margin: 30px 0; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
+              <p style="color: #555; margin-bottom: 15px; font-weight: bold;">We've created your account — set your password to access your dashboard:</p>
+              <a href="${actionLink}" 
+                 style="background-color: #667eea; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+                Create My Password →
+              </a>
+            </div>
+            ` : ''}
+
+            <p style="color: #555; margin-top: 30px;">
+              You can track your order status and download completed images from your <a href="https://clickstagepro.com/dashboard" style="color: #667eea; text-decoration: none;">account dashboard</a>.
+            </p>
+
+            <p style="color: #555; margin-top: 20px;">
+              If you have any questions, please don't hesitate to contact our support team.
+            </p>
+
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+            
+            <p style="color: #888; font-size: 14px; text-align: center;">
+              Best regards,<br>
+              <strong>The ClickStage Pro Team</strong><br>
+              <a href="https://www.clickstagepro.com" style="color: #667eea; text-decoration: none;">www.ClickStagePro.com</a>
+            </p>
           </div>
-          
-          <p style="color: #555; line-height: 1.6;">
-            We've created your account — click below to set your password and access your dashboard:
-          </p>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${actionLink}" 
-               style="background-color: #10b981; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
-              Create My Password →
-            </a>
-          </div>
-          
-          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
-          
-          <p style="color: #555;">
-            — The ClickStagePro Team<br>
-            <a href="https://www.clickstagepro.com" style="color: #10b981;">www.ClickStagePro.com</a>
-          </p>
         </div>
       `,
     });
 
-    if (emailError) {
-      console.error("Error sending email:", emailError);
-      throw emailError;
+    if (customerEmailError) {
+      console.error("Error sending customer email:", customerEmailError);
+    } else {
+      console.log("Customer email sent successfully");
     }
 
-    console.log("Email sent successfully:", emailData);
+    // Send admin notification email
+    const { error: adminEmailError } = await resend.emails.send({
+      from: "ClickStagePro <orders@clickstagepro.com>",
+      to: "orders@clickstagepro.com",
+      subject: `New Order Received - Action Required`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #dc2626; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; font-size: 24px;">New Order Received - Action Required</h1>
+          </div>
+          
+          <div style="background-color: #1a1a1a; color: white; padding: 30px; border-radius: 0 0 8px 8px;">
+            <h2 style="color: #667eea; margin-top: 0;">Order #${orderNumbers}</h2>
+            
+            <p style="margin-bottom: 20px;"><strong>Customer:</strong> ${firstName} ${lastName}</p>
+            <p style="margin-bottom: 20px;"><strong>Email:</strong> <a href="mailto:${email}" style="color: #667eea;">${email}</a></p>
+            ${phone ? `<p style="margin-bottom: 20px;"><strong>Phone:</strong> ${phone}</p>` : ''}
+            
+            <hr style="border: none; border-top: 1px solid #333; margin: 25px 0;">
+            
+            <p style="margin-bottom: 10px;"><strong>Photos to Stage:</strong> ${photos_count}</p>
+            ${staging_style ? `<p style="margin-bottom: 10px;"><strong>Staging Style:</strong> ${staging_style.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>` : ''}
+            <p style="margin-bottom: 20px;"><strong>Amount Paid:</strong> $${(total_amount / 100).toFixed(2)}</p>
+            
+            ${files && files.length > 0 ? `
+            <div style="background-color: #2d3748; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #667eea; margin-top: 0;">📸 Download Original Photos</h3>
+              <p style="margin-bottom: 15px; font-size: 14px;">Click the link below to download the customer's photos from storage:</p>
+              <a href="https://ufzhskookhsarjlijywh.supabase.co/storage/v1/object/public/original-images/${files[0]}" 
+                 style="color: #667eea; word-break: break-all; font-size: 13px;">
+                Download Photos from Storage
+              </a>
+            </div>
+            ` : ''}
+
+            <div style="background-color: #065f46; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0;">Next Steps:</h3>
+              <ol style="padding-left: 20px; line-height: 1.8;">
+                <li>Click the download link above to get original photos from Supabase</li>
+                <li>Stage the photos professionally</li>
+                <li>Upload completed images to the admin dashboard</li>
+                <li>Mark order as completed</li>
+              </ol>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+              <a href="https://clickstagepro.com/admin/dashboard" 
+                 style="background-color: #667eea; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+                View in Admin Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+      `,
+    });
+
+    if (adminEmailError) {
+      console.error("Error sending admin email:", adminEmailError);
+    } else {
+      console.log("Admin email sent successfully");
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        email_sent: true,
+        emails_sent: true,
         user_existed: userExists
       }),
       {
@@ -141,15 +226,15 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error("Error in handle-new-order:", error);
+    console.error("Webhook error:", error);
     return new Response(
       JSON.stringify({ 
-        success: false, 
+        received: true, 
         error: error.message 
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
+        status: 200,
       }
     );
   }

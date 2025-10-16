@@ -65,14 +65,18 @@ serve(async (req) => {
       
       console.log("Processing checkout.session.completed for session:", session.id);
 
-      // Extract customer details
-      const email = session.customer_details?.email;
-      const name = session.customer_details?.name || "Customer";
-      const total_amount = session.amount_total || 0;
-      const bundle_name = session.metadata?.bundle_name || "Unknown Bundle";
-      const photo_count = parseInt(session.metadata?.photo_count || "0");
+      // Extract metadata
+      const metadata = session.metadata || {};
+      const customerEmail = metadata.customer_email || session.customer_details?.email;
+      const customerName = metadata.customer_name || session.customer_details?.name || "Customer";
+      const files = metadata.files ? JSON.parse(metadata.files) : [];
+      const photosCount = parseInt(metadata.photos_count || "0");
+      const stagingStyle = metadata.staging_style || "";
+      const firstName = metadata.first_name || "";
+      const lastName = metadata.last_name || "";
+      const phone = metadata.phone || "";
 
-      if (!email) {
+      if (!customerEmail) {
         console.error("No email found in session");
         return new Response(
           JSON.stringify({ error: "No email in session" }),
@@ -83,47 +87,79 @@ serve(async (req) => {
         );
       }
 
-      console.log("Calling handle-new-order function with:", {
-        email,
-        name,
-        bundle_name,
-        total_amount,
-        photo_count,
-      });
-
-      // Initialize Supabase client to call the handle-new-order function
+      // Initialize Supabase admin client
       const supabaseAdmin = createClient(
         Deno.env.get("SUPABASE_URL") ?? "",
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
       );
 
-      // Call the handle-new-order function
+      // Check if user exists or create one
+      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+      let userId = existingUsers?.users.find(u => u.email === customerEmail)?.id;
+
+      if (!userId) {
+        console.log("Creating new user:", customerEmail);
+        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email: customerEmail,
+          email_confirm: true,
+          user_metadata: { name: customerName },
+        });
+
+        if (createError) {
+          console.error("Error creating user:", createError);
+          throw createError;
+        }
+
+        userId = newUser.user?.id;
+        console.log("User created successfully:", userId);
+      }
+
+      // Create orders from uploaded files
+      if (files.length > 0 && userId) {
+        console.log(`Creating ${files.length} orders for user ${userId}`);
+        
+        for (const fileUrl of files) {
+          const { data: orderData, error: orderError } = await supabaseAdmin
+            .from("orders")
+            .insert({
+              user_id: userId,
+              original_image_url: fileUrl,
+              staging_style: stagingStyle,
+              status: "pending",
+              stripe_payment_id: session.id,
+              credits_used: 1,
+            })
+            .select("order_number")
+            .single();
+
+          if (orderError) {
+            console.error("Error creating order:", orderError);
+          } else {
+            console.log("Order created:", orderData?.order_number);
+          }
+        }
+      }
+
+      // Call handle-new-order to send emails
       const { data, error } = await supabaseAdmin.functions.invoke("handle-new-order", {
         body: {
-          email,
-          name,
-          bundle_name,
-          total_amount,
-          photo_count,
+          email: customerEmail,
+          name: customerName,
+          firstName,
+          lastName,
+          phone,
+          staging_style: stagingStyle,
+          photos_count: photosCount,
+          total_amount: session.amount_total || 0,
+          files: files,
         },
       });
 
       if (error) {
         console.error("Error calling handle-new-order:", error);
-        // Still return 200 to Stripe to acknowledge receipt
-        return new Response(
-          JSON.stringify({ 
-            received: true, 
-            warning: "Order processing failed but webhook received" 
-          }),
-          { 
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          }
-        );
+      } else {
+        console.log("handle-new-order completed successfully:", data);
       }
-
-      console.log("handle-new-order completed successfully:", data);
 
       // Mark abandoned checkout as completed
       const { error: updateError } = await supabaseAdmin
@@ -132,7 +168,7 @@ serve(async (req) => {
           completed: true, 
           completed_at: new Date().toISOString() 
         })
-        .eq('email', email)
+        .eq('email', customerEmail)
         .eq('completed', false)
         .order('created_at', { ascending: false })
         .limit(1);
@@ -140,7 +176,7 @@ serve(async (req) => {
       if (updateError) {
         console.error("Error updating abandoned checkout:", updateError);
       } else {
-        console.log("Abandoned checkout marked as completed for:", email);
+        console.log("Abandoned checkout marked as completed for:", customerEmail);
       }
     }
 
