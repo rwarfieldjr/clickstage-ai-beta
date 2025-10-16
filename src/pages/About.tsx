@@ -148,7 +148,7 @@ const About = () => {
               </Link>
               <Link to="/pricing">
                 <Button size="lg" variant="outline" className="text-lg px-8">
-                  View Our Services
+                  See Pricing Bundles
                 </Button>
               </Link>
             </div>
