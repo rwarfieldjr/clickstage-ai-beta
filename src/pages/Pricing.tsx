@@ -54,7 +54,7 @@ const Pricing = () => {
       priceId: "price_1SD8lsIG3TLqP9yabBsx4jyZ",
       credits: 1,
       perPhoto: "$10 per photo",
-      description: "Try our service",
+      description: "Test Drive our service - see the difference",
     },
     {
       name: "5 Photos",
