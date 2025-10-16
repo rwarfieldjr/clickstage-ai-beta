@@ -12,6 +12,8 @@ import livingBefore from "@/assets/hero-before-new.png";
 import livingAfter from "@/assets/hero-after.png";
 import livingBefore2 from "@/assets/living-room-before-2.jpg";
 import livingAfter2 from "@/assets/living-room-after-2.png";
+import bedroomBefore from "@/assets/bedroom-before-new.jpg";
+import bedroomAfter from "@/assets/bedroom-after-new.png";
 
 const Home = () => {
   const schema = {
@@ -265,6 +267,13 @@ const Home = () => {
                 afterImage={livingAfter2}
                 beforeAlt="Empty living room with fireplace before staging"
                 afterAlt="Beautifully staged living room with fireplace"
+              />
+              
+              <BeforeAfterSlider
+                beforeImage={bedroomBefore}
+                afterImage={bedroomAfter}
+                beforeAlt="Empty bedroom before staging"
+                afterAlt="Beautifully staged bedroom"
               />
             </div>
             
