@@ -11,7 +11,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required").max(100, "First name must be less than 100 characters"),
@@ -52,49 +51,16 @@ const PlaceOrder = () => {
       return;
     }
 
-    try {
-      // Save abandoned checkout to database
-      const priceValue = selectedBundle?.price 
-        ? parseFloat(selectedBundle.price.replace('$', ''))
-        : null;
-
-      const { data: checkoutData, error } = await supabase
-        .from('abandoned_checkouts')
-        .insert({
-          first_name: data.firstName,
-          last_name: data.lastName,
-          email: data.email,
-          phone_number: data.phoneNumber,
-          transactional_consent: transactionalConsent,
-          marketing_consent: marketingConsent,
-          bundle_name: selectedBundle?.name,
-          bundle_price: priceValue,
-          bundle_photos: selectedBundle?.photos,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error saving abandoned checkout:', error);
-        toast.error("Failed to save information. Please try again.");
-        return;
-      }
-
-      // Store contact info for next step (upload photos)
-      localStorage.setItem('orderContactInfo', JSON.stringify({
-        ...data,
-        transactionalConsent,
-        marketingConsent,
-        selectedBundle,
-        abandonedCheckoutId: checkoutData.id,
-      }));
-      
-      toast.success("Contact information saved!");
-      navigate("/upload");
-    } catch (error) {
-      console.error('Error in onSubmit:', error);
-      toast.error("Something went wrong. Please try again.");
-    }
+    // Store contact info for next step (upload photos)
+    localStorage.setItem('orderContactInfo', JSON.stringify({
+      ...data,
+      transactionalConsent,
+      marketingConsent,
+      selectedBundle,
+    }));
+    
+    toast.success("Contact information saved!");
+    navigate("/upload");
   };
 
   return (
