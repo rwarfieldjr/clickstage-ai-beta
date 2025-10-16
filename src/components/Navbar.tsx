@@ -86,7 +86,7 @@ const Navbar = () => {
                 <Link to="/auth">
                   <Button variant="outline" size="sm">Login</Button>
                 </Link>
-                <Link to="/auth?mode=signup">
+                <Link to="/pricing">
                   <Button size="sm" className="bg-accent hover:bg-accent/90">Get Started</Button>
                 </Link>
               </>
