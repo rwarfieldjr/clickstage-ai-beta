@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required").max(100, "First name must be less than 100 characters"),
@@ -47,17 +48,42 @@ const PlaceOrder = () => {
 
   const onSubmit = async (data: FormData) => {
     try {
-      // Store contact info in localStorage for later use
+      // Save abandoned checkout to database
+      const { data: checkoutData, error } = await supabase
+        .from('abandoned_checkouts')
+        .insert({
+          first_name: data.firstName,
+          last_name: data.lastName,
+          email: data.email,
+          phone_number: data.phoneNumber,
+          transactional_consent: transactionalConsent,
+          marketing_consent: marketingConsent,
+          bundle_name: selectedBundle?.name,
+          bundle_price: selectedBundle?.price,
+          bundle_photos: selectedBundle?.photos,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving abandoned checkout:', error);
+        toast.error("Failed to save information. Please try again.");
+        return;
+      }
+
+      // Store contact info and checkout ID in localStorage for later use
       localStorage.setItem('orderContactInfo', JSON.stringify({
         ...data,
         transactionalConsent,
         marketingConsent,
-        selectedBundle, // Include bundle info
+        selectedBundle,
+        abandonedCheckoutId: checkoutData.id, // Track the checkout ID
       }));
       
       toast.success("Contact information saved!");
       navigate("/upload");
     } catch (error) {
+      console.error('Error in onSubmit:', error);
       toast.error("Something went wrong. Please try again.");
     }
   };

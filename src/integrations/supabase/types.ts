@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_checkouts: {
+        Row: {
+          bundle_name: string | null
+          bundle_photos: number | null
+          bundle_price: number | null
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          marketing_consent: boolean | null
+          phone_number: string
+          transactional_consent: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          bundle_name?: string | null
+          bundle_photos?: number | null
+          bundle_price?: number | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          marketing_consent?: boolean | null
+          phone_number: string
+          transactional_consent?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          bundle_name?: string | null
+          bundle_photos?: number | null
+          bundle_price?: number | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          marketing_consent?: boolean | null
+          phone_number?: string
+          transactional_consent?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_actions: {
         Row: {
           action_type: string

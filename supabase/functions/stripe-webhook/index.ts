@@ -124,6 +124,24 @@ serve(async (req) => {
       }
 
       console.log("handle-new-order completed successfully:", data);
+
+      // Mark abandoned checkout as completed
+      const { error: updateError } = await supabaseAdmin
+        .from('abandoned_checkouts')
+        .update({ 
+          completed: true, 
+          completed_at: new Date().toISOString() 
+        })
+        .eq('email', email)
+        .eq('completed', false)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (updateError) {
+        console.error("Error updating abandoned checkout:", updateError);
+      } else {
+        console.log("Abandoned checkout marked as completed for:", email);
+      }
     }
 
     // Always return 200 to acknowledge receipt
