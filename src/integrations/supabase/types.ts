@@ -97,6 +97,7 @@ export type Database = {
           amount: number
           created_at: string
           description: string | null
+          expires_at: string | null
           id: string
           order_id: string | null
           stripe_payment_id: string | null
@@ -107,6 +108,7 @@ export type Database = {
           amount: number
           created_at?: string
           description?: string | null
+          expires_at?: string | null
           id?: string
           order_id?: string | null
           stripe_payment_id?: string | null
@@ -117,6 +119,7 @@ export type Database = {
           amount?: number
           created_at?: string
           description?: string | null
+          expires_at?: string | null
           id?: string
           order_id?: string | null
           stripe_payment_id?: string | null

@@ -138,7 +138,13 @@ serve(async (req) => {
 
     if (updateError) throw updateError;
 
-    // Record transaction
+    // Calculate expiration date based on bundle size
+    // 1-10 photos: 6 months, 20+ photos: 12 months
+    const expirationMonths = photosCount <= 10 ? 6 : 12;
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + expirationMonths);
+
+    // Record transaction with expiration date
     const { error: transactionError } = await supabaseAdmin
       .from("credits_transactions")
       .insert({
@@ -146,7 +152,8 @@ serve(async (req) => {
         amount: photosCount,
         transaction_type: "purchase",
         stripe_payment_id: session.payment_intent as string,
-        description: `Purchased ${photosCount} photo credits`,
+        description: `Purchased ${photosCount} photo credits (expires in ${expirationMonths} months)`,
+        expires_at: expiresAt.toISOString(),
       });
 
     if (transactionError) throw transactionError;
