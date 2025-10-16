@@ -17,6 +17,8 @@ import exteriorDay from "@/assets/exterior-day.jpg";
 import exteriorDusk from "@/assets/exterior-dusk.png";
 import declutterBefore from "@/assets/declutter-before.jpg";
 import declutterAfter from "@/assets/declutter-after.png";
+import bathroomBefore from "@/assets/bathroom-before.jpg";
+import bathroomAfter from "@/assets/bathroom-after.png";
 
 const Portfolio = () => {
   const schema = breadcrumbSchema([
@@ -54,6 +56,12 @@ const Portfolio = () => {
       description: "Sometimes the clients forget or don't think to move items for before the photographer arrives. We can handle it with our De-Clutter option!",
       before: declutterBefore,
       after: declutterAfter,
+    },
+    {
+      title: "Bathroom Transformation",
+      description: "Adding tasteful decor touches transforms a plain bathroom into a spa-like retreat that appeals to buyers",
+      before: bathroomBefore,
+      after: bathroomAfter,
     },
   ];
 
@@ -194,6 +202,36 @@ const Portfolio = () => {
                 <h3 className="text-2xl font-bold mb-3">{transformations[4].title}</h3>
                 <p className="text-muted-foreground">
                   {transformations[4].description}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Bathroom Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="rounded-lg overflow-hidden">
+                  <img 
+                    src={transformations[5].before} 
+                    alt="Plain bathroom before staging"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="rounded-lg overflow-hidden">
+                  <img 
+                    src={transformations[5].after} 
+                    alt="Styled bathroom after staging"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+              <div className="text-center">
+                <h3 className="text-xl font-bold mb-2">{transformations[5].title}</h3>
+                <p className="text-muted-foreground text-sm">
+                  {transformations[5].description}
                 </p>
               </div>
             </div>
