@@ -47,9 +47,13 @@ const PlaceOrder = () => {
   });
 
   const onSubmit = async (data: FormData) => {
+    if (!selectedBundle) {
+      toast.error("No bundle selected. Please go back to pricing.");
+      return;
+    }
+
     try {
       // Save abandoned checkout to database
-      // Convert price string (e.g., "$45") to numeric value
       const priceValue = selectedBundle?.price 
         ? parseFloat(selectedBundle.price.replace('$', ''))
         : null;
@@ -76,17 +80,33 @@ const PlaceOrder = () => {
         return;
       }
 
-      // Store contact info and checkout ID in localStorage for later use
-      localStorage.setItem('orderContactInfo', JSON.stringify({
-        ...data,
-        transactionalConsent,
-        marketingConsent,
-        selectedBundle,
-        abandonedCheckoutId: checkoutData.id, // Track the checkout ID
-      }));
+      // Create Stripe checkout session directly (guest checkout)
+      toast.loading("Creating checkout session...");
       
-      toast.success("Contact information saved!");
-      navigate("/upload");
+      const { data: checkoutSession, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          priceId: selectedBundle.priceId,
+          contactInfo: {
+            ...data,
+            transactionalConsent,
+            marketingConsent,
+            abandonedCheckoutId: checkoutData.id,
+          },
+          photosCount: selectedBundle.photos,
+        },
+      });
+
+      if (checkoutError) {
+        console.error('Checkout error:', checkoutError);
+        toast.error("Failed to create checkout session. Please try again.");
+        return;
+      }
+
+      if (checkoutSession?.url) {
+        toast.success("Redirecting to payment...");
+        // Redirect to Stripe checkout
+        window.location.href = checkoutSession.url;
+      }
     } catch (error) {
       console.error('Error in onSubmit:', error);
       toast.error("Something went wrong. Please try again.");
@@ -114,14 +134,14 @@ const PlaceOrder = () => {
                   <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-semibold">
                     2
                   </div>
-                  <span className="text-sm font-medium text-muted-foreground">Upload Photos</span>
+                  <span className="text-sm font-medium text-muted-foreground">Payment</span>
                 </div>
                 <div className="w-12 h-0.5 bg-border"></div>
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-semibold">
                     3
                   </div>
-                  <span className="text-sm font-medium text-muted-foreground">Payment</span>
+                  <span className="text-sm font-medium text-muted-foreground">Upload Photos</span>
                 </div>
               </div>
 
@@ -235,8 +255,12 @@ const PlaceOrder = () => {
                   size="lg"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Saving..." : "Continue to Upload Photos"}
+                  {isSubmitting ? "Processing..." : "Continue to Payment"}
                 </Button>
+                
+                <p className="text-sm text-muted-foreground text-center mt-4">
+                  After payment, you'll receive an email to create your account and upload photos.
+                </p>
               </form>
             </CardContent>
           </Card>
