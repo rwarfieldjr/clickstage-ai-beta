@@ -108,44 +108,6 @@ const Portfolio = () => {
           </div>
         </section>
 
-        {/* Featured Transformation */}
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <div className="max-w-6xl mx-auto">
-              <div className="relative">
-                <BeforeAfterSlider
-                  beforeImage={transformations[0].before}
-                  afterImage={transformations[0].after}
-                  beforeAlt="Empty master bedroom"
-                  afterAlt="Staged master bedroom"
-                />
-                <p className="absolute bottom-4 -right-4 text-sm text-muted-foreground italic">
-                  * Scandinavian style
-                </p>
-              </div>
-              <div className="mt-12 text-center">
-                <h2 className="text-3xl font-bold mb-3">{transformations[0].title}</h2>
-                <p className="text-lg text-muted-foreground mb-6">
-                  {transformations[0].description}
-                </p>
-                <div className="flex flex-wrap gap-4 justify-center">
-                  <Link to="/pricing">
-                    <Button size="lg" className="bg-accent hover:bg-accent/90">
-                      Place Staging Order
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    </Button>
-                  </Link>
-                  <Link to="/pricing">
-                    <Button size="lg" variant="outline">
-                      View Pricing Plans
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Portfolio Gallery */}
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
