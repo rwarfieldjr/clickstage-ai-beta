@@ -54,6 +54,7 @@ const Pricing = () => {
       priceId: "price_1SD8lsIG3TLqP9yabBsx4jyZ",
       credits: 1,
       perPhoto: "$10 per photo",
+      competitive: "Save 70% vs. our competition ($30 to $40 per photo)",
       description: "Test Drive our service - see the difference",
     },
     {
@@ -147,6 +148,11 @@ const Pricing = () => {
                       {tier.price}
                     </CardDescription>
                     <p className="text-sm text-muted-foreground">{tier.perPhoto}</p>
+                    {tier.competitive && (
+                      <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                        {tier.competitive}
+                      </p>
+                    )}
                     {tier.savings && (
                       <p className="text-sm font-medium text-green-600 dark:text-green-400">
                         {tier.savings}
