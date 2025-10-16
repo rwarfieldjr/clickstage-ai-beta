@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Upload as UploadIcon, X } from "lucide-react";
+import { Upload as UploadIcon, X, ZoomIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -31,6 +31,7 @@ const Upload = () => {
   const [stylesDialogOpen, setStylesDialogOpen] = useState(false);
   const [selectedBundle, setSelectedBundle] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
+  const [magnifiedImage, setMagnifiedImage] = useState<{ name: string; image: string } | null>(null);
   const { credits } = useCredits(user);
 
   const styles = [
@@ -315,18 +316,33 @@ const Upload = () => {
                           {styles.map((style) => (
                             <div
                               key={style.id}
-                              className="rounded-xl overflow-hidden border border-border hover:border-accent transition-smooth cursor-pointer"
-                              onClick={() => {
-                                setStagingStyle(style.id);
-                                setStylesDialogOpen(false);
-                              }}
+                              className="rounded-xl overflow-hidden border border-border hover:border-accent transition-smooth"
                             >
-                              <img
-                                src={style.image}
-                                alt={style.name}
-                                className="w-full h-48 object-cover"
-                              />
-                              <div className="p-4">
+                              <div 
+                                className="relative cursor-pointer group"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setMagnifiedImage({ name: style.name, image: style.image });
+                                }}
+                              >
+                                <img
+                                  src={style.image}
+                                  alt={style.name}
+                                  className="w-full h-48 object-cover transition-transform group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <div className="bg-white/90 rounded-full p-3 transform transition-transform group-hover:scale-110">
+                                    <ZoomIn className="w-6 h-6 text-accent" />
+                                  </div>
+                                </div>
+                              </div>
+                              <div 
+                                className="p-4 cursor-pointer hover:bg-accent/5 transition-colors"
+                                onClick={() => {
+                                  setStagingStyle(style.id);
+                                  setStylesDialogOpen(false);
+                                }}
+                              >
                                 <h3 className="text-lg font-semibold mb-2">{style.name}</h3>
                                 <p className="text-sm text-muted-foreground">{style.description}</p>
                               </div>
@@ -428,6 +444,22 @@ const Upload = () => {
       </main>
 
       <Footer />
+
+      {/* Magnified Image Dialog */}
+      <Dialog open={!!magnifiedImage} onOpenChange={() => setMagnifiedImage(null)}>
+        <DialogContent className="max-w-5xl w-full">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{magnifiedImage?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full">
+            <img
+              src={magnifiedImage?.image}
+              alt={magnifiedImage?.name}
+              className="w-full h-auto rounded-lg"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
