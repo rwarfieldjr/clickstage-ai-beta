@@ -361,16 +361,11 @@ const Portfolio = () => {
               <p className="text-xl text-muted-foreground mb-8">
                 Join hundreds of successful agents who are closing deals faster with professional virtual staging
               </p>
-              <div className="flex flex-wrap gap-4 justify-center">
+              <div className="flex justify-center">
                 <Link to="/pricing">
                   <Button size="lg" className="bg-accent hover:bg-accent/90">
                     Get Started Today
                     <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
-                <Link to="/contact">
-                  <Button size="lg" variant="outline">
-                    Contact Us
                   </Button>
                 </Link>
               </div>
