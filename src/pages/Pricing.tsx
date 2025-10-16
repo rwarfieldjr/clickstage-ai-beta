@@ -132,7 +132,7 @@ const Pricing = () => {
               {pricingTiers.map((tier) => (
                 <Card
                   key={tier.name}
-                  className={`shadow-custom-lg border-2 transition-smooth hover:scale-105 ${
+                  className={`shadow-custom-lg border-2 transition-smooth hover:scale-105 h-full flex flex-col ${
                     tier.popular ? "border-accent" : "border-border"
                   }`}
                 >
@@ -153,10 +153,10 @@ const Pricing = () => {
                       </p>
                     )}
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="flex-grow flex flex-col">
                     <p className="text-sm text-muted-foreground mb-4">{tier.description}</p>
                     <Button
-                      className="w-full bg-accent hover:bg-accent/90"
+                      className="w-full bg-accent hover:bg-accent/90 mt-auto"
                       size="lg"
                       onClick={() => handleSelectPlan(tier.name, tier.priceId, tier.credits)}
                     >
