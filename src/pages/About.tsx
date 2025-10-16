@@ -139,16 +139,11 @@ const About = () => {
             <p className="text-xl mb-8 text-muted-foreground">
               Join thousands of agents who trust ClickStagePro to make their properties stand out online.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex justify-center">
               <Link to="/place-order">
                 <Button size="lg" className="text-lg px-8 bg-accent hover:bg-accent/90">
                   Place Staging Order
                   <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-              <Link to="/pricing">
-                <Button size="lg" variant="outline" className="text-lg px-8">
-                  See Pricing Bundles
                 </Button>
               </Link>
             </div>
