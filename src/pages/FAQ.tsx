@@ -19,11 +19,11 @@ const FAQ = () => {
       questions: [
         {
           q: "How much does virtual staging cost?",
-          a: "Traditional virtual staging companies charge $30–$40 per image. With ClickStagePro, you can get AI virtual staging for real estate starting at just $10 per photo — with bulk discounts for larger bundles. Our flexible pricing includes options from 1 photo to 100 photos, with credits that never expire for 6–12 months depending on your plan."
+          a: "Pricing depends on your bundle size — as low as $7 per photo. No subscriptions, no minimums, and all orders include 24-hour turnaround."
         },
         {
           q: "What is virtual staging?",
-          a: "Virtual staging is the process of digitally furnishing and decorating empty rooms using AI software. ClickStagePro uses AI virtual staging to transform photos of vacant homes into beautifully staged, MLS-ready images that attract buyers. It's a cost-effective alternative to traditional physical staging and helps homes sell faster."
+          a: "Virtual staging uses AI to digitally furnish and decorate empty rooms. ClickStagePro creates photorealistic, MLS-compliant images that help listings stand out and sell faster."
         },
         {
           q: "Do my credits expire?",
@@ -41,7 +41,7 @@ const FAQ = () => {
       questions: [
         {
           q: "How long does virtual staging take?",
-          a: "Our AI-driven process delivers stunning, photorealistic staged photos in less than 24 hours — far faster than traditional staging or design services. Most orders are completed within 24 hours of submission. We also offer rush delivery (same business day) for an additional $5 per photo."
+          a: "Most projects are completed in less than 24 hours. Larger bundles may take up to 48 hours."
         },
         {
           q: "Do you offer rush delivery?",
@@ -70,8 +70,8 @@ const FAQ = () => {
           a: "Yes! We can remove small items like trash cans, cables, or minor clutter as part of the staging process. Extensive clutter removal may require additional credits."
         },
         {
-          q: "Can I use virtual staging for real estate photos I've already taken?",
-          a: "Absolutely. Upload your existing property photos, choose your design style, and ClickStagePro will create professionally staged images ready for MLS or marketing use. Our AI virtual staging works with any real estate photos that meet our technical requirements (at least 2000px on the longest side)."
+          q: "Can I upload my own photos?",
+          a: "Yes. Upload your property photos directly, select your style, and we'll handle the rest — no software or editing required."
         },
         {
           q: "Can you do day-to-dusk conversions?",
@@ -94,9 +94,9 @@ const FAQ = () => {
           a: "We offer a wide range of styles including Modern, Contemporary, Traditional, Farmhouse, Industrial, Scandinavian, Mid-Century Modern, and more. You can specify your preferred style when uploading."
         },
         {
-          q: "Can you follow specific brand guidelines?",
-          a: "Yes! If you have specific brand guidelines or furniture preferences, let us know in the order notes and we'll match your requirements as closely as possible."
-        }
+          q: "What makes ClickStagePro different?",
+          a: "ClickStagePro combines real design expertise with AI precision, offering fast, consistent, and affordable results designed for real estate professionals."
+        },
       ]
     },
     {
@@ -105,7 +105,7 @@ const FAQ = () => {
       questions: [
         {
           q: "Is AI virtual staging MLS compliant?",
-          a: "Yes. Every image produced by ClickStagePro is MLS-compliant virtual staging. We never alter structural features, windows, floors, or walls — only furnishings and decor. We provide both labeled and unlabeled versions, though we strongly recommend disclosing virtual staging in your listings to maintain transparency with buyers."
+          a: "Yes. ClickStagePro follows all MLS guidelines. We never change permanent features like walls, windows, or flooring — only furnishings and décor."
         },
         {
           q: "Do you label images as 'Virtually Staged'?",
@@ -113,7 +113,7 @@ const FAQ = () => {
         },
         {
           q: "Is there a free version of virtual staging?",
-          a: "We don't offer a free plan, but our single-photo option for $10 lets you try AI virtual staging risk-free — no subscriptions or minimums required. This is significantly more affordable than other virtual staging companies that charge $30-$40 per photo."
+          a: "We don't offer a free plan, but our single-photo option for $10 lets you try AI virtual staging risk-free — no subscriptions or minimums required."
         },
         {
           q: "Who owns the staged images?",
@@ -156,10 +156,10 @@ const FAQ = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO 
-        title="Virtual Staging FAQ | AI Virtual Staging for Real Estate | ClickStagePro"
-        description="Find answers about AI virtual staging, pricing, and MLS compliance. Learn how ClickStagePro delivers fast, affordable virtual staging for real estate agents and photographers."
+        title="Virtual Staging FAQ"
+        description="Get answers about AI virtual staging with ClickStagePro — pricing, turnaround times, MLS compliance, and more. Learn why agents and photographers trust ClickStagePro."
         canonical="/faq"
-        keywords="virtual staging, virtual staging AI, virtual staging real estate, virtual staging software, MLS-compliant virtual staging, virtual staging app, real estate photo staging, AI home staging, ClickStagePro FAQ"
+        keywords="virtual staging FAQ, AI virtual staging, real estate photo staging, MLS compliant virtual staging, ClickStagePro FAQ"
         schema={schema}
       />
       <Navbar />
@@ -173,11 +173,7 @@ const FAQ = () => {
                 Virtual Staging FAQ
               </h1>
               <p className="text-xl text-muted-foreground">
-                Everything you need to know about <strong>AI virtual staging for real estate</strong>, pricing, and our process. 
-                Can't find what you're looking for? <Link to="/contact" className="text-accent hover:underline">Contact our support team</Link>.
-              </p>
-              <p className="text-base text-muted-foreground mt-4">
-                Ready to get started? Check out our <Link to="/pricing" className="text-accent hover:underline">virtual staging pricing</Link>.
+                Find quick answers about ClickStagePro's AI virtual staging — how it works, what it costs, and what makes it different.
               </p>
             </div>
           </div>
