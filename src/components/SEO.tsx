@@ -10,9 +10,12 @@ interface SEOProps {
 }
 
 export const SEO = ({ title, description, canonical, ogImage, schema, keywords }: SEOProps) => {
-  const siteUrl = "https://clickstagepro.com";
+  const siteUrl = "https://www.clickstagepro.com";
   const fullTitle = `${title} | ClickStage Pro`;
   const defaultImage = `${siteUrl}/og-image.jpg`;
+  
+  // Always provide a canonical URL to avoid conflicts between www and non-www versions
+  const canonicalUrl = canonical ? `${siteUrl}${canonical}` : `${siteUrl}${typeof window !== 'undefined' ? window.location.pathname : ''}`;
 
   return (
     <Helmet>
@@ -21,14 +24,14 @@ export const SEO = ({ title, description, canonical, ogImage, schema, keywords }
       {keywords && <meta name="keywords" content={keywords} />}
       
       {/* Canonical URL */}
-      {canonical && <link rel="canonical" href={`${siteUrl}${canonical}`} />}
+      <link rel="canonical" href={canonicalUrl} />
       
       {/* Open Graph */}
       <meta property="og:type" content="website" />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={ogImage || defaultImage} />
-      <meta property="og:url" content={`${siteUrl}${canonical || ""}`} />
+      <meta property="og:url" content={canonicalUrl} />
       <meta property="og:site_name" content="ClickStage Pro" />
       
       {/* Twitter Card */}
