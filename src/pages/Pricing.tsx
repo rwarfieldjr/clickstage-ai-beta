@@ -123,9 +123,6 @@ const Pricing = () => {
               <h1 className="text-4xl md:text-5xl font-bold mb-6 text-primary">
                 Simple, Affordable Virtual Staging Pricing
               </h1>
-              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-muted-foreground">
-                AI-powered virtual staging for agents, photographers, and teams — as low as $7 per photo.
-              </h2>
               <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
                 Fast, photorealistic, and MLS-compliant results delivered in 24 hours. Choose the plan that fits your needs.
               </p>
