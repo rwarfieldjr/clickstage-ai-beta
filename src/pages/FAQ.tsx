@@ -19,11 +19,11 @@ const FAQ = () => {
       questions: [
         {
           q: "How much does virtual staging cost?",
-          a: "We offer flexible pricing bundles starting at $10 for a single photo. Our most popular package is the 10-photo bundle at $85 ($8.50 per photo), which saves you $15. Check out our pricing page for all available options and bulk discounts."
+          a: "Traditional virtual staging companies charge $30–$40 per image. With ClickStagePro, you can get AI virtual staging for real estate starting at just $10 per photo — with bulk discounts for larger bundles. Our flexible pricing includes options from 1 photo to 100 photos, with credits that never expire for 6–12 months depending on your plan."
         },
         {
           q: "What is virtual staging?",
-          a: "Virtual staging is the digital process of furnishing and decorating empty property photos. Using AI and professional design software, we add realistic furniture, decor, and styling to showcase a home's potential to buyers. It's a cost-effective alternative to traditional physical staging."
+          a: "Virtual staging is the process of digitally furnishing and decorating empty rooms using AI software. ClickStagePro uses AI virtual staging to transform photos of vacant homes into beautifully staged, MLS-ready images that attract buyers. It's a cost-effective alternative to traditional physical staging and helps homes sell faster."
         },
         {
           q: "Do my credits expire?",
@@ -40,8 +40,8 @@ const FAQ = () => {
       icon: Clock,
       questions: [
         {
-          q: "What's the standard turnaround time?",
-          a: "Most orders are completed within 24 hours of when you submit your photos. We do have rush delivery available for same business day for $5 extra per photo. Check rush delivery at checkout for that option."
+          q: "How long does virtual staging take?",
+          a: "Our AI-driven process delivers stunning, photorealistic staged photos in less than 24 hours — far faster than traditional staging or design services. Most orders are completed within 24 hours of submission. We also offer rush delivery (same business day) for an additional $5 per photo."
         },
         {
           q: "Do you offer rush delivery?",
@@ -70,8 +70,12 @@ const FAQ = () => {
           a: "Yes! We can remove small items like trash cans, cables, or minor clutter as part of the staging process. Extensive clutter removal may require additional credits."
         },
         {
+          q: "Can I use virtual staging for real estate photos I've already taken?",
+          a: "Absolutely. Upload your existing property photos, choose your design style, and ClickStagePro will create professionally staged images ready for MLS or marketing use. Our AI virtual staging works with any real estate photos that meet our technical requirements (at least 2000px on the longest side)."
+        },
+        {
           q: "Can you do day-to-dusk conversions?",
-          a: "Absolutely! Day-to-dusk conversions are available as an add-on service. This dramatically enhances exterior photos by converting daytime shots to stunning twilight scenes."
+          a: "Yes! Day-to-dusk conversions are available as an add-on service. This dramatically enhances exterior photos by converting daytime shots to stunning twilight scenes."
         },
         {
           q: "Do you offer virtual renovations?",
@@ -100,8 +104,16 @@ const FAQ = () => {
       icon: FileText,
       questions: [
         {
+          q: "Is AI virtual staging MLS compliant?",
+          a: "Yes. Every image produced by ClickStagePro is MLS-compliant virtual staging. We never alter structural features, windows, floors, or walls — only furnishings and decor. We provide both labeled and unlabeled versions, though we strongly recommend disclosing virtual staging in your listings to maintain transparency with buyers."
+        },
+        {
           q: "Do you label images as 'Virtually Staged'?",
           a: "We provide both labeled and unlabeled versions. However, we strongly recommend (and most real estate laws require) that you disclose virtual staging in your listings to maintain transparency with buyers."
+        },
+        {
+          q: "Is there a free version of virtual staging?",
+          a: "We don't offer a free plan, but our single-photo option for $10 lets you try AI virtual staging risk-free — no subscriptions or minimums required. This is significantly more affordable than other virtual staging companies that charge $30-$40 per photo."
         },
         {
           q: "Who owns the staged images?",
@@ -144,10 +156,10 @@ const FAQ = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO 
-        title="Virtual Staging FAQ - Common Questions About Virtual Staging Services"
-        description="Get answers to common questions about virtual staging. Learn about pricing, turnaround time, MLS compliance, and how virtual staging works for real estate."
+        title="Virtual Staging FAQ | AI Virtual Staging for Real Estate | ClickStagePro"
+        description="Find answers about AI virtual staging, pricing, and MLS compliance. Learn how ClickStagePro delivers fast, affordable virtual staging for real estate agents and photographers."
         canonical="/faq"
-        keywords="virtual staging FAQ, virtual staging questions, how does virtual staging work, MLS virtual staging rules, virtual staging turnaround"
+        keywords="virtual staging, virtual staging AI, virtual staging real estate, virtual staging software, MLS-compliant virtual staging, virtual staging app, real estate photo staging, AI home staging, ClickStagePro FAQ"
         schema={schema}
       />
       <Navbar />
@@ -158,11 +170,14 @@ const FAQ = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-                Frequently Asked <span className="text-accent">Questions</span>
+                Virtual Staging FAQ
               </h1>
               <p className="text-xl text-muted-foreground">
-                Everything you need to know about our virtual staging services, pricing, and process. 
+                Everything you need to know about <strong>AI virtual staging for real estate</strong>, pricing, and our process. 
                 Can't find what you're looking for? <Link to="/contact" className="text-accent hover:underline">Contact our support team</Link>.
+              </p>
+              <p className="text-base text-muted-foreground mt-4">
+                Ready to get started? Check out our <Link to="/pricing" className="text-accent hover:underline">virtual staging pricing</Link>.
               </p>
             </div>
           </div>
