@@ -107,7 +107,7 @@ const Portfolio = () => {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="py-20 bg-gradient-to-b from-background to-muted/30">
+        <section className="py-12 bg-gradient-to-b from-background to-muted/30">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
@@ -122,7 +122,7 @@ const Portfolio = () => {
         </section>
 
         {/* Featured Transformation */}
-        <section className="py-16 bg-muted/30">
+        <section className="py-10 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
               <BeforeAfterSlider
