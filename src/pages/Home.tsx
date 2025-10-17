@@ -298,7 +298,7 @@ const Home = () => {
       <section className="py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-primary">
-            How AI Virtual Staging Works
+            How the Process Works
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             <Card className="shadow-custom-md border-0 gradient-card bg-white dark:bg-white">
