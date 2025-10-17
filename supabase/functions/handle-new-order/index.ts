@@ -49,6 +49,21 @@ serve(async (req) => {
     // Initialize Resend client
     const resend = new Resend(Deno.env.get("RESEND_API_KEY") ?? "");
 
+    // Generate signed URL for the first file if files exist
+    let downloadLink = "";
+    if (files && files.length > 0) {
+      const { data: signedUrlData, error: signedUrlError } = await supabaseAdmin
+        .storage
+        .from("original-images")
+        .createSignedUrl(files[0], 604800); // 7 days expiration
+
+      if (signedUrlError) {
+        console.error("Error creating signed URL:", signedUrlError);
+      } else {
+        downloadLink = signedUrlData.signedUrl;
+      }
+    }
+
     // Check if user already exists
     const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
     const userExists = existingUser?.users.some(u => u.email === email);
