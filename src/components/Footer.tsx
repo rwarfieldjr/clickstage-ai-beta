@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <footer className="border-t border-border bg-background">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <div className="mb-4">
               <img 
@@ -32,27 +32,6 @@ const Footer = () => {
                 <span>Greenville, SC</span>
               </div>
             </div>
-          </div>
-
-          <div>
-            <h4 className="font-medium mb-4">Product</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link to="/pricing" className="text-muted-foreground hover:text-accent transition-smooth">
-                  Pricing
-                </Link>
-              </li>
-              <li>
-                <Link to="/upload" className="text-muted-foreground hover:text-accent transition-smooth">
-                  Upload
-                </Link>
-              </li>
-              <li>
-                <Link to="/dashboard" className="text-muted-foreground hover:text-accent transition-smooth">
-                  Dashboard
-                </Link>
-              </li>
-            </ul>
           </div>
 
           <div>
