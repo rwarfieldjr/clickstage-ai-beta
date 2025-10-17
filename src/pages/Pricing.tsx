@@ -108,10 +108,10 @@ const Pricing = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO 
-        title="Virtual Staging Pricing | AI-Powered Real Estate Photo Staging"
-        description="See how much virtual staging costs with ClickStagePro. Starting at $10 per photo with AI-powered, MLS-compliant results. Perfect for agents, photographers, and teams."
+        title="Virtual Staging Pricing"
+        description="See ClickStagePro's simple virtual staging pricing. Get fast, affordable, and photorealistic results starting as low as $7 per photo. Perfect for real estate agents, photographers, and teams."
         canonical="/pricing"
-        keywords="virtual staging, AI virtual staging, virtual staging cost, virtual staging pricing, virtual staging real estate, virtual staging companies, affordable virtual staging, MLS-compliant staging, real estate photo staging"
+        keywords="virtual staging pricing, AI virtual staging, real estate photo staging, MLS-compliant staging, virtual staging cost, ClickStagePro pricing"
         schema={schema}
       />
       <Navbar />
@@ -121,20 +121,13 @@ const Pricing = () => {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h1 className="text-4xl md:text-5xl font-bold mb-6 text-primary">
-                Virtual Staging Pricing
+                Simple, Affordable Virtual Staging Pricing
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-                ClickStagePro makes <strong>AI virtual staging</strong> affordable for every real estate professional. Our flexible pricing starts at just <strong>$10 per photo</strong>, with bundle options for agents, photographers, and teams. Enjoy <strong>MLS-compliant, photorealistic results</strong> — delivered in 24 hours.
-              </p>
-              
-              <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                How Much Does Virtual Staging Cost?
+              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-muted-foreground">
+                AI-powered virtual staging for agents, photographers, and teams — as low as $7 per photo.
               </h2>
-              <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto mb-8">
-                Most <strong>virtual staging companies</strong> charge $30–$40 per photo. ClickStagePro delivers the same (or better) quality for a fraction of the price — starting at just $10 per image. Choose from flexible bundles and save even more. Credits never expire for 6–12 months depending on your plan, giving you flexibility for multiple listings. No subscriptions, no hidden fees — just <strong>AI virtual staging that sells homes faster</strong>.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Have questions? Visit our <Link to="/faq" className="text-accent hover:underline">Virtual Staging FAQ</Link> page.
+              <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+                Fast, photorealistic, and MLS-compliant results delivered in 24 hours. Choose the plan that fits your needs.
               </p>
             </div>
 
