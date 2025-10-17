@@ -293,9 +293,6 @@ const Upload = () => {
                   <li><strong>Place Order:</strong> Confirm your bundle and complete checkout securely with Stripe.</li>
                   <li><strong>Receive Images:</strong> Get professionally staged photos within 24 hours, ready for MLS or marketing.</li>
                 </ol>
-                <p className="text-sm text-muted-foreground mt-4">
-                  <strong>Need Help?</strong> Our support team is here to help with photo uploads or design questions. <Link to="/contact" className="text-accent hover:underline font-medium">Contact our team</Link> or check our <Link to="/faq" className="text-accent hover:underline font-medium">FAQ</Link>.
-                </p>
                 <p className="text-sm text-muted-foreground mt-2">
                   Not sure which bundle to choose? <Link to="/pricing" className="text-accent hover:underline font-medium">View pricing details</Link>.
                 </p>
@@ -538,6 +535,13 @@ const Upload = () => {
               </form>
             </CardContent>
           </Card>
+
+          {/* Help Section */}
+          <div className="max-w-3xl mx-auto mt-8 text-center">
+            <p className="text-lg text-muted-foreground">
+              Have questions? <Link to="/faq" className="text-accent hover:underline font-medium">Check our FAQ</Link> or <Link to="/contact" className="text-accent hover:underline font-medium">contact our team</Link>.
+            </p>
+          </div>
         </div>
       </main>
 
