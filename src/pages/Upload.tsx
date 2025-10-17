@@ -524,6 +524,22 @@ const Upload = () => {
                   </div>
                 </div>
 
+                {/* SMS Consent Notice */}
+                <div className="text-sm text-muted-foreground mt-5 leading-relaxed">
+                  By continuing, you agree to receive text messages from <strong className="text-foreground">ClickStagePro</strong>
+                  {' '}related to your order, account updates, and occasional offers.
+                  Message and data rates may apply. Reply <strong className="text-foreground">STOP</strong> to opt out or
+                  {' '}<strong className="text-foreground">HELP</strong> for help.
+                  See our{' '}
+                  <Link 
+                    to="/sms-policy" 
+                    target="_blank"
+                    className="text-accent hover:underline"
+                  >
+                    SMS Messaging Policy
+                  </Link>.
+                </div>
+
                 <Button
                   type="submit"
                   className="w-full bg-accent hover:bg-accent/90"
