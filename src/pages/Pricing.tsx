@@ -263,12 +263,6 @@ const Pricing = () => {
                   </CardContent>
                 </Card>
               </div>
-
-              <div className="text-center mt-12">
-                <p className="text-lg text-muted-foreground mb-6">
-                  Ready to get started? <Link to="/upload" className="text-accent hover:underline font-semibold">Upload your photos</Link> and choose your design style today.
-                </p>
-              </div>
             </section>
           </div>
         </div>
