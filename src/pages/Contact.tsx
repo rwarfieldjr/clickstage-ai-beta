@@ -52,13 +52,24 @@ const Contact = () => {
     setLoading(true);
 
     try {
-      // In a real implementation, this would call the Resend edge function
-      // For now, we'll just show a success message
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const { supabase } = await import("@/integrations/supabase/client");
+      
+      const { error } = await supabase.functions.invoke("send-contact-confirmation", {
+        body: {
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          message: formData.message.trim(),
+        },
+      });
 
-      toast.success("Message sent successfully! We'll get back to you soon.");
+      if (error) {
+        throw error;
+      }
+
+      toast.success("Message sent successfully! Check your email for confirmation.");
       setFormData({ name: "", email: "", message: "" });
     } catch (error) {
+      console.error("Contact form error:", error);
       toast.error("Failed to send message. Please try again.");
     } finally {
       setLoading(false);
