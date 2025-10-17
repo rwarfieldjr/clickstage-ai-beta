@@ -534,7 +534,7 @@ const Upload = () => {
                 </div>
 
                 {/* reCAPTCHA */}
-                <div className="flex justify-center">
+                <div className="flex">
                   <ReCAPTCHA
                     ref={recaptchaRef}
                     sitekey={RECAPTCHA_SITE_KEY}
