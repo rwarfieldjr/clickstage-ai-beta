@@ -224,15 +224,10 @@ const FAQ = () => {
               <p className="text-muted-foreground mb-6">
                 Our support team is here to help. Reach out anytime with questions about pricing, uploads, or design options.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex justify-center">
                 <Link to="/contact">
                   <Button size="lg" className="bg-accent hover:bg-accent/90">
                     Contact Our Team
-                  </Button>
-                </Link>
-                <Link to="/">
-                  <Button size="lg" variant="outline">
-                    Back to Homepage
                   </Button>
                 </Link>
               </div>
