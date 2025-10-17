@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SEO } from "@/components/SEO";
 import { useCredits } from "@/hooks/use-credits";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
 import coastal from "@/assets/style-coastal.jpg";
@@ -243,6 +244,12 @@ const Upload = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO 
+        title="Upload Photos | Virtual Staging Order"
+        description="Upload your property photos to start an AI virtual staging order with ClickStagePro. Fast, affordable, and MLS-compliant results delivered within 24 hours."
+        canonical="/upload"
+        keywords="upload virtual staging photos, AI virtual staging order, real estate photo upload, MLS compliant virtual staging, ClickStagePro order"
+      />
       <Navbar />
 
       <main className="flex-1 py-20 bg-secondary/30">
@@ -273,11 +280,23 @@ const Upload = () => {
                 </div>
               </div>
 
-              <CardTitle className="text-2xl">Upload Your Photos</CardTitle>
-              <CardDescription>
-                Upload property photos and select your preferred staging style. You'll complete payment in the next step.
-                {user && <span className="block mt-2 font-medium text-accent">Available Credits: {credits}</span>}
+              <CardTitle className="text-2xl md:text-3xl">Upload Your Photos</CardTitle>
+              <CardDescription className="text-base md:text-lg mt-2">
+                Start your AI virtual staging order in minutes. Simply upload your property photos, choose your bundle, and select your design style. We'll deliver photorealistic, MLS-compliant staged images within 24 hours.
+                {user && <span className="block mt-3 font-medium text-accent">Available Credits: {credits}</span>}
               </CardDescription>
+              <div className="mt-6 bg-muted/50 p-4 rounded-lg">
+                <h3 className="text-base font-semibold mb-3">How It Works</h3>
+                <ol className="space-y-2 text-sm text-muted-foreground">
+                  <li><strong>Upload:</strong> Add your photos directly from your device or cloud storage.</li>
+                  <li><strong>Select Style:</strong> Choose your preferred design look — modern, farmhouse, traditional, and more.</li>
+                  <li><strong>Place Order:</strong> Confirm your bundle and complete checkout securely with Stripe.</li>
+                  <li><strong>Receive Images:</strong> Get professionally staged photos within 24 hours, ready for MLS or marketing.</li>
+                </ol>
+                <p className="text-sm text-muted-foreground mt-4">
+                  <strong>Need Help?</strong> Our support team is here to help with photo uploads or design questions. Email us anytime at <a href="mailto:support@clickstagepro.com" className="text-accent hover:underline">support@clickstagepro.com</a>.
+                </p>
+              </div>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -511,7 +530,7 @@ const Upload = () => {
                     return bundle && files.length > bundle.photos;
                   })()}
                 >
-                  {loading ? "Processing..." : "Continue to Payment"}
+                  {loading ? "Processing..." : "Complete Order"}
                 </Button>
               </form>
             </CardContent>
