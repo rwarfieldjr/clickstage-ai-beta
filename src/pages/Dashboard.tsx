@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { credits, refetchCredits } = useCredits(user);
 
   useEffect(() => {
@@ -70,6 +71,7 @@ const Dashboard = () => {
 
   const fetchOrders = async (userId: string) => {
     try {
+      setError(null);
       const { data, error } = await supabase
         .from("orders")
         .select("*")
@@ -80,7 +82,8 @@ const Dashboard = () => {
 
       setOrders(data || []);
     } catch (error: any) {
-      toast.error(error.message || "Failed to fetch orders");
+      console.error("Error fetching orders:", error);
+      setError(error.message || "Failed to fetch orders");
     } finally {
       setLoading(false);
     }
@@ -129,6 +132,18 @@ const Dashboard = () => {
             <CardContent>
               {loading ? (
                 <p className="text-center py-8 text-muted-foreground">Loading orders...</p>
+              ) : error ? (
+                <div className="text-center py-12">
+                  <p className="text-lg text-destructive mb-4">
+                    {error}
+                  </p>
+                  <button
+                    onClick={() => user && fetchOrders(user.id)}
+                    className="text-accent hover:underline font-medium"
+                  >
+                    Try again
+                  </button>
+                </div>
               ) : orders.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-lg text-muted-foreground mb-4">

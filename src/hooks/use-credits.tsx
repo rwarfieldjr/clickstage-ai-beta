@@ -5,6 +5,7 @@ import { User } from "@supabase/supabase-js";
 export const useCredits = (user: User | null) => {
   const [credits, setCredits] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchCredits = async () => {
     if (!user) {
@@ -14,6 +15,7 @@ export const useCredits = (user: User | null) => {
     }
 
     try {
+      setError(null);
       const { data, error } = await supabase
         .from("profiles")
         .select("credits")
@@ -24,6 +26,7 @@ export const useCredits = (user: User | null) => {
       setCredits(data?.credits || 0);
     } catch (error) {
       console.error("Error fetching credits:", error);
+      setError(error instanceof Error ? error.message : "Failed to fetch credits");
       setCredits(0);
     } finally {
       setLoading(false);
@@ -32,7 +35,7 @@ export const useCredits = (user: User | null) => {
 
   useEffect(() => {
     fetchCredits();
-  }, [user]);
+  }, [user?.id]); // Only refetch when user ID changes
 
-  return { credits, loading, refetchCredits: fetchCredits };
+  return { credits, loading, error, refetchCredits: fetchCredits };
 };
