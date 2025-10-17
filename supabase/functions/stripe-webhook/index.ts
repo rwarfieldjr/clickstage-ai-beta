@@ -142,12 +142,12 @@ serve(async (req) => {
         }
       }
 
-      // Send notification emails directly with order number
+      // Send notification emails with proper order number
       if (orderNumbers.length > 0) {
         const { error: notificationError } = await supabaseAdmin.functions.invoke("send-order-notification", {
           body: {
             sessionId: session.id,
-            orderNumber: orderNumbers[0], // Use first order number
+            orderNumber: orderNumbers[0], // Use proper order number like "ORD-000001"
             customerName: customerName,
             customerEmail: customerEmail,
             photosCount: photosCount,
@@ -160,30 +160,8 @@ serve(async (req) => {
         if (notificationError) {
           console.error("Error sending notification emails:", notificationError);
         } else {
-          console.log("Notification emails sent successfully");
+          console.log("Notification emails sent successfully with order number:", orderNumbers[0]);
         }
-      }
-
-      // Also call handle-new-order for magic link (if needed)
-      const { data, error } = await supabaseAdmin.functions.invoke("handle-new-order", {
-        body: {
-          email: customerEmail,
-          name: customerName,
-          firstName,
-          lastName,
-          phone,
-          staging_style: stagingStyle,
-          photos_count: photosCount,
-          total_amount: session.amount_total || 0,
-          files: files,
-          orderNumber: orderNumbers[0],
-        },
-      });
-
-      if (error) {
-        console.error("Error calling handle-new-order:", error);
-      } else {
-        console.log("handle-new-order completed successfully:", data);
       }
 
       // Mark abandoned checkout as completed
