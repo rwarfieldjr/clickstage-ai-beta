@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Upload as UploadIcon, X, ZoomIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -34,6 +35,7 @@ const Upload = () => {
   const [selectedBundle, setSelectedBundle] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
   const [magnifiedImage, setMagnifiedImage] = useState<{ name: string; image: string } | null>(null);
+  const [smsConsent, setSmsConsent] = useState(false);
   const { credits } = useCredits(user);
   const { theme } = useTheme();
 
@@ -487,27 +489,41 @@ const Upload = () => {
                    })()}
                 </div>
 
-                {/* SMS Consent Notice */}
-                <div className="text-sm text-muted-foreground mt-5 leading-relaxed">
-                  By continuing, you agree to receive text messages from <strong className="text-foreground">ClickStagePro</strong>
-                  {' '}related to your order, account updates, and occasional offers.
-                  Message and data rates may apply. Reply <strong className="text-foreground">STOP</strong> to opt out or
-                  {' '}<strong className="text-foreground">HELP</strong> for help.
-                  See our{' '}
-                  <Link 
-                    to="/sms-policy" 
-                    target="_blank"
-                    className="text-accent hover:underline"
-                  >
-                    SMS Messaging Policy
-                  </Link>.
+                {/* SMS Consent Checkbox */}
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="sms-consent"
+                    checked={smsConsent}
+                    onCheckedChange={(checked) => setSmsConsent(checked as boolean)}
+                    required
+                    className="mt-0.5"
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <label
+                      htmlFor="sms-consent"
+                      className="text-sm leading-relaxed cursor-pointer text-muted-foreground"
+                    >
+                      By checking this box, you agree to receive text messages from{' '}
+                      <strong className="text-foreground">ClickStagePro</strong> related to your order, 
+                      account updates, and occasional offers. Message & data rates may apply. 
+                      Reply <strong className="text-foreground">STOP</strong> to opt out or{' '}
+                      <strong className="text-foreground">HELP</strong> for help. See our{' '}
+                      <Link 
+                        to="/sms-policy" 
+                        target="_blank"
+                        className="text-accent hover:underline"
+                      >
+                        SMS Messaging Policy
+                      </Link>.
+                    </label>
+                  </div>
                 </div>
 
                 <Button
                   type="submit"
                   className="w-full bg-accent hover:bg-accent/90"
                   size="lg"
-                  disabled={loading || (() => {
+                  disabled={!smsConsent || loading || (() => {
                     const bundle = bundles.find(b => b.id === selectedBundle);
                     return bundle && files.length > bundle.photos;
                   })()}
