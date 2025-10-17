@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Upload as UploadIcon, X, ZoomIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -35,8 +34,6 @@ const Upload = () => {
   const [selectedBundle, setSelectedBundle] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
   const [magnifiedImage, setMagnifiedImage] = useState<{ name: string; image: string } | null>(null);
-  const [transactionalConsent, setTransactionalConsent] = useState(false);
-  const [marketingConsent, setMarketingConsent] = useState(false);
   const { credits } = useCredits(user);
   const { theme } = useTheme();
 
@@ -488,40 +485,6 @@ const Upload = () => {
                      }
                      return null;
                    })()}
-                </div>
-
-                {/* Transactional Consent */}
-                <div className="flex items-start space-x-3">
-                  <Checkbox
-                    id="transactionalConsent"
-                    checked={transactionalConsent}
-                    onCheckedChange={(checked) => setTransactionalConsent(checked as boolean)}
-                  />
-                  <div className="grid gap-1.5 leading-none">
-                    <label
-                      htmlFor="transactionalConsent"
-                      className="text-sm leading-relaxed cursor-pointer"
-                    >
-                      By checking this box, I consent to receive transactional messages related to my account, orders, or services I have requested. These messages may include appointment reminders, order confirmations, and account notifications among others. Message frequency may vary. Message & Data rates may apply. Reply HELP for help or STOP to opt-out.
-                    </label>
-                  </div>
-                </div>
-
-                {/* Marketing Consent */}
-                <div className="flex items-start space-x-3">
-                  <Checkbox
-                    id="marketingConsent"
-                    checked={marketingConsent}
-                    onCheckedChange={(checked) => setMarketingConsent(checked as boolean)}
-                  />
-                  <div className="grid gap-1.5 leading-none">
-                    <label
-                      htmlFor="marketingConsent"
-                      className="text-sm leading-relaxed cursor-pointer"
-                    >
-                      By checking this box, I consent to receive marketing and promotional messages, including special offers, discounts, new product updates among others. Message frequency may vary. Message & Data rates may apply. Reply HELP for help or STOP to opt-out.
-                    </label>
-                  </div>
                 </div>
 
                 {/* SMS Consent Notice */}
