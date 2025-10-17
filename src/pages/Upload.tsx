@@ -14,6 +14,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { useCredits } from "@/hooks/use-credits";
+import { useTheme } from "@/hooks/use-theme";
 import ReCAPTCHA from "react-google-recaptcha";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
 import coastal from "@/assets/style-coastal.jpg";
@@ -40,6 +41,7 @@ const Upload = () => {
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
   const { credits } = useCredits(user);
+  const { theme } = useTheme();
 
   // Replace with your actual Google reCAPTCHA site key
   const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; // Test key for development
@@ -540,7 +542,7 @@ const Upload = () => {
                     sitekey={RECAPTCHA_SITE_KEY}
                     onChange={(token) => setRecaptchaToken(token)}
                     onExpired={() => setRecaptchaToken(null)}
-                    theme="light"
+                    theme={theme === "dark" ? "dark" : "light"}
                   />
                 </div>
 
