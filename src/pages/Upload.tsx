@@ -201,7 +201,7 @@ const Upload = () => {
         const fileName = `temp/${sessionId}/${crypto.randomUUID()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("original-images")
+          .from("uploads")
           .upload(fileName, file);
 
         if (uploadError) throw uploadError;
