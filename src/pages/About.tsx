@@ -153,16 +153,11 @@ const About = () => {
           <p className="text-xl mb-8 max-w-2xl mx-auto text-white/90">
             Start with our affordable pricing plans and see why thousands of agents trust ClickStagePro
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Link to="/pricing">
               <Button size="lg" variant="secondary" className="text-lg px-8">
                 View Pricing Plans
                 <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-            <Link to="/upload">
-              <Button size="lg" variant="outline" className="text-lg px-8 border-white/20 text-white hover:bg-white/10">
-                Upload Your Photos
               </Button>
             </Link>
           </div>
