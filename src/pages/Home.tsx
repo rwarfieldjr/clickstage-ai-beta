@@ -24,10 +24,10 @@ const Home = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEO 
-        title="Virtual Staging Services for Real Estate Agents & Photographers"
-        description="Transform listing photos with AI-powered virtual staging. Perfect for real estate agents and photographers. Upload → Stage → Sell faster with ClickStage Pro."
+        title="AI Virtual Staging for Real Estate"
+        description="ClickStagePro provides fast, affordable AI virtual staging for real estate photos. Get photorealistic, MLS-compliant staged images in 24 hours. Perfect for agents, photographers, and teams."
         canonical="/"
-        keywords="virtual staging, virtual staging services, AI virtual staging, virtual staging for real estate, virtual staging for photographers, real estate photo enhancement"
+        keywords="virtual staging, virtual staging AI, virtual staging for real estate, AI virtual staging, virtual staging software, virtual staging companies, virtual staging app, real estate photo staging, MLS-compliant staging"
         schema={schema}
       />
       <Navbar />
@@ -46,13 +46,13 @@ const Home = () => {
               <span className="text-sm md:text-base text-white/90">Advanced AI Technology</span>
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              Virtual Staging That Sells Homes Faster
+              AI Virtual Staging for Real Estate Agents, Photographers, and Teams
             </h1>
             <h2 className="text-2xl md:text-3xl mb-6 text-white/90">
-              For Agents • For Photographers • For Teams
+              Transform Empty Rooms into Beautifully Furnished Spaces — Starting at $10 Per Photo
             </h2>
             <p className="text-lg md:text-xl mb-8 text-white/80 max-w-3xl mx-auto">
-              AI-powered virtual staging designed for real estate professionals. Upload your listing photos and get photorealistic staged images in 24 hours. MLS-compliant and proven to sell homes faster.
+              ClickStagePro offers AI-powered virtual staging for real estate professionals. Upload your listing photos and receive stunning, MLS-compliant staged images in 24 hours. Affordable, fast, and photorealistic — perfect for agents, photographers, and teams looking to sell homes faster.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/pricing">
@@ -87,7 +87,7 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-primary dark:text-white">
-              Why Choose AI Virtual Staging?
+              Why Agents and Photographers Love ClickStagePro
             </h2>
             <p className="text-center text-muted-foreground dark:text-white/70 mb-12 text-lg">
               Transform empty properties into buyer's dreams with cutting-edge technology
@@ -143,10 +143,10 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Professional Staging at <span className="text-primary">Unbeatable Prices</span>
+              Affordable Pricing — Starting at $10 Per Photo
             </h2>
             <p className="text-xl md:text-2xl text-muted-foreground mb-10">
-              Pricing as low as <span className="text-primary font-semibold">$7.00 per Staged Photo</span>
+              Professional virtual staging pricing as low as <span className="text-primary font-semibold">$7.00 per photo</span> with our bulk packages
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/pricing">
@@ -248,32 +248,32 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
-              See the Transformation
+              See Before & After Virtual Staging Examples
             </h2>
             <p className="text-white/70 mb-12 text-lg max-w-3xl mx-auto">
-              See the dramatic transformation as we turn empty rooms into beautiful, staged spaces that sell faster
+              Real examples of AI virtual staging transforming empty rooms into beautifully furnished spaces
             </p>
             
             <div className="space-y-8 mb-8">
               <BeforeAfterSlider
                 beforeImage={livingBefore}
                 afterImage={livingAfter}
-                beforeAlt="Empty living room before staging"
-                afterAlt="Beautifully staged living room"
+                beforeAlt="AI virtual staging for real estate living room before"
+                afterAlt="AI virtual staging for real estate living room after - MLS compliant virtual staging example"
               />
               
               <BeforeAfterSlider
                 beforeImage={bedroomBefore}
                 afterImage={bedroomAfter}
-                beforeAlt="Empty bedroom before staging"
-                afterAlt="Beautifully staged bedroom"
+                beforeAlt="Virtual staging before and after photo - empty bedroom"
+                afterAlt="Virtual staging before and after photo - beautifully furnished bedroom"
               />
               
               <BeforeAfterSlider
                 beforeImage={livingBefore2}
                 afterImage={livingAfter2}
-                beforeAlt="Empty living room with fireplace before staging"
-                afterAlt="Beautifully staged living room with fireplace"
+                beforeAlt="Virtual staging for real estate photos - unfurnished living room"
+                afterAlt="Virtual staging for real estate photos - professionally staged living room"
               />
             </div>
             
@@ -291,7 +291,7 @@ const Home = () => {
       <section className="py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-primary">
-            How It Works
+            How AI Virtual Staging Works
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             <Card className="shadow-custom-md border-0 gradient-card bg-white dark:bg-white">

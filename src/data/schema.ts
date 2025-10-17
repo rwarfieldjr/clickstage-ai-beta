@@ -1,25 +1,17 @@
 export const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "ClickStage Pro",
-  "url": "https://clickstagepro.com",
-  "logo": "https://clickstagepro.com/logo.png",
-  "description": "AI-powered virtual staging services for real estate agents and photographers",
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Greenville",
-    "addressRegion": "SC",
-    "addressCountry": "US"
-  },
-  "contactPoint": {
-    "@type": "ContactPoint",
-    "contactType": "customer service",
-    "email": "support@clickstagepro.com"
-  },
+  "name": "ClickStagePro",
+  "url": "https://www.clickstagepro.com",
+  "logo": "https://www.clickstagepro.com/images/logo.png",
+  "description": "AI-powered virtual staging for real estate photos. Upload your listing photos and get photorealistic, MLS-compliant staged images in 24 hours.",
+  "serviceType": "Virtual Staging",
+  "areaServed": "United States",
+  "priceRange": "$",
   "sameAs": [
-    "https://www.linkedin.com/company/clickstagepro",
+    "https://www.facebook.com/clickstagepro",
     "https://www.instagram.com/clickstagepro",
-    "https://www.facebook.com/clickstagepro"
+    "https://www.linkedin.com/company/clickstagepro"
   ]
 };
 
