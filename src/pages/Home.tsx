@@ -39,13 +39,19 @@ const Home = () => {
             src={livingBefore} 
             alt="AI virtual staging for real estate living room before" 
             className="w-full h-full object-cover"
+            width="1920"
+            height="1080"
             fetchPriority="high"
+            decoding="async"
           />
           <img 
             src={livingAfter} 
             alt="AI virtual staging for real estate living room after - MLS compliant virtual staging" 
             className="w-full h-full object-cover"
+            width="1920"
+            height="1080"
             loading="eager"
+            decoding="async"
           />
         </div>
         <div className="absolute inset-y-0 left-1/2 w-1.5 bg-white/40 -translate-x-1/2"></div>

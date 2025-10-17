@@ -13,6 +13,10 @@ const Footer = () => {
                 src={logoMain} 
                 alt="ClickStage Pro - Virtual Staging Powered by AI" 
                 className="h-12 w-auto"
+                width="142"
+                height="48"
+                loading="lazy"
+                decoding="async"
               />
             </div>
             <p className="text-sm text-muted-foreground mb-4">

@@ -40,6 +40,9 @@ const Navbar = () => {
               src={logoMain} 
               alt="ClickStage Pro - Virtual Staging Powered by AI" 
               className="h-16 w-auto"
+              width="190"
+              height="64"
+              decoding="async"
             />
           </Link>
 

@@ -44,6 +44,10 @@ const BeforeAfterSlider = ({
           src={afterImage} 
           alt={afterAlt}
           className="w-full h-full object-cover"
+          width="1920"
+          height="1080"
+          loading="lazy"
+          decoding="async"
         />
         <div className="absolute bottom-4 right-4 bg-accent text-white px-3 py-1 rounded-md text-sm font-medium">
           After
@@ -59,6 +63,10 @@ const BeforeAfterSlider = ({
           src={beforeImage} 
           alt={beforeAlt}
           className="w-full h-full object-cover"
+          width="1920"
+          height="1080"
+          loading="lazy"
+          decoding="async"
         />
         <div className="absolute bottom-4 left-4 bg-muted text-foreground px-3 py-1 rounded-md text-sm font-medium">
           Before
