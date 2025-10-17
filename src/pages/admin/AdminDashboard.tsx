@@ -19,7 +19,7 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
-  const { isAdmin, loading, requireAdmin } = useAdmin();
+  const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const navigate = useNavigate();
 

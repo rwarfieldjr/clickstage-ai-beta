@@ -27,7 +27,7 @@ interface OrderDetail {
 
 export default function AdminOrderDetail() {
   const { id } = useParams();
-  const { isAdmin, loading, requireAdmin } = useAdmin();
+  const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const navigate = useNavigate();
 

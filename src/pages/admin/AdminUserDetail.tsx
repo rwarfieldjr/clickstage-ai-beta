@@ -37,7 +37,7 @@ interface Transaction {
 
 export default function AdminUserDetail() {
   const { id } = useParams();
-  const { isAdmin, loading, requireAdmin } = useAdmin();
+  const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);

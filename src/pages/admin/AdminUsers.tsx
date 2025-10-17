@@ -24,7 +24,7 @@ interface Profile {
 }
 
 export default function AdminUsers() {
-  const { isAdmin, loading, requireAdmin } = useAdmin();
+  const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
   const [users, setUsers] = useState<Profile[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<Profile[]>([]);
   const [searchTerm, setSearchTerm] = useState("");

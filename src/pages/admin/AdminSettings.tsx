@@ -23,7 +23,7 @@ interface AdminUser {
 }
 
 export default function AdminSettings() {
-  const { isAdmin, loading, requireAdmin } = useAdmin();
+  const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const navigate = useNavigate();

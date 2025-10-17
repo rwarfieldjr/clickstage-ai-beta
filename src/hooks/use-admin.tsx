@@ -63,5 +63,8 @@ export const useAdmin = () => {
     }
   };
 
-  return { user, isAdmin, loading, requireAdmin };
+  // Prevent rendering admin UI until auth check completes
+  const shouldRenderAdmin = !loading && isAdmin;
+
+  return { user, isAdmin, loading, requireAdmin, shouldRenderAdmin };
 };

@@ -23,7 +23,7 @@ interface OrderWithUser {
 }
 
 export default function AdminOrders() {
-  const { isAdmin, loading, requireAdmin } = useAdmin();
+  const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
   const [orders, setOrders] = useState<OrderWithUser[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<OrderWithUser[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
