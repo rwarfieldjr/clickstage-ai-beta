@@ -114,7 +114,8 @@ serve(async (req) => {
         console.log("User created successfully:", userId);
       }
 
-      // Create orders from uploaded files
+      // Create orders from uploaded files and collect order numbers
+      const orderNumbers: string[] = [];
       if (files.length > 0 && userId) {
         console.log(`Creating ${files.length} orders for user ${userId}`);
         
@@ -134,13 +135,36 @@ serve(async (req) => {
 
           if (orderError) {
             console.error("Error creating order:", orderError);
-          } else {
-            console.log("Order created:", orderData?.order_number);
+          } else if (orderData?.order_number) {
+            console.log("Order created:", orderData.order_number);
+            orderNumbers.push(orderData.order_number);
           }
         }
       }
 
-      // Call handle-new-order to send emails
+      // Send notification emails directly with order number
+      if (orderNumbers.length > 0) {
+        const { error: notificationError } = await supabaseAdmin.functions.invoke("send-order-notification", {
+          body: {
+            sessionId: session.id,
+            orderNumber: orderNumbers[0], // Use first order number
+            customerName: customerName,
+            customerEmail: customerEmail,
+            photosCount: photosCount,
+            amountPaid: (session.amount_total || 0) / 100, // Convert from cents to dollars
+            files: files,
+            stagingStyle: stagingStyle,
+          },
+        });
+
+        if (notificationError) {
+          console.error("Error sending notification emails:", notificationError);
+        } else {
+          console.log("Notification emails sent successfully");
+        }
+      }
+
+      // Also call handle-new-order for magic link (if needed)
       const { data, error } = await supabaseAdmin.functions.invoke("handle-new-order", {
         body: {
           email: customerEmail,
@@ -152,6 +176,7 @@ serve(async (req) => {
           photos_count: photosCount,
           total_amount: session.amount_total || 0,
           files: files,
+          orderNumber: orderNumbers[0],
         },
       });
 

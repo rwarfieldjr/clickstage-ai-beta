@@ -10,7 +10,7 @@ const corsHeaders = {
 // Input validation schema
 const NotificationSchema = z.object({
   sessionId: z.string().min(1),
-  orderNumber: z.number().int().positive().optional(),
+  orderNumber: z.string().min(1).optional(), // Changed to string to accept order numbers like "ORD-000001"
   customerName: z.string().min(1),
   customerEmail: z.string().email(),
   photosCount: z.number().int().positive(),
