@@ -144,7 +144,7 @@ serve(async (req) => {
       [customerEmail],
       `Order Confirmation #${displayOrderNumber} - ClickStage Pro`,
       customerEmailHtml,
-      "ClickStage Pro <onboarding@resend.dev>"
+      "ClickStage Pro <noreply@clickstagepro.com>"
     );
 
     // Send notification email to admin/team
@@ -202,7 +202,7 @@ serve(async (req) => {
       ["rwarfieldjr@gmail.com", "RiaSiangioKW@gmail.com"],
       `NEW ORDER #${displayOrderNumber} - Action Required`,
       adminEmailHtml,
-      "ClickStage Pro Orders <onboarding@resend.dev>"
+      "ClickStage Pro <noreply@clickstagepro.com>"
     );
 
     console.log(`Notification emails sent for order ${sessionId}`);

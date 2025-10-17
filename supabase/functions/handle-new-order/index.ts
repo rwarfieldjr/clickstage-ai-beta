@@ -96,7 +96,7 @@ serve(async (req) => {
     // Send customer confirmation email
     console.log("Sending customer email to:", email);
     const { error: customerEmailError } = await resend.emails.send({
-      from: "ClickStagePro <orders@clickstagepro.com>",
+      from: "ClickStage Pro <noreply@clickstagepro.com>",
       to: email,
       subject: "Thank You for Your Order!",
       html: `
@@ -208,7 +208,7 @@ serve(async (req) => {
 
     // Send admin notification email
     const { error: adminEmailError } = await resend.emails.send({
-      from: "ClickStagePro <orders@clickstagepro.com>",
+      from: "ClickStage Pro <noreply@clickstagepro.com>",
       to: "orders@clickstagepro.com",
       subject: `New Order Received - Action Required`,
       html: `

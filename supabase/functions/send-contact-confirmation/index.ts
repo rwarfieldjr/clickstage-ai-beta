@@ -30,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send confirmation email to customer
     const customerEmail = await resend.emails.send({
-      from: "ClickStagePro <onboarding@resend.dev>",
+      from: "ClickStage Pro <noreply@clickstagepro.com>",
       to: [email],
       subject: "We Received Your Message - ClickStagePro",
       html: `
@@ -92,7 +92,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send notification to business
     const adminEmail = await resend.emails.send({
-      from: "ClickStagePro Notifications <onboarding@resend.dev>",
+      from: "ClickStage Pro <noreply@clickstagepro.com>",
       to: ["support@clickstagepro.com"],
       subject: `New Contact Form Submission from ${name}`,
       html: `
