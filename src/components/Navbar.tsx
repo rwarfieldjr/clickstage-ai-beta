@@ -1,15 +1,17 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Upload, DollarSign, Mail, Image, HelpCircle, LayoutGrid, Users, UserCircle } from "lucide-react";
+import { Home, Upload, DollarSign, Mail, Image, HelpCircle, LayoutGrid, Users, UserCircle, Menu, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import logoMain from "@/assets/logo-primary.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -24,6 +26,10 @@ const Navbar = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleNavClick = () => {
+    setMobileMenuOpen(false);
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -65,32 +71,138 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center space-x-3">
+            {/* Mobile Menu */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="lg:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <nav className="flex flex-col space-y-4 mt-8">
+                  <Link 
+                    to="/" 
+                    className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
+                    onClick={handleNavClick}
+                  >
+                    <Home className="w-5 h-5" />
+                    Home
+                  </Link>
+                  <Link 
+                    to="/about" 
+                    className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
+                    onClick={handleNavClick}
+                  >
+                    <Users className="w-5 h-5" />
+                    About
+                  </Link>
+                  <Link 
+                    to="/portfolio" 
+                    className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
+                    onClick={handleNavClick}
+                  >
+                    <Image className="w-5 h-5" />
+                    Portfolio
+                  </Link>
+                  <Link 
+                    to="/styles" 
+                    className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
+                    onClick={handleNavClick}
+                  >
+                    <LayoutGrid className="w-5 h-5" />
+                    Styles
+                  </Link>
+                  <Link 
+                    to="/pricing" 
+                    className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
+                    onClick={handleNavClick}
+                  >
+                    <DollarSign className="w-5 h-5" />
+                    Pricing
+                  </Link>
+                  <Link 
+                    to="/faq" 
+                    className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
+                    onClick={handleNavClick}
+                  >
+                    <HelpCircle className="w-5 h-5" />
+                    FAQ
+                  </Link>
+                  
+                  <div className="pt-4 border-t border-border">
+                    {user ? (
+                      <>
+                        <Link 
+                          to="/dashboard" 
+                          className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
+                          onClick={handleNavClick}
+                        >
+                          <LayoutGrid className="w-5 h-5" />
+                          Portal
+                        </Link>
+                        <Link 
+                          to="/account" 
+                          className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
+                          onClick={handleNavClick}
+                        >
+                          <UserCircle className="w-5 h-5" />
+                          Account
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link 
+                          to="/auth" 
+                          className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
+                          onClick={handleNavClick}
+                        >
+                          Login
+                        </Link>
+                        <Link 
+                          to="/pricing"
+                          onClick={handleNavClick}
+                        >
+                          <Button size="sm" className="bg-accent hover:bg-accent/90 w-full mt-2">
+                            Get Started
+                          </Button>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </nav>
+              </SheetContent>
+            </Sheet>
+
             <ThemeToggle />
-            {user ? (
-              <>
-                <Link to="/dashboard">
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
-                    <LayoutGrid className="w-4 h-4" />
-                    Portal
-                  </Button>
-                </Link>
-                <Link to="/account">
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                    <UserCircle className="w-4 h-4" />
-                    Account
-                  </Button>
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link to="/auth">
-                  <Button variant="outline" size="sm">Login</Button>
-                </Link>
-                <Link to="/pricing">
-                  <Button size="sm" className="bg-accent hover:bg-accent/90">Get Started</Button>
-                </Link>
-              </>
-            )}
+            
+            {/* Desktop Auth Buttons */}
+            <div className="hidden lg:flex items-center space-x-3">
+              {user ? (
+                <>
+                  <Link to="/dashboard">
+                    <Button variant="outline" size="sm" className="flex items-center gap-2">
+                      <LayoutGrid className="w-4 h-4" />
+                      Portal
+                    </Button>
+                  </Link>
+                  <Link to="/account">
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                      <UserCircle className="w-4 h-4" />
+                      Account
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/auth">
+                    <Button variant="outline" size="sm">Login</Button>
+                  </Link>
+                  <Link to="/pricing">
+                    <Button size="sm" className="bg-accent hover:bg-accent/90">Get Started</Button>
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
