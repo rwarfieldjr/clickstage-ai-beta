@@ -24,7 +24,7 @@ const Contact = () => {
       "@type": "OpeningHoursSpecification",
       "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
       "opens": "09:00",
-      "closes": "18:00"
+      "closes": "17:00"
     }
   };
 
@@ -182,7 +182,7 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold mb-2">Business Hours</h3>
                         <p className="text-muted-foreground text-sm">
-                          Monday–Friday: 9 AM–6 PM EST<br />
+                          Monday–Friday: 9 AM–5 PM EST<br />
                           Closed on weekends and holidays
                         </p>
                       </div>
