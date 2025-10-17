@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -294,7 +294,10 @@ const Upload = () => {
                   <li><strong>Receive Images:</strong> Get professionally staged photos within 24 hours, ready for MLS or marketing.</li>
                 </ol>
                 <p className="text-sm text-muted-foreground mt-4">
-                  <strong>Need Help?</strong> Our support team is here to help with photo uploads or design questions. Email us anytime at <a href="mailto:support@clickstagepro.com" className="text-accent hover:underline">support@clickstagepro.com</a>.
+                  <strong>Need Help?</strong> Our support team is here to help with photo uploads or design questions. <Link to="/contact" className="text-accent hover:underline font-medium">Contact our team</Link> or check our <Link to="/faq" className="text-accent hover:underline font-medium">FAQ</Link>.
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Not sure which bundle to choose? <Link to="/pricing" className="text-accent hover:underline font-medium">View pricing details</Link>.
                 </p>
               </div>
             </CardHeader>

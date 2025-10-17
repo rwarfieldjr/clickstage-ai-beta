@@ -88,14 +88,24 @@ const About = () => {
             </ul>
 
             <h2 className="text-3xl md:text-4xl font-bold mb-8 mt-12 text-primary">Our Story</h2>
-            <div className="prose prose-lg max-w-none">
-              <p className="text-lg text-foreground/80 leading-relaxed mb-6">
-                Founded by real estate professionals who understand the importance of presentation, ClickStagePro combines technology and creativity to deliver consistent, high-quality virtual staging for every listing.
-              </p>
-              
-              <p className="text-lg text-foreground/80 leading-relaxed">
-                We're proud to help agents and photographers across the country present properties beautifully — without the cost or time of physical staging.
-              </p>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
+              Founded by real estate professionals who understand the importance of presentation, ClickStagePro combines technology and creativity to deliver consistent, high-quality virtual staging for every listing.
+            </p>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mt-4">
+              We're proud to help agents and photographers across the country present properties beautifully — without the cost or time of physical staging.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+              <Link to="/pricing">
+                <Button size="lg" className="bg-accent hover:bg-accent/90">
+                  View Pricing Plans
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+              <Link to="/contact">
+                <Button size="lg" variant="outline">
+                  Contact Our Team
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -135,23 +145,26 @@ const About = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-primary">
-              Ready to Transform Your Listings?
-            </h2>
-            <p className="text-xl mb-8 text-muted-foreground">
-              Join thousands of agents who trust ClickStagePro to make their properties stand out online.
-            </p>
-            <div className="flex justify-center">
-              <Link to="/pricing">
-                <Button size="lg" className="text-lg px-8 bg-accent hover:bg-accent/90">
-                  Place Staging Order
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-            </div>
+      <section className="py-20 bg-primary text-white">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+            Ready to Transform Your Listings?
+          </h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto text-white/90">
+            Start with our affordable pricing plans and see why thousands of agents trust ClickStagePro
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/pricing">
+              <Button size="lg" variant="secondary" className="text-lg px-8">
+                View Pricing Plans
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+            <Link to="/upload">
+              <Button size="lg" variant="outline" className="text-lg px-8 border-white/20 text-white hover:bg-white/10">
+                Upload Your Photos
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

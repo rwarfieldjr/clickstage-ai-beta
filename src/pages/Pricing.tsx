@@ -132,6 +132,12 @@ const Pricing = () => {
             </div>
 
             {/* Pricing Tiers */}
+            <div className="mb-6 text-center">
+              <p className="text-muted-foreground">
+                Have questions? <Link to="/faq" className="text-accent hover:underline font-medium">Check our FAQ</Link> or <Link to="/contact" className="text-accent hover:underline font-medium">contact our team</Link>.
+              </p>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {pricingTiers.map((tier) => (
                 <Card
@@ -259,6 +265,12 @@ const Pricing = () => {
                     </ul>
                   </CardContent>
                 </Card>
+              </div>
+
+              <div className="text-center mt-12">
+                <p className="text-lg text-muted-foreground mb-6">
+                  Ready to get started? <Link to="/upload" className="text-accent hover:underline font-semibold">Upload your photos</Link> and choose your design style today.
+                </p>
               </div>
             </section>
           </div>

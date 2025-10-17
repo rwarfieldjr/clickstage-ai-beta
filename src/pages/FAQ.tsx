@@ -8,6 +8,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 import { DollarSign, Clock, Settings, FileText, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -172,8 +173,11 @@ const FAQ = () => {
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
                 Virtual Staging FAQ
               </h1>
-              <p className="text-xl text-muted-foreground">
+              <p className="text-xl text-muted-foreground mb-4">
                 Find quick answers about ClickStagePro's AI virtual staging — how it works, what it costs, and what makes it different.
+              </p>
+              <p className="text-muted-foreground">
+                Ready to get started? <Link to="/pricing" className="text-accent hover:underline font-medium">View pricing details</Link> or <Link to="/upload" className="text-accent hover:underline font-medium">upload your photos</Link>.
               </p>
             </div>
           </div>
@@ -213,6 +217,25 @@ const FAQ = () => {
                   </div>
                 );
               })}
+            </div>
+
+            <div className="text-center mt-16 p-8 bg-muted/50 rounded-lg max-w-3xl mx-auto">
+              <h3 className="text-2xl font-bold mb-4">Still Have Questions?</h3>
+              <p className="text-muted-foreground mb-6">
+                Our support team is here to help. Reach out anytime with questions about pricing, uploads, or design options.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/contact">
+                  <Button size="lg" className="bg-accent hover:bg-accent/90">
+                    Contact Our Team
+                  </Button>
+                </Link>
+                <Link to="/">
+                  <Button size="lg" variant="outline">
+                    Back to Homepage
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </section>

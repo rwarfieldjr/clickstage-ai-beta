@@ -57,8 +57,13 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/pricing">
                 <Button size="lg" variant="secondary" className="text-lg px-8">
-                  Get Started
+                  View Pricing Plans
                   <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+              <Link to="/about">
+                <Button size="lg" variant="outline" className="text-lg px-8 border-white/20 text-white hover:bg-white/10">
+                  Learn More About Us
                 </Button>
               </Link>
             </div>
@@ -151,13 +156,13 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/pricing">
                 <Button size="lg" className="text-lg px-8">
-                  View All Pricing Plans
+                  View Pricing Details
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link to="/pricing">
+              <Link to="/faq">
                 <Button size="lg" variant="outline" className="text-lg px-8">
-                  Get Started Today
+                  Read Our FAQ
                 </Button>
               </Link>
             </div>
@@ -277,12 +282,19 @@ const Home = () => {
               />
             </div>
             
-            <Link to="/portfolio">
-              <Button size="lg" className="bg-accent hover:bg-accent/90 text-white">
-                View More Examples
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/portfolio">
+                <Button size="lg" className="bg-accent hover:bg-accent/90 text-white">
+                  View Portfolio
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+              <Link to="/upload">
+                <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                  Upload Your Photos
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -350,17 +362,24 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-primary">
-              Ready to Transform Your Photos?
+              Ready to Transform Your Listings?
             </h2>
             <p className="text-xl mb-8 text-muted-foreground">
-              Get started with ClickStagePro today and see the difference AI staging can make.
+              Start with our affordable pricing plans and see why thousands of agents trust ClickStagePro
             </p>
-            <Link to="/pricing">
-              <Button size="lg" className="text-lg px-8 bg-accent hover:bg-accent/90">
-                View Pricing Plans
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/pricing">
+                <Button size="lg" className="text-lg px-8 bg-accent hover:bg-accent/90">
+                  View Pricing Plans
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+              <Link to="/contact">
+                <Button size="lg" variant="outline" className="text-lg px-8">
+                  Contact Our Team
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
