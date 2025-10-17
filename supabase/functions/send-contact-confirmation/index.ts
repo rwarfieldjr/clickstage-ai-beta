@@ -85,6 +85,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Customer confirmation email sent:", customerEmail);
 
+    if (customerEmail.error) {
+      console.error("Failed to send customer email:", customerEmail.error);
+      throw new Error(`Failed to send confirmation email: ${customerEmail.error.message}`);
+    }
+
     // Send notification to business
     const adminEmail = await resend.emails.send({
       from: "ClickStagePro Notifications <onboarding@resend.dev>",
@@ -137,6 +142,11 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     console.log("Admin notification email sent:", adminEmail);
+
+    if (adminEmail.error) {
+      console.error("Failed to send admin email:", adminEmail.error);
+      throw new Error(`Failed to send admin notification: ${adminEmail.error.message}`);
+    }
 
     return new Response(
       JSON.stringify({ 
