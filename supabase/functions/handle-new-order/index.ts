@@ -152,6 +152,45 @@ serve(async (req) => {
       console.log("Customer email sent successfully");
     }
 
+    // Generate signed URLs for admin access (48 hour expiry)
+    let signedUrlsHtml = '';
+    if (files && files.length > 0) {
+      const signedUrls = await Promise.all(
+        files.map(async (file) => {
+          const { data, error } = await supabaseAdmin.storage
+            .from('original-images')
+            .createSignedUrl(file, 172800); // 48 hours
+          
+          if (error) {
+            console.error(`Error creating signed URL for ${file}:`, error);
+            return null;
+          }
+          return { file, url: data.signedUrl };
+        })
+      );
+
+      const validUrls = signedUrls.filter(item => item !== null);
+      
+      if (validUrls.length > 0) {
+        signedUrlsHtml = `
+        <div style="background-color: #2d3748; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #667eea; margin-top: 0;">📸 Download Original Photos</h3>
+          <p style="margin-bottom: 15px; font-size: 14px;">Secure links (valid for 48 hours):</p>
+          <ul style="list-style: none; padding: 0;">
+            ${validUrls.map((item, idx) => `
+              <li style="margin-bottom: 10px;">
+                <a href="${item.url}" 
+                   style="color: #667eea; word-break: break-all; font-size: 13px;">
+                  Photo ${idx + 1}
+                </a>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+        `;
+      }
+    }
+
     // Send admin notification email
     const { error: adminEmailError } = await resend.emails.send({
       from: "ClickStagePro <orders@clickstagepro.com>",
@@ -176,21 +215,12 @@ serve(async (req) => {
             ${staging_style ? `<p style="margin-bottom: 10px;"><strong>Staging Style:</strong> ${staging_style.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>` : ''}
             <p style="margin-bottom: 20px;"><strong>Amount Paid:</strong> $${(total_amount / 100).toFixed(2)}</p>
             
-            ${files && files.length > 0 ? `
-            <div style="background-color: #2d3748; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #667eea; margin-top: 0;">📸 Download Original Photos</h3>
-              <p style="margin-bottom: 15px; font-size: 14px;">Click the link below to download the customer's photos from storage:</p>
-              <a href="https://ufzhskookhsarjlijywh.supabase.co/storage/v1/object/public/original-images/${files[0]}" 
-                 style="color: #667eea; word-break: break-all; font-size: 13px;">
-                Download Photos from Storage
-              </a>
-            </div>
-            ` : ''}
+            ${signedUrlsHtml}
 
             <div style="background-color: #065f46; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="margin-top: 0;">Next Steps:</h3>
               <ol style="padding-left: 20px; line-height: 1.8;">
-                <li>Click the download link above to get original photos from Supabase</li>
+                <li>Click the secure download links above to get original photos</li>
                 <li>Stage the photos professionally</li>
                 <li>Upload completed images to the admin dashboard</li>
                 <li>Mark order as completed</li>
