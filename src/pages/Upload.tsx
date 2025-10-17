@@ -278,26 +278,26 @@ const Upload = () => {
           <Card className="max-w-3xl mx-auto shadow-custom-lg">
             <CardHeader>
               {/* Progress Steps */}
-              <div className="flex items-center justify-center gap-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold">
+              <div className="flex items-center justify-center gap-2 sm:gap-4 mb-6 overflow-x-auto">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold shrink-0">
                     ✓
                   </div>
-                  <span className="text-sm font-medium text-primary">Contact Info</span>
+                  <span className="text-xs sm:text-sm font-medium text-primary whitespace-nowrap">Contact Info</span>
                 </div>
-                <div className="w-12 h-0.5 bg-border"></div>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center text-sm font-semibold">
+                <div className="w-6 sm:w-12 h-0.5 bg-border shrink-0"></div>
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <div className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center text-sm font-semibold shrink-0">
                     2
                   </div>
-                  <span className="text-sm font-medium text-accent">Upload Photos</span>
+                  <span className="text-xs sm:text-sm font-medium text-accent whitespace-nowrap">Upload Photos</span>
                 </div>
-                <div className="w-12 h-0.5 bg-border"></div>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-semibold">
+                <div className="w-6 sm:w-12 h-0.5 bg-border shrink-0"></div>
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-semibold shrink-0">
                     3
                   </div>
-                  <span className="text-sm font-medium text-muted-foreground">Payment</span>
+                  <span className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">Payment</span>
                 </div>
               </div>
 
