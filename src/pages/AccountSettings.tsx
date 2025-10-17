@@ -133,7 +133,15 @@ const AccountSettings = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId, photosCount: credits },
+        body: { 
+          priceId, 
+          photosCount: credits,
+          contactInfo: {
+            email: user.email || profile.email,
+            firstName: profile.name?.split(' ')[0] || user.user_metadata?.name?.split(' ')[0] || 'Customer',
+            lastName: profile.name?.split(' ').slice(1).join(' ') || user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
+          }
+        },
       });
 
       if (error) throw error;
@@ -146,7 +154,7 @@ const AccountSettings = () => {
         }, 2000);
       }
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to create checkout session");
     } finally {
       setLoading(false);
     }
