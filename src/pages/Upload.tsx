@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { useCredits } from "@/hooks/use-credits";
+import ReCAPTCHA from "react-google-recaptcha";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
 import coastal from "@/assets/style-coastal.jpg";
 import scandinavian from "@/assets/style-scandinavian.jpg";
@@ -36,7 +37,12 @@ const Upload = () => {
   const [magnifiedImage, setMagnifiedImage] = useState<{ name: string; image: string } | null>(null);
   const [transactionalConsent, setTransactionalConsent] = useState(false);
   const [marketingConsent, setMarketingConsent] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const { credits } = useCredits(user);
+
+  // Replace with your actual Google reCAPTCHA site key
+  const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; // Test key for development
 
   const styles = [
     { id: "modern-farmhouse", name: "Modern Farmhouse", image: modernFarmhouse, description: "Blend rustic charm with modern comfort" },
@@ -161,6 +167,11 @@ const Upload = () => {
 
     if (!selectedBundle) {
       toast.error("Please select a bundle");
+      return;
+    }
+
+    if (!recaptchaToken) {
+      toast.error("Please complete the reCAPTCHA verification");
       return;
     }
 
@@ -521,11 +532,22 @@ const Upload = () => {
                   </div>
                 </div>
 
+                {/* reCAPTCHA */}
+                <div className="flex justify-center">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={RECAPTCHA_SITE_KEY}
+                    onChange={(token) => setRecaptchaToken(token)}
+                    onExpired={() => setRecaptchaToken(null)}
+                    theme="light"
+                  />
+                </div>
+
                 <Button
                   type="submit"
                   className="w-full bg-accent hover:bg-accent/90"
                   size="lg"
-                  disabled={loading || (() => {
+                  disabled={loading || !recaptchaToken || (() => {
                     const bundle = bundles.find(b => b.id === selectedBundle);
                     return bundle && files.length > bundle.photos;
                   })()}
