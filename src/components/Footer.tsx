@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <footer className="border-t border-border bg-background">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <div className="mb-4">
               <img 
@@ -68,6 +68,53 @@ const Footer = () => {
                 </Link>
               </li>
             </ul>
+          </div>
+
+          <div>
+            <h4 className="font-medium mb-4">Account</h4>
+            <ul className="space-y-2 text-sm mb-6">
+              <li>
+                <Link to="/auth" className="text-muted-foreground hover:text-accent transition-smooth">
+                  Client Login
+                </Link>
+              </li>
+              <li>
+                <Link to="/upload" className="text-muted-foreground hover:text-accent transition-smooth">
+                  Place an Order
+                </Link>
+              </li>
+            </ul>
+
+            <h4 className="font-medium mb-4">Connect</h4>
+            <div className="flex gap-4 text-sm">
+              <a 
+                href="https://instagram.com/clickstagepro" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-accent transition-smooth"
+                aria-label="Instagram"
+              >
+                Instagram
+              </a>
+              <a 
+                href="https://facebook.com/clickstagepro" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-accent transition-smooth"
+                aria-label="Facebook"
+              >
+                Facebook
+              </a>
+              <a 
+                href="https://linkedin.com/company/clickstagepro" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-accent transition-smooth"
+                aria-label="LinkedIn"
+              >
+                LinkedIn
+              </a>
+            </div>
           </div>
         </div>
 
