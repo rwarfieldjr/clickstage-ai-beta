@@ -1,6 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, RefreshCw } from "lucide-react";
+import { CheckCircle, RefreshCw, HelpCircle } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEO } from "@/components/SEO";
@@ -260,12 +266,43 @@ const Pricing = () => {
               </div>
             </section>
 
-            {/* Help Section */}
-            <div className="text-center mt-12">
-              <p className="text-lg text-muted-foreground">
-                Have questions? <Link to="/faq" className="text-accent hover:underline font-medium">Check our FAQ</Link> or <Link to="/contact" className="text-accent hover:underline font-medium">contact our team</Link>.
-              </p>
-            </div>
+            {/* Support Section */}
+            <section className="mt-20">
+              <div className="max-w-4xl mx-auto">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-accent/10 rounded-full">
+                    <HelpCircle className="w-8 h-8 text-accent" />
+                  </div>
+                  <h2 className="text-3xl font-bold">Support & Contact</h2>
+                </div>
+                
+                <Accordion type="single" collapsible className="mb-12">
+                  <AccordionItem 
+                    value="support" 
+                    className="border border-border rounded-lg px-6 bg-card hover:bg-muted/50 transition-colors"
+                  >
+                    <AccordionTrigger className="text-left hover:no-underline py-4">
+                      <span className="font-medium text-lg">How do I contact support?</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground pb-4">
+                      You can reach our support team via email at support@clickstagepro.com, through the contact form on our website, or via live chat during business hours (9 AM - 6 PM EST, Monday-Friday).
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
+                <div className="text-center p-8 bg-muted/50 rounded-lg">
+                  <h3 className="text-3xl font-bold mb-4">Still Have Questions?</h3>
+                  <p className="text-lg text-muted-foreground mb-6">
+                    Our support team is here to help. Reach out anytime with questions about pricing, uploads, or design options.
+                  </p>
+                  <Link to="/contact">
+                    <Button size="lg" className="bg-accent hover:bg-accent/90">
+                      Get Started
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </main>
