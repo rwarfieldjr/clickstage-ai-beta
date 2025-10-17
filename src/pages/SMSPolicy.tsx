@@ -47,36 +47,6 @@ const SMSPolicy = () => {
                   Privacy Policy
                 </Link>.
               </p>
-
-              <div className="mt-8 pt-6 border-t border-border">
-                <h2 className="text-xl font-semibold mb-4">Message Types</h2>
-                <ul className="space-y-2 list-disc list-inside">
-                  <li>Order confirmations and status updates</li>
-                  <li>Account notifications and security alerts</li>
-                  <li>Appointment reminders</li>
-                  <li>Promotional offers and special discounts (if opted in)</li>
-                </ul>
-              </div>
-
-              <div className="mt-6">
-                <h2 className="text-xl font-semibold mb-4">Your Rights</h2>
-                <p>
-                  You have the right to opt out of marketing messages at any time while still 
-                  receiving important transactional messages about your orders. You can manage 
-                  your preferences in your account settings or by replying STOP to any message.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-10 pt-6 border-t border-border text-center">
-              <p className="text-muted-foreground mb-4">
-                Questions about our SMS policy?
-              </p>
-              <Link to="/contact">
-                <span className="text-accent hover:underline font-medium">
-                  Contact our support team
-                </span>
-              </Link>
             </div>
           </article>
         </div>
