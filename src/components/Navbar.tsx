@@ -5,13 +5,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import logoDark from "@/assets/logo-dark.png";
+import logoLight from "@/assets/logo-light.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useTheme } from "@/hooks/use-theme";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -37,9 +40,9 @@ const Navbar = () => {
         <div className="flex items-center justify-between">
           <Link to="/" className="hidden lg:flex items-center">
             <img 
-              src={logoDark} 
+              src={theme === "dark" ? logoLight : logoDark} 
               alt="ClickStage Pro - Virtual Staging Powered by AI" 
-              className="h-16 w-auto dark:invert"
+              className="h-16 w-auto"
             />
           </Link>
 
