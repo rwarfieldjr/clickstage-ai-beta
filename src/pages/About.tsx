@@ -21,34 +21,34 @@ const About = () => {
 
   const values = [
     {
-      icon: Users,
-      title: "Accessible",
-      description: "Professional staging for every agent and every budget",
-    },
-    {
       icon: DollarSign,
-      title: "Affordable",
-      description: "Competitive pricing without sacrificing quality",
+      title: "AI Precision",
+      description: "Advanced AI trained on real design principles",
     },
     {
       icon: Award,
-      title: "Experienced",
-      description: "Built on 20+ years of real estate expertise",
+      title: "MLS-Compliant",
+      description: "Never alter structural elements, only furniture",
+    },
+    {
+      icon: Users,
+      title: "Fast Delivery",
+      description: "High-resolution images within 24 hours",
     },
     {
       icon: MapPin,
-      title: "Local",
-      description: "Proudly based in Greenville, SC",
+      title: "Affordable",
+      description: "Flexible bundles starting at $7 per photo",
     },
   ];
 
   return (
     <div className="min-h-screen flex flex-col">
       <SEO 
-        title="About ClickStage Pro - Virtual Staging by Real Estate Professionals"
-        description="Founded by a real estate agent in Greenville, SC. Learn about our mission to make professional virtual staging accessible and affordable for all agents."
+        title="About ClickStagePro | AI Virtual Staging for Real Estate"
+        description="ClickStagePro is an AI-powered virtual staging company that helps real estate agents, photographers, and teams create stunning, MLS-compliant photos that sell faster."
         canonical="/about"
-        keywords="about virtual staging, ClickStage Pro, virtual staging company, Greenville SC virtual staging, real estate technology"
+        keywords="about ClickStagePro, virtual staging company, AI virtual staging, real estate virtual staging, MLS-compliant staging, ClickStagePro team"
         schema={schema}
       />
       <Navbar />
@@ -61,7 +61,7 @@ const About = () => {
               About ClickStagePro
             </h1>
             <p className="text-xl md:text-2xl text-white/90">
-              Built by a real estate agent, for real estate agents.
+              ClickStagePro is an AI-driven virtual staging company that helps real estate agents, photographers, and teams transform listing photos into stunning, MLS-compliant images that sell homes faster.
             </p>
           </div>
         </div>
@@ -71,25 +71,30 @@ const About = () => {
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-8 text-primary">Our Mission</h2>
             <div className="prose prose-lg max-w-none">
               <p className="text-lg text-foreground/80 leading-relaxed mb-6">
-                ClickStagePro was built by a real estate agent, for real estate agents.
+                We make high-quality virtual staging accessible to every real estate professional — affordable, fast, and beautifully realistic. With AI-powered tools and expert design guidance, our goal is to simplify the staging process and elevate property marketing.
               </p>
-              
+            </div>
+
+            <h2 className="text-3xl md:text-4xl font-bold mb-8 mt-12 text-primary">Why Choose ClickStagePro</h2>
+            <ul className="space-y-4 text-lg text-foreground/80">
+              <li><strong>AI Precision:</strong> Every photo is staged using advanced AI trained on real design principles.</li>
+              <li><strong>MLS-Compliant Results:</strong> We never alter structural elements — only furniture and décor.</li>
+              <li><strong>Fast Turnaround:</strong> Receive finished, high-resolution staged images within 24 hours.</li>
+              <li><strong>Affordable Pricing:</strong> Flexible bundles with prices as low as $7 per photo.</li>
+              <li><strong>Professional Support:</strong> Real humans available when you need help or design guidance.</li>
+            </ul>
+
+            <h2 className="text-3xl md:text-4xl font-bold mb-8 mt-12 text-primary">Our Story</h2>
+            <div className="prose prose-lg max-w-none">
               <p className="text-lg text-foreground/80 leading-relaxed mb-6">
-                With more than two decades of experience selling homes, we've seen firsthand what the data proves: staging sells homes faster and for more money. The problem? Traditional staging has always been expensive, slow, and out of reach for most agents and their clients.
-              </p>
-              
-              <p className="text-lg text-foreground/80 leading-relaxed mb-6">
-                That's why we created ClickStagePro. Based in Greenville, SC, our mission is simple—make professional staging accessible to every agent, for every listing.
-              </p>
-              
-              <p className="text-lg text-foreground/80 leading-relaxed mb-6">
-                Large staging companies typically charge two or three times more — yet deliver a lower-quality product. But with today's technology, there's no reason staging should be a luxury. Our virtual staging solutions give agents a powerful, affordable tool to compete at the highest level—without breaking the budget.
+                Founded by real estate professionals who understand the importance of presentation, ClickStagePro combines technology and creativity to deliver consistent, high-quality virtual staging for every listing.
               </p>
               
               <p className="text-lg text-foreground/80 leading-relaxed">
-                We believe every property deserves to look its best online. With ClickStagePro, that's now fully attainable.
+                We're proud to help agents and photographers across the country present properties beautifully — without the cost or time of physical staging.
               </p>
             </div>
           </div>
@@ -102,10 +107,10 @@ const About = () => {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-4 text-primary">
-                Our Values
+                What Sets Us Apart
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Everything we do is guided by our commitment to real estate professionals and their success.
+                Our commitment to speed, quality, and affordability makes ClickStagePro the trusted choice for real estate professionals.
               </p>
             </div>
 
