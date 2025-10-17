@@ -300,66 +300,10 @@ const Upload = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* File Upload */}
-                <div className="space-y-2">
-                  <Label>Property Photos (JPEG or PNG) <span className="text-destructive">*</span></Label>
-                  <div 
-                    className={`border-2 border-dashed rounded-2xl p-8 text-center transition-smooth cursor-pointer ${
-                      isDragOver 
-                        ? 'border-accent bg-accent/10' 
-                        : 'border-border hover:border-accent'
-                    }`}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                  >
-                    <input
-                      type="file"
-                      id="file-upload"
-                      multiple
-                      accept="image/jpeg,image/png"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      required
-                    />
-                    <label htmlFor="file-upload" className="cursor-pointer block">
-                      <UploadIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-lg font-medium mb-2">
-                        Drop files here or click to upload
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Supports JPEG and PNG up to 20MB each
-                      </p>
-                    </label>
-                  </div>
-                </div>
-
-                {/* File Previews */}
-                {previews.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {previews.map((preview, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={preview}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-xl"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="absolute top-2 right-2 bg-destructive text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-smooth"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Staging Style */}
+                {/* Step 1: Staging Style */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="staging-style">Staging Style <span className="text-destructive">*</span></Label>
+                    <Label htmlFor="staging-style">Step 1: Staging Style <span className="text-destructive">*</span></Label>
                     <Dialog open={stylesDialogOpen} onOpenChange={setStylesDialogOpen}>
                       <DialogTrigger asChild>
                         <button
@@ -432,9 +376,65 @@ const Upload = () => {
                   </Select>
                 </div>
 
-                {/* Bundle Selection */}
+                {/* Step 2: File Upload */}
+                <div className="space-y-2">
+                  <Label>Step 2: Property Photos (JPEG or PNG) <span className="text-destructive">*</span></Label>
+                  <div 
+                    className={`border-2 border-dashed rounded-2xl p-8 text-center transition-smooth cursor-pointer ${
+                      isDragOver 
+                        ? 'border-accent bg-accent/10' 
+                        : 'border-border hover:border-accent'
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <input
+                      type="file"
+                      id="file-upload"
+                      multiple
+                      accept="image/jpeg,image/png"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      required
+                    />
+                    <label htmlFor="file-upload" className="cursor-pointer block">
+                      <UploadIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-lg font-medium mb-2">
+                        Drop files here or click to upload
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Supports JPEG and PNG up to 20MB each
+                      </p>
+                    </label>
+                  </div>
+                </div>
+
+                {/* File Previews */}
+                {previews.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {previews.map((preview, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-xl"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="absolute top-2 right-2 bg-destructive text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-smooth"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Step 3: Select Bundle */}
                 <div className="space-y-3">
-                  <Label>Select Package <span className="text-destructive">*</span></Label>
+                  <Label>Step 3: Select Bundle <span className="text-destructive">*</span></Label>
                   <RadioGroup value={selectedBundle} onValueChange={setSelectedBundle}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {bundles.map((bundle) => (
