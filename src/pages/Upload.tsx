@@ -289,7 +289,7 @@ const Upload = () => {
                 <h3 className="text-base font-semibold mb-3">How It Works</h3>
                 <ol className="space-y-2 text-sm text-muted-foreground">
                   <li><strong>Upload:</strong> Add your photos directly from your device or cloud storage.</li>
-                  <li><strong>Select Style:</strong> Choose your preferred design look — modern, farmhouse, traditional, and more.</li>
+                  <li><strong>Select Style:</strong> Choose your preferred design look — Modern Farmhouse, Coastal, and more.</li>
                   <li><strong>Place Order:</strong> Confirm your bundle and complete checkout securely with Stripe.</li>
                   <li><strong>Receive Images:</strong> Get professionally staged photos within 24 hours, ready for MLS or marketing.</li>
                 </ol>
