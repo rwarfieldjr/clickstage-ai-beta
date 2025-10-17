@@ -30,6 +30,9 @@ const Home = () => {
         keywords="AI virtual staging, virtual staging real estate, virtual staging photography, MLS compliant virtual staging, real estate photo staging, ClickStagePro"
         schema={schema}
       />
+      {/* Preload critical LCP images for faster paint */}
+      <link rel="preload" as="image" href={livingBefore} fetchPriority="high" />
+      <link rel="preload" as="image" href={livingAfter} />
       <Navbar />
 
       {/* Hero Section */}
