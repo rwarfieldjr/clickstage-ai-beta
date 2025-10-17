@@ -92,6 +92,30 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_rate_limits: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          id: string
+          ip_address: string
+          window_start: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          id?: string
+          ip_address: string
+          window_start?: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          id?: string
+          ip_address?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       credits_transactions: {
         Row: {
           amount: number
@@ -317,6 +341,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_rate_limits: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_order_number: {
         Args: Record<PropertyKey, never>
         Returns: string
