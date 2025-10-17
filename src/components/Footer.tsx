@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Instagram, Linkedin } from "lucide-react";
 import logoMain from "@/assets/logo-primary.png";
 
 const Footer = () => {
@@ -90,33 +90,33 @@ const Footer = () => {
             </ul>
 
             <h4 className="font-medium mb-4">Connect</h4>
-            <div className="flex gap-4 text-sm">
+            <div className="flex gap-4">
               <a 
-                href="https://instagram.com/clickstagepro" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-accent transition-smooth"
-                aria-label="Instagram"
-              >
-                Instagram
-              </a>
-              <a 
-                href="https://facebook.com/clickstagepro" 
+                href="https://www.facebook.com/clickstagepro" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-accent transition-smooth"
                 aria-label="Facebook"
               >
-                Facebook
+                <Facebook className="w-6 h-6" />
               </a>
               <a 
-                href="https://linkedin.com/company/clickstagepro" 
+                href="https://www.instagram.com/clickstagepro" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-accent transition-smooth"
+                aria-label="Instagram"
+              >
+                <Instagram className="w-6 h-6" />
+              </a>
+              <a 
+                href="https://www.linkedin.com/company/clickstage-pro/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-accent transition-smooth"
                 aria-label="LinkedIn"
               >
-                LinkedIn
+                <Linkedin className="w-6 h-6" />
               </a>
             </div>
           </div>
