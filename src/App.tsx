@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import SMSPolicy from "./pages/SMSPolicy";
 import Styles from "./pages/Styles";
 import PlaceOrder from "./pages/PlaceOrder";
 import About from "./pages/About";
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/sms-policy" element={<SMSPolicy />} />
           <Route path="/styles" element={<Styles />} />
           <Route path="/place-order" element={<PlaceOrder />} />
           <Route path="/about" element={<About />} />
