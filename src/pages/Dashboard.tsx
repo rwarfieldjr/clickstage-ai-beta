@@ -67,7 +67,7 @@ const Dashboard = () => {
         }
       }
     });
-  }, [navigate, searchParams, refetchCredits]);
+  }, [navigate, searchParams]);
 
   const fetchOrders = async (userId: string) => {
     try {
