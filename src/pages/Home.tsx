@@ -35,8 +35,18 @@ const Home = () => {
       {/* Hero Section */}
       <section className="relative text-white py-20 lg:py-32 overflow-hidden">
         <div className="absolute inset-0 grid grid-cols-2">
-          <div className="bg-cover bg-center" style={{ backgroundImage: `url(${livingBefore})` }}></div>
-          <div className="bg-cover bg-center" style={{ backgroundImage: `url(${livingAfter})` }}></div>
+          <img 
+            src={livingBefore} 
+            alt="AI virtual staging for real estate living room before" 
+            className="w-full h-full object-cover"
+            fetchPriority="high"
+          />
+          <img 
+            src={livingAfter} 
+            alt="AI virtual staging for real estate living room after - MLS compliant virtual staging" 
+            className="w-full h-full object-cover"
+            loading="eager"
+          />
         </div>
         <div className="absolute inset-y-0 left-1/2 w-1.5 bg-white/40 -translate-x-1/2"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70"></div>
