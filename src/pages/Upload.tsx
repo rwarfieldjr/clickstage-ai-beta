@@ -56,12 +56,12 @@ const Upload = () => {
   ];
 
   const bundles = [
-    { id: "single", name: "Single Photo", price: "$10", priceId: "price_1SD8lsIG3TLqP9yabBsx4jyZ", description: "Perfect for testing", photos: 1 },
-    { id: "5-photos", name: "5 Photos", price: "$45", priceId: "price_1SD8nJIG3TLqP9yaGAjd2WdP", description: "$9 per photo", photos: 5 },
-    { id: "10-photos", name: "10 Photos", price: "$85", priceId: "price_1SD8nNIG3TLqP9yazPngAIN0", description: "$8.50 per photo", photos: 10 },
-    { id: "20-photos", name: "20 Photos", price: "$160", priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG", description: "$8 per photo", photos: 20 },
-    { id: "50-photos", name: "50 Photos", price: "$375", priceId: "price_1SD8nTIG3TLqP9yaTOhRMNFq", description: "$7.50 per photo", photos: 50 },
-    { id: "100-photos", name: "100 Photos", price: "$700", priceId: "price_1SD8nWIG3TLqP9yaH0D0oIpW", description: "$7 per photo", photos: 100 },
+    { id: "single", name: "Single Photo", price: "$10", priceId: "price_1SD8lsIG3TLqP9yabBsx4jyZ", description: "Perfect for testing", photos: 1, expiration: "Credits expire 6 months after purchase." },
+    { id: "5-photos", name: "5 Photos", price: "$45", priceId: "price_1SD8nJIG3TLqP9yaGAjd2WdP", description: "$9 per photo", photos: 5, expiration: "Credits expire 6 months after purchase." },
+    { id: "10-photos", name: "10 Photos", price: "$85", priceId: "price_1SD8nNIG3TLqP9yazPngAIN0", description: "$8.50 per photo", photos: 10, expiration: "Credits expire 6 months after purchase." },
+    { id: "20-photos", name: "20 Photos", price: "$160", priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG", description: "$8 per photo", photos: 20, expiration: "Credits expire 12 months after purchase." },
+    { id: "50-photos", name: "50 Photos", price: "$375", priceId: "price_1SD8nTIG3TLqP9yaTOhRMNFq", description: "$7.50 per photo", photos: 50, expiration: "Credits expire 12 months after purchase." },
+    { id: "100-photos", name: "100 Photos", price: "$700", priceId: "price_1SD8nWIG3TLqP9yaH0D0oIpW", description: "$7 per photo", photos: 100, expiration: "Credits expire 12 months after purchase." },
   ];
 
   useEffect(() => {
@@ -476,7 +476,8 @@ const Upload = () => {
                               </div>
                             </div>
                             <span className="text-2xl font-bold text-accent mb-1">{bundle.price}</span>
-                            <span className="text-sm text-muted-foreground">{bundle.description}</span>
+                            <span className="text-sm text-muted-foreground block mb-2">{bundle.description}</span>
+                            <span className="text-xs text-muted-foreground">{bundle.expiration}</span>
                           </label>
                         </div>
                       ))}
