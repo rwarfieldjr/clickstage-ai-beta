@@ -46,6 +46,14 @@ const Upload = () => {
   // Replace with your actual Google reCAPTCHA site key
   const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; // Test key for development
 
+  // Reset reCAPTCHA when theme changes
+  useEffect(() => {
+    if (recaptchaRef.current) {
+      recaptchaRef.current.reset();
+      setRecaptchaToken(null);
+    }
+  }, [theme]);
+
   const styles = [
     { id: "modern-farmhouse", name: "Modern Farmhouse", image: modernFarmhouse, description: "Blend rustic charm with modern comfort" },
     { id: "coastal", name: "Coastal", image: coastal, description: "Relaxed beachside living with light colors" },
@@ -538,6 +546,7 @@ const Upload = () => {
                 {/* reCAPTCHA */}
                 <div className="flex">
                   <ReCAPTCHA
+                    key={theme} // Force re-render when theme changes
                     ref={recaptchaRef}
                     sitekey={RECAPTCHA_SITE_KEY}
                     onChange={(token) => setRecaptchaToken(token)}
