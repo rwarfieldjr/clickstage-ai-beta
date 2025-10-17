@@ -34,12 +34,12 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Create Supabase clients
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_ANON_KEY") ?? ""
   );
 
+  // Create service role client for rate limiting
   const supabaseAdmin = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -48,78 +48,64 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    // Extract IP address for rate limiting
-    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || 
+    // Rate limiting: Get client IP
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0] || 
                      req.headers.get("x-real-ip") || 
                      "unknown";
     
-    logStep("IP address extracted", { ip: clientIP });
+    logStep("Client IP detected", { ip: clientIp });
 
-    // Rate limiting: Check if IP has exceeded limit (5 attempts per hour)
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    
-    const { data: rateLimitData, error: rateLimitError } = await supabaseAdmin
+    // Check rate limit (5 requests per hour per IP)
+    const { data: rateLimitData } = await supabaseAdmin
       .from("checkout_rate_limits")
-      .select("attempt_count, window_start")
-      .eq("ip_address", clientIP)
+      .select("*")
+      .eq("ip_address", clientIp)
       .single();
-
-    if (rateLimitError && rateLimitError.code !== "PGRST116") {
-      // PGRST116 is "not found" error, which is fine
-      logStep("Rate limit check error", { error: rateLimitError });
-    }
 
     if (rateLimitData) {
       const windowStart = new Date(rateLimitData.window_start);
-      const isWithinWindow = windowStart > new Date(oneHourAgo);
-
-      if (isWithinWindow && rateLimitData.attempt_count >= 5) {
-        logStep("Rate limit exceeded", { ip: clientIP, attempts: rateLimitData.attempt_count });
-        return new Response(
-          JSON.stringify({ 
-            error: "Too many checkout attempts. Please try again in an hour." 
-          }),
-          { 
-            headers: { ...corsHeaders, "Content-Type": "application/json" }, 
-            status: 429 
-          }
-        );
-      }
-
-      // Update attempt count
-      if (isWithinWindow) {
+      const now = new Date();
+      
+      // If within the same hour window
+      if (now.getTime() - windowStart.getTime() < 60 * 60 * 1000) {
+        if (rateLimitData.attempt_count >= 5) {
+          logStep("Rate limit exceeded", { ip: clientIp, attempts: rateLimitData.attempt_count });
+          return new Response(
+            JSON.stringify({ 
+              error: "Too many checkout attempts. Please try again in an hour.",
+              retryAfter: Math.ceil((60 * 60 * 1000 - (now.getTime() - windowStart.getTime())) / 1000)
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
+          );
+        }
+        
+        // Increment attempt count
         await supabaseAdmin
           .from("checkout_rate_limits")
-          .update({ 
-            attempt_count: rateLimitData.attempt_count + 1 
-          })
-          .eq("ip_address", clientIP);
-        logStep("Rate limit updated", { ip: clientIP, newCount: rateLimitData.attempt_count + 1 });
+          .update({ attempt_count: rateLimitData.attempt_count + 1 })
+          .eq("ip_address", clientIp);
       } else {
-        // Reset window if it has expired
+        // Reset window
         await supabaseAdmin
           .from("checkout_rate_limits")
           .update({ 
-            attempt_count: 1,
-            window_start: new Date().toISOString()
+            attempt_count: 1, 
+            window_start: now.toISOString() 
           })
-          .eq("ip_address", clientIP);
-        logStep("Rate limit window reset", { ip: clientIP });
+          .eq("ip_address", clientIp);
       }
     } else {
-      // First attempt from this IP
+      // First request from this IP
       await supabaseAdmin
         .from("checkout_rate_limits")
         .insert({ 
-          ip_address: clientIP,
+          ip_address: clientIp, 
           attempt_count: 1,
           window_start: new Date().toISOString()
         });
-      logStep("Rate limit record created", { ip: clientIP });
     }
 
-    // Clean up old rate limit records (optional, non-blocking)
-    supabaseAdmin.rpc("cleanup_old_rate_limits");
+    logStep("Rate limit check passed");
 
     // Get and validate request body
     const body = await req.json();
@@ -242,14 +228,13 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in create-checkout", { message: errorMessage });
     
-    // Return sanitized error to client
-    const clientError = errorMessage.includes('validation')
-      ? errorMessage
-      : 'Failed to create checkout session. Please try again.';
-    
-    return new Response(JSON.stringify({ error: clientError }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    // Return generic error to client (security best practice)
+    return new Response(
+      JSON.stringify({ error: 'An error occurred while processing your request. Please try again.' }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
   }
 });
