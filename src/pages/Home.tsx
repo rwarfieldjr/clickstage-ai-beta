@@ -25,9 +25,9 @@ const Home = () => {
     <div className="min-h-screen flex flex-col">
       <SEO 
         title="AI Virtual Staging for Real Estate"
-        description="ClickStagePro provides fast, affordable AI virtual staging for real estate photos. Get photorealistic, MLS-compliant staged images in 24 hours. Perfect for agents, photographers, and teams."
+        description="ClickStagePro offers fast, affordable AI virtual staging for real estate agents, photographers, and teams. Get photorealistic, MLS-compliant images in 24 hours for as low as $7 per photo."
         canonical="/"
-        keywords="virtual staging, virtual staging AI, virtual staging for real estate, AI virtual staging, virtual staging software, virtual staging companies, virtual staging app, real estate photo staging, MLS-compliant staging"
+        keywords="AI virtual staging, virtual staging real estate, virtual staging photography, MLS compliant virtual staging, real estate photo staging, ClickStagePro"
         schema={schema}
       />
       <Navbar />
@@ -46,13 +46,13 @@ const Home = () => {
               <span className="text-sm md:text-base text-white/90">Advanced AI Technology</span>
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              AI Virtual Staging for Real Estate Agents, Photographers, and Teams
+              AI Virtual Staging for Real Estate Professionals
             </h1>
             <h2 className="text-2xl md:text-3xl mb-6 text-white/90">
-              Transform Empty Rooms into Beautifully Furnished Spaces — Starting at $10 Per Photo
+              Photorealistic, MLS-compliant staging delivered in 24 hours — as low as $7 per photo.
             </h2>
             <p className="text-lg md:text-xl mb-8 text-white/80 max-w-3xl mx-auto">
-              ClickStagePro offers AI-powered virtual staging for real estate professionals. Upload your listing photos and receive stunning, MLS-compliant staged images in 24 hours. Affordable, fast, and photorealistic — perfect for agents, photographers, and teams looking to sell homes faster.
+              Transform your listing photos with ClickStagePro's AI-powered virtual staging. Fast, affordable, and designed for agents, photographers, and teams who want homes to sell faster.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/pricing">
