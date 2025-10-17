@@ -536,8 +536,11 @@ const Upload = () => {
             </CardContent>
           </Card>
 
-          {/* Help Section */}
-          <div className="max-w-3xl mx-auto mt-8 text-center">
+          {/* CTA and Help Section */}
+          <div className="max-w-3xl mx-auto mt-8 text-center space-y-4">
+            <p className="text-lg text-muted-foreground">
+              Ready to get started? <Link to="/upload" className="text-accent hover:underline font-medium">Upload your photos</Link> and choose your design style today.
+            </p>
             <p className="text-lg text-muted-foreground">
               Have questions? <Link to="/faq" className="text-accent hover:underline font-medium">Check our FAQ</Link> or <Link to="/contact" className="text-accent hover:underline font-medium">contact our team</Link>.
             </p>
