@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Facebook, Instagram, Linkedin } from "lucide-react";
-import logoMain from "@/assets/logo-primary.webp";
+import logoMain from "@/assets/logo-new.png";
 
 const Footer = () => {
   return (
@@ -12,9 +12,9 @@ const Footer = () => {
               <img 
                 src={logoMain} 
                 alt="ClickStage Pro - Virtual Staging Powered by AI" 
-                className="h-12 w-auto"
-                width="142"
-                height="48"
+                className="h-16 w-auto"
+                width="190"
+                height="64"
                 loading="lazy"
                 decoding="async"
               />
