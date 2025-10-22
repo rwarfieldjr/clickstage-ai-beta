@@ -7,9 +7,10 @@ interface SEOProps {
   ogImage?: string;
   schema?: object;
   keywords?: string;
+  preloadImages?: Array<{ href: string; fetchPriority?: 'high' | 'low' | 'auto' }>;
 }
 
-export const SEO = ({ title, description, canonical, ogImage, schema, keywords }: SEOProps) => {
+export const SEO = ({ title, description, canonical, ogImage, schema, keywords, preloadImages }: SEOProps) => {
   const siteUrl = "https://www.clickstagepro.com";
   const fullTitle = `${title} | ClickStage Pro`;
   const defaultImage = `${siteUrl}/og-image.jpg`;
@@ -25,6 +26,17 @@ export const SEO = ({ title, description, canonical, ogImage, schema, keywords }
       
       {/* Canonical URL */}
       <link rel="canonical" href={canonicalUrl} />
+      
+      {/* Preload critical images for LCP optimization */}
+      {preloadImages && preloadImages.map((img, index) => (
+        <link 
+          key={index}
+          rel="preload" 
+          as="image" 
+          href={img.href} 
+          fetchPriority={img.fetchPriority || 'auto'}
+        />
+      ))}
       
       {/* Open Graph */}
       <meta property="og:type" content="website" />
