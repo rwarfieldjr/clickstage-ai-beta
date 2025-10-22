@@ -161,14 +161,6 @@ const Navbar = () => {
                         >
                           Login
                         </Link>
-                        <Link 
-                          to="/pricing"
-                          onClick={handleNavClick}
-                        >
-                          <Button size="sm" className="bg-accent hover:bg-accent/90 w-full mt-2">
-                            Get Started
-                          </Button>
-                        </Link>
                       </>
                     )}
                   </div>
@@ -201,9 +193,6 @@ const Navbar = () => {
                     <Button variant="outline" size="icon">
                       <UserIcon className="h-4 w-4" />
                     </Button>
-                  </Link>
-                  <Link to="/pricing">
-                    <Button size="sm" className="bg-accent hover:bg-accent/90">Get Started</Button>
                   </Link>
                 </>
               )}
