@@ -11,12 +11,14 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LogOut, User, Mail, Lock, Clock, CreditCard, Coins } from "lucide-react";
+import { useCredits } from "@/hooks/use-credits";
+import { CreditsSummary } from "@/components/CreditsSummary";
 
 const AccountSettings = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [credits, setCredits] = useState(0);
+  const { credits, creditSummary, loading: creditsLoading, refetchCredits } = useCredits(user);
   const [profile, setProfile] = useState({
     name: "",
     email: "",
@@ -52,19 +54,6 @@ const AccountSettings = () => {
         email: profileData.email || "",
         timezone: profileData.timezone || "UTC",
       });
-      setCredits(profileData.credits || 0);
-    }
-  };
-
-  const refetchCredits = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("credits")
-      .eq("id", user.id)
-      .single();
-    if (data) {
-      setCredits(data.credits || 0);
     }
   };
 
@@ -282,42 +271,38 @@ const AccountSettings = () => {
             </Card>
 
             {/* Credits Management */}
+            <CreditsSummary summary={creditSummary} loading={creditsLoading} />
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Coins className="w-5 h-5" />
-                  Credits & Billing
+                  <CreditCard className="w-5 h-5" />
+                  Purchase More Credits
                 </CardTitle>
-                <CardDescription>
-                  Current balance: <span className="font-bold text-primary">{credits} credits</span>
-                </CardDescription>
+                <CardDescription>Add more credits to your account</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">Purchase additional credits for staging photos</p>
-                  <Separator />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {creditBundles.map((bundle) => (
-                      <Card key={bundle.name} className="border-2 hover:border-primary transition-smooth">
-                        <CardContent className="pt-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <div>
-                              <h3 className="font-semibold text-lg">{bundle.name}</h3>
-                              <p className="text-2xl font-bold text-primary">{bundle.price}</p>
-                            </div>
-                            <CreditCard className="w-8 h-8 text-muted-foreground" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {creditBundles.map((bundle) => (
+                    <Card key={bundle.name} className="border-2 hover:border-primary transition-smooth">
+                      <CardContent className="pt-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="font-semibold text-lg">{bundle.name}</h3>
+                            <p className="text-2xl font-bold text-primary">{bundle.price}</p>
                           </div>
-                          <Button
-                            className="w-full"
-                            onClick={() => handlePurchaseCredits(bundle.priceId, bundle.credits, bundle.name, bundle.price)}
-                            disabled={loading}
-                          >
-                            Purchase
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                          <Coins className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <Button
+                          className="w-full"
+                          onClick={() => handlePurchaseCredits(bundle.priceId, bundle.credits, bundle.name, bundle.price)}
+                          disabled={loading}
+                        >
+                          Purchase
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </CardContent>
             </Card>

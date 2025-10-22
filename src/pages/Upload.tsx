@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload as UploadIcon, X, ZoomIn } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Upload as UploadIcon, X, ZoomIn, Coins, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -15,6 +16,7 @@ import Footer from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { useCredits } from "@/hooks/use-credits";
 import { useTheme } from "@/hooks/use-theme";
+import { CreditsSummary } from "@/components/CreditsSummary";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
 import coastal from "@/assets/style-coastal.jpg";
 import scandinavian from "@/assets/style-scandinavian.jpg";
@@ -37,7 +39,8 @@ const Upload = () => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [magnifiedImage, setMagnifiedImage] = useState<{ name: string; image: string } | null>(null);
   const [smsConsent, setSmsConsent] = useState(false);
-  const { credits } = useCredits(user);
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "credits">("stripe");
+  const { credits, creditSummary, loading: creditsLoading, refetchCredits } = useCredits(user);
   const { theme } = useTheme();
 
   const styles = [
@@ -195,6 +198,57 @@ const Upload = () => {
     setLoading(true);
 
     try {
+      // Handle credit payment
+      if (paymentMethod === "credits" && user) {
+        // Check if user has enough credits
+        if (credits < files.length) {
+          toast.error(`Insufficient credits. You need ${files.length} credits but only have ${credits}.`);
+          setLoading(false);
+          return;
+        }
+
+        // Upload files to storage
+        toast.loading("Uploading photos...");
+        const sessionId = crypto.randomUUID();
+        
+        const uploadPromises = files.map(async (file) => {
+          const fileExt = file.name.split(".").pop();
+          const fileName = `${user.id}/${sessionId}/${crypto.randomUUID()}.${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from("original-images")
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+          return fileName;
+        });
+
+        const uploadedFiles = await Promise.all(uploadPromises);
+        toast.dismiss();
+
+        // Process order with credits
+        const { data, error } = await supabase.functions.invoke('process-credit-order', {
+          body: {
+            files: uploadedFiles,
+            stagingStyle: stagingStyle,
+            photosCount: files.length,
+            sessionId: sessionId,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data?.success) {
+          toast.success(`Order placed successfully using ${data.creditsUsed} credits!`);
+          // Refetch credits to update the display
+          await refetchCredits();
+          // Navigate to dashboard
+          navigate('/dashboard');
+        }
+        return;
+      }
+
+      // Handle Stripe payment (existing code)
       // Get contact info - prefer logged-in user's profile, fallback to localStorage
       let contactInfo;
       
@@ -317,8 +371,12 @@ const Upload = () => {
               <CardTitle className="text-2xl md:text-3xl">Upload Your Photos</CardTitle>
               <CardDescription className="text-base md:text-lg mt-2">
                 Start your AI virtual staging order in minutes. Simply upload your property photos, choose your bundle, and select your design style. We'll deliver photorealistic, MLS-compliant staged images within 24 hours.
-                {user && <span className="block mt-3 font-medium text-accent">Available Credits: {credits}</span>}
               </CardDescription>
+              {user && creditSummary && (
+                <div className="mt-4">
+                  <CreditsSummary summary={creditSummary} loading={creditsLoading} compact />
+                </div>
+              )}
               <div className="mt-6 bg-muted/50 p-4 rounded-lg">
                 <h3 className="text-base font-semibold mb-3">How It Works</h3>
                 <ol className="space-y-2 text-sm text-muted-foreground">
@@ -466,44 +524,86 @@ const Upload = () => {
                   </div>
                 )}
 
-                {/* Step 3: Select Bundle */}
+                {/* Step 3: Payment Method */}
+                {user && credits > 0 && (
+                  <div className="space-y-3">
+                    <Label className="text-lg font-semibold">Step 3: Payment Method</Label>
+                    <Tabs value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as "stripe" | "credits")}>
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="stripe" className="flex items-center gap-2">
+                          <CreditCard className="w-4 h-4" />
+                          Credit Card
+                        </TabsTrigger>
+                        <TabsTrigger value="credits" className="flex items-center gap-2">
+                          <Coins className="w-4 h-4" />
+                          Use Credits ({credits} available)
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
+                )}
+
+                {/* Step 4: Select Bundle */}
                 <div className="space-y-3">
-                  <Label className="text-lg font-semibold">Step 3: Select Bundle <span className="text-destructive">*</span></Label>
+                  <Label className="text-lg font-semibold">
+                    {user && credits > 0 ? "Step 4:" : "Step 3:"} Select Bundle <span className="text-destructive">*</span>
+                  </Label>
                   <RadioGroup value={selectedBundle} onValueChange={setSelectedBundle}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {bundles.map((bundle) => (
-                        <div key={bundle.id} className="relative">
-                          <RadioGroupItem
-                            value={bundle.id}
-                            id={bundle.id}
-                            className="peer sr-only"
-                          />
-                          <label
-                            htmlFor={bundle.id}
-                            className={`flex flex-col p-4 border-2 rounded-xl cursor-pointer transition-smooth ${
-                              selectedBundle === bundle.id
-                                ? 'border-accent bg-accent/5'
-                                : 'border-border hover:border-accent'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-semibold text-lg">{bundle.name}</span>
-                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-smooth ${
+                      {bundles.map((bundle) => {
+                        const canAffordWithCredits = paymentMethod === "credits" && credits >= bundle.photos;
+                        const isDisabled = paymentMethod === "credits" && !canAffordWithCredits;
+                        
+                        return (
+                          <div key={bundle.id} className="relative">
+                            <RadioGroupItem
+                              value={bundle.id}
+                              id={bundle.id}
+                              className="peer sr-only"
+                              disabled={isDisabled}
+                            />
+                            <label
+                              htmlFor={bundle.id}
+                              className={`flex flex-col p-4 border-2 rounded-xl transition-smooth ${
+                                isDisabled 
+                                  ? 'opacity-50 cursor-not-allowed' 
+                                  : 'cursor-pointer hover:border-accent'
+                              } ${
                                 selectedBundle === bundle.id
-                                  ? 'border-accent bg-accent'
+                                  ? 'border-accent bg-accent/5'
                                   : 'border-border'
-                              }`}>
-                                {selectedBundle === bundle.id && (
-                                  <div className="w-2 h-2 rounded-full bg-white" />
-                                )}
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-semibold text-lg">{bundle.name}</span>
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-smooth ${
+                                  selectedBundle === bundle.id
+                                    ? 'border-accent bg-accent'
+                                    : 'border-border'
+                                }`}>
+                                  {selectedBundle === bundle.id && (
+                                    <div className="w-2 h-2 rounded-full bg-white" />
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            <span className="text-2xl font-bold text-accent mb-1">{bundle.price}</span>
-                            <span className="text-sm text-muted-foreground block mb-2">{bundle.description}</span>
-                            <span className="text-xs text-muted-foreground">{bundle.expiration}</span>
-                          </label>
-                        </div>
-                      ))}
+                              {paymentMethod === "credits" ? (
+                                <>
+                                  <span className="text-2xl font-bold text-accent mb-1">{bundle.photos} Credits</span>
+                                  {!canAffordWithCredits && (
+                                    <span className="text-xs text-destructive">Insufficient credits</span>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <span className="text-2xl font-bold text-accent mb-1">{bundle.price}</span>
+                                  <span className="text-sm text-muted-foreground block mb-2">{bundle.description}</span>
+                                </>
+                              )}
+                              <span className="text-xs text-muted-foreground mt-2">{bundle.expiration}</span>
+                            </label>
+                          </div>
+                        );
+                      })}
                     </div>
                    </RadioGroup>
                    {selectedBundle && files.length > 0 && (() => {
