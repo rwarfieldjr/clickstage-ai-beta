@@ -337,7 +337,7 @@ const Upload = () => {
                 {/* Step 1: Staging Style */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="staging-style">Step 1: Staging Style <span className="text-destructive">*</span></Label>
+                    <Label htmlFor="staging-style" className="text-lg font-semibold">Step 1: Staging Style <span className="text-destructive">*</span></Label>
                     <Dialog open={stylesDialogOpen} onOpenChange={setStylesDialogOpen}>
                       <DialogTrigger asChild>
                         <button
@@ -412,8 +412,8 @@ const Upload = () => {
 
                 {/* Step 2: File Upload */}
                 <div className="space-y-2">
-                  <Label>Step 2: Property Photos (JPEG or PNG) <span className="text-destructive">*</span></Label>
-                  <div 
+                  <Label className="text-lg font-semibold">Step 2: Property Photos (JPEG or PNG) <span className="text-destructive">*</span></Label>
+                  <div
                     className={`border-2 border-dashed rounded-2xl p-8 text-center transition-smooth cursor-pointer ${
                       isDragOver 
                         ? 'border-accent bg-accent/10' 
@@ -468,7 +468,7 @@ const Upload = () => {
 
                 {/* Step 3: Select Bundle */}
                 <div className="space-y-3">
-                  <Label>Step 3: Select Bundle <span className="text-destructive">*</span></Label>
+                  <Label className="text-lg font-semibold">Step 3: Select Bundle <span className="text-destructive">*</span></Label>
                   <RadioGroup value={selectedBundle} onValueChange={setSelectedBundle}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {bundles.map((bundle) => (
