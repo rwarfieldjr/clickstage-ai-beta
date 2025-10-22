@@ -1,23 +1,45 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface HandleNewOrderRequest {
-  email: string;
-  name: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  staging_style?: string;
-  photos_count: number;
-  total_amount: number;
-  files?: string[];
-}
+// Input validation schema
+const HandleNewOrderSchema = z.object({
+  email: z.string().email().max(255),
+  name: z.string().min(1).max(200),
+  firstName: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional(),
+  phone: z.string().max(50).optional(),
+  staging_style: z.string().max(50).optional(),
+  photos_count: z.number().int().positive().max(1000),
+  total_amount: z.number().positive().max(100000000), // $1M max in cents
+  files: z.array(z.string().max(500)).max(100).optional()
+});
+
+// Rate limiting store (in-memory, resets on function restart)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+const checkRateLimit = (identifier: string, maxRequests = 10, windowMs = 3600000): boolean => {
+  const now = Date.now();
+  const record = rateLimitStore.get(identifier);
+
+  if (!record || now > record.resetTime) {
+    rateLimitStore.set(identifier, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+
+  if (record.count >= maxRequests) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -26,6 +48,34 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting by IP
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
+    if (!checkRateLimit(clientIp, 10, 3600000)) { // 10 requests per hour
+      console.warn(`Rate limit exceeded for IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again later." }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429,
+        }
+      );
+    }
+
+    // Parse and validate input
+    const body = await req.json();
+    const validation = HandleNewOrderSchema.safeParse(body);
+
+    if (!validation.success) {
+      console.error("Invalid input:", validation.error.issues);
+      return new Response(
+        JSON.stringify({ error: "Invalid input parameters", details: validation.error.issues }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
     const { 
       email, 
       name, 
@@ -36,7 +86,7 @@ serve(async (req) => {
       photos_count, 
       total_amount,
       files
-    }: HandleNewOrderRequest = await req.json();
+    } = validation.data;
 
     console.log("Processing new order notification for:", email);
 
@@ -207,9 +257,10 @@ serve(async (req) => {
     }
 
     // Send admin notification email
+    const adminEmails = (Deno.env.get("ADMIN_NOTIFICATION_EMAILS") || "orders@clickstagepro.com").split(",").map(e => e.trim());
     const { error: adminEmailError } = await resend.emails.send({
       from: "ClickStage Pro <noreply@clickstagepro.com>",
-      to: "orders@clickstagepro.com",
+      to: adminEmails,
       subject: `New Order Received - Action Required`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

@@ -198,8 +198,9 @@ serve(async (req) => {
       </div>
     `;
 
+    const adminEmails = (Deno.env.get("ADMIN_NOTIFICATION_EMAILS") || "orders@clickstagepro.com").split(",").map(e => e.trim());
     await sendResendEmail(
-      ["rwarfieldjr@gmail.com", "RiaSiangioKW@gmail.com"],
+      adminEmails,
       `NEW ORDER #${displayOrderNumber} - Action Required`,
       adminEmailHtml,
       "ClickStage Pro <noreply@clickstagepro.com>"
