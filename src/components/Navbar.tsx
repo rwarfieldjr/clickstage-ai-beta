@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Upload, DollarSign, Mail, Image, HelpCircle, LayoutGrid, Users, UserCircle, Menu, X } from "lucide-react";
+import { Home, Upload, DollarSign, Mail, Image, HelpCircle, LayoutGrid, Users, UserCircle, Menu, X, User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
@@ -198,7 +198,9 @@ const Navbar = () => {
               ) : (
                 <>
                   <Link to="/auth">
-                    <Button variant="outline" size="sm">Login</Button>
+                    <Button variant="outline" size="icon">
+                      <UserIcon className="h-4 w-4" />
+                    </Button>
                   </Link>
                   <Link to="/pricing">
                     <Button size="sm" className="bg-accent hover:bg-accent/90">Get Started</Button>
