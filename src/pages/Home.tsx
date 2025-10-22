@@ -12,8 +12,8 @@ import livingBefore from "@/assets/hero-before-optimized.webp";
 import livingAfter from "@/assets/hero-after-optimized.webp";
 import livingBefore2 from "@/assets/living-room-before-2.jpg";
 import livingAfter2 from "@/assets/living-room-after-2.png";
-import bedroomBefore from "@/assets/bedroom-before-new.webp";
-import bedroomAfter from "@/assets/bedroom-after-new.webp";
+import bedroomBefore from "@/assets/bedroom-before-optimized.webp";
+import bedroomAfter from "@/assets/bedroom-after-optimized.webp";
 
 const Home = () => {
   const schema = {
