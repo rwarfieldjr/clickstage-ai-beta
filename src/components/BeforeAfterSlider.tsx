@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 interface BeforeAfterSliderProps {
@@ -16,18 +16,32 @@ const BeforeAfterSlider = ({
 }: BeforeAfterSliderProps) => {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
 
-  const handleMove = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+  const handleMove = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (!isDragging && e.type !== "click") return;
+    if (!containerRef.current) return;
 
-    const container = e.currentTarget.getBoundingClientRect();
-    const x = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const position = ((x - container.left) / container.width) * 100;
-    setSliderPosition(Math.min(Math.max(position, 0), 100));
-  };
+    // Cancel any pending animation frame
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+    }
+
+    // Batch DOM read and state update in requestAnimationFrame
+    rafRef.current = requestAnimationFrame(() => {
+      if (!containerRef.current) return;
+      
+      const container = containerRef.current.getBoundingClientRect();
+      const x = "touches" in e ? e.touches[0].clientX : e.clientX;
+      const position = ((x - container.left) / container.width) * 100;
+      setSliderPosition(Math.min(Math.max(position, 0), 100));
+    });
+  }, [isDragging]);
 
   return (
     <div 
+      ref={containerRef}
       className="relative w-full aspect-video overflow-hidden rounded-xl cursor-col-resize select-none"
       onMouseMove={handleMove}
       onTouchMove={handleMove}
