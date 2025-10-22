@@ -7,7 +7,7 @@ interface SEOProps {
   ogImage?: string;
   schema?: object;
   keywords?: string;
-  preloadImages?: Array<{ href: string; fetchPriority?: 'high' | 'low' | 'auto' }>;
+  preloadImages?: Array<{ href: string; fetchpriority?: 'high' | 'low' | 'auto' }>;
 }
 
 export const SEO = ({ title, description, canonical, ogImage, schema, keywords, preloadImages }: SEOProps) => {
@@ -34,7 +34,8 @@ export const SEO = ({ title, description, canonical, ogImage, schema, keywords, 
           rel="preload" 
           as="image" 
           href={img.href} 
-          fetchPriority={img.fetchPriority || 'auto'}
+          // @ts-ignore - fetchpriority is a valid HTML attribute
+          fetchpriority={img.fetchpriority || 'auto'}
         />
       ))}
       

@@ -8,12 +8,12 @@ import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, serviceSchema } from "@/data/schema";
 import heroBackground from "@/assets/hero-background-new.png";
-import livingBefore from "@/assets/hero-before-optimized.webp";
-import livingAfter from "@/assets/hero-after-optimized.webp";
+import livingBefore from "@/assets/hero-before-new.webp";
+import livingAfter from "@/assets/hero-after.webp";
 import livingBefore2 from "@/assets/living-room-before-2.jpg";
 import livingAfter2 from "@/assets/living-room-after-2.png";
-import bedroomBefore from "@/assets/bedroom-before-optimized.webp";
-import bedroomAfter from "@/assets/bedroom-after-optimized.webp";
+import bedroomBefore from "@/assets/bedroom-before-new.webp";
+import bedroomAfter from "@/assets/bedroom-after-new.webp";
 
 const Home = () => {
   const schema = {
@@ -30,8 +30,8 @@ const Home = () => {
         keywords="AI virtual staging, virtual staging real estate, virtual staging photography, MLS compliant virtual staging, real estate photo staging, ClickStagePro"
         schema={schema}
         preloadImages={[
-          { href: livingBefore, fetchPriority: 'high' },
-          { href: livingAfter, fetchPriority: 'high' }
+          { href: livingBefore, fetchpriority: 'high' },
+          { href: livingAfter, fetchpriority: 'high' }
         ]}
       />
       <Navbar />
@@ -45,7 +45,6 @@ const Home = () => {
             className="w-full h-full object-cover"
             width="1920"
             height="1080"
-            fetchPriority="high"
             decoding="async"
           />
           <img 
