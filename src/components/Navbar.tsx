@@ -4,7 +4,7 @@ import { Home, Upload, DollarSign, Mail, Image, HelpCircle, LayoutGrid, Users, U
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
-import logoMain from "@/assets/logo-primary.png";
+import logoMain from "@/assets/logo-primary.webp";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 

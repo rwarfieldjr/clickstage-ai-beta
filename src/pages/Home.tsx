@@ -8,12 +8,12 @@ import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 import { SEO } from "@/components/SEO";
 import { organizationSchema, serviceSchema } from "@/data/schema";
 import heroBackground from "@/assets/hero-background-new.png";
-import livingBefore from "@/assets/hero-before-new.png";
-import livingAfter from "@/assets/hero-after.png";
+import livingBefore from "@/assets/hero-before-new.webp";
+import livingAfter from "@/assets/hero-after.webp";
 import livingBefore2 from "@/assets/living-room-before-2.jpg";
 import livingAfter2 from "@/assets/living-room-after-2.png";
-import bedroomBefore from "@/assets/bedroom-before-new.jpg";
-import bedroomAfter from "@/assets/bedroom-after-new.png";
+import bedroomBefore from "@/assets/bedroom-before-new.webp";
+import bedroomAfter from "@/assets/bedroom-after-new.webp";
 
 const Home = () => {
   const schema = {
