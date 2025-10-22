@@ -3,33 +3,36 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import ScrollToTop from "./components/ScrollToTop";
-import Home from "./pages/Home";
-import Pricing from "./pages/Pricing";
-import Portfolio from "./pages/Portfolio";
-import FAQ from "./pages/FAQ";
-import Auth from "./pages/Auth";
-import Upload from "./pages/Upload";
-import Dashboard from "./pages/Dashboard";
-import Contact from "./pages/Contact";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
-import SMSPolicy from "./pages/SMSPolicy";
-import Styles from "./pages/Styles";
-import PlaceOrder from "./pages/PlaceOrder";
-import About from "./pages/About";
-import AccountSettings from "./pages/AccountSettings";
-import NotFound from "./pages/NotFound";
-import AdminLogin from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminUserDetail from "./pages/admin/AdminUserDetail";
-import AdminOrders from "./pages/admin/AdminOrders";
-import AdminOrderDetail from "./pages/admin/AdminOrderDetail";
-import AdminSettings from "./pages/admin/AdminSettings";
-import Blog from "./pages/Blog";
-import VirtualStagingGuide from "./pages/blog/VirtualStagingGuide";
-import Success from "./pages/Success";
+
+// Lazy load all route components for better performance
+const Home = lazy(() => import("./pages/Home"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const Portfolio = lazy(() => import("./pages/Portfolio"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Upload = lazy(() => import("./pages/Upload"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Contact = lazy(() => import("./pages/Contact"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const SMSPolicy = lazy(() => import("./pages/SMSPolicy"));
+const Styles = lazy(() => import("./pages/Styles"));
+const PlaceOrder = lazy(() => import("./pages/PlaceOrder"));
+const About = lazy(() => import("./pages/About"));
+const AccountSettings = lazy(() => import("./pages/AccountSettings"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminUserDetail = lazy(() => import("./pages/admin/AdminUserDetail"));
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
+const AdminOrderDetail = lazy(() => import("./pages/admin/AdminOrderDetail"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const Blog = lazy(() => import("./pages/Blog"));
+const VirtualStagingGuide = lazy(() => import("./pages/blog/VirtualStagingGuide"));
+const Success = lazy(() => import("./pages/Success"));
 
 const queryClient = new QueryClient();
 
@@ -40,7 +43,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ScrollToTop />
-        <Routes>
+        <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
+          <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/portfolio" element={<Portfolio />} />
@@ -68,7 +72,8 @@ const App = () => (
           <Route path="/success" element={<Success />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
-        </Routes>
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
