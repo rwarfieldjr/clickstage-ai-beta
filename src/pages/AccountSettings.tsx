@@ -127,37 +127,22 @@ const AccountSettings = () => {
     }
   };
 
-  const handlePurchaseCredits = async (priceId: string, credits: number) => {
+  const handlePurchaseCredits = (priceId: string, credits: number, bundleName: string, bundlePrice: string) => {
     if (!user) return;
-    setLoading(true);
 
-    try {
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { 
-          priceId, 
-          photosCount: credits,
-          contactInfo: {
-            email: user.email || profile.email,
-            firstName: profile.name?.split(' ')[0] || user.user_metadata?.name?.split(' ')[0] || 'Customer',
-            lastName: profile.name?.split(' ').slice(1).join(' ') || user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
-          }
-        },
-      });
+    // Store bundle info for upload page
+    const bundle = {
+      id: `${credits}-photos`,
+      name: bundleName,
+      price: bundlePrice,
+      priceId: priceId,
+      photos: credits,
+    };
 
-      if (error) throw error;
-
-      if (data?.url) {
-        window.open(data.url, "_blank");
-        // Refetch credits after a delay to allow payment processing
-        setTimeout(() => {
-          refetchCredits();
-        }, 2000);
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to create checkout session");
-    } finally {
-      setLoading(false);
-    }
+    localStorage.setItem('selectedBundle', JSON.stringify(bundle));
+    
+    // Navigate to upload page
+    navigate('/upload');
   };
 
   const handleLogout = async () => {
@@ -324,7 +309,7 @@ const AccountSettings = () => {
                           </div>
                           <Button
                             className="w-full"
-                            onClick={() => handlePurchaseCredits(bundle.priceId, bundle.credits)}
+                            onClick={() => handlePurchaseCredits(bundle.priceId, bundle.credits, bundle.name, bundle.price)}
                             disabled={loading}
                           >
                             Purchase

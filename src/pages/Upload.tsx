@@ -27,6 +27,7 @@ import japandi from "@/assets/style-japandi.jpg";
 const Upload = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [stagingStyle, setStagingStyle] = useState("");
@@ -60,9 +61,17 @@ const Upload = () => {
   ];
 
   useEffect(() => {
-    // Check for selected bundle from localStorage (from place-order page)
+    // Check for selected bundle from localStorage (from place-order page OR account settings)
+    const bundleData = localStorage.getItem('selectedBundle');
     const orderData = localStorage.getItem('orderContactInfo');
-    if (orderData) {
+    
+    if (bundleData) {
+      const parsedBundle = JSON.parse(bundleData);
+      const matchingBundle = bundles.find(b => b.priceId === parsedBundle.priceId);
+      if (matchingBundle) {
+        setSelectedBundle(matchingBundle.id);
+      }
+    } else if (orderData) {
       const parsedData = JSON.parse(orderData);
       if (parsedData.selectedBundle && parsedData.selectedBundle.priceId) {
         const matchingBundle = bundles.find(b => b.priceId === parsedData.selectedBundle.priceId);
@@ -72,10 +81,21 @@ const Upload = () => {
       }
     }
 
-    // Check if user is already logged in (optional)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Load user session and profile
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         setUser(session.user);
+        
+        // Load user profile
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+        
+        if (profileData) {
+          setUserProfile(profileData);
+        }
       }
     });
   }, []);
@@ -175,15 +195,28 @@ const Upload = () => {
     setLoading(true);
 
     try {
-      // Get contact info from localStorage (from place-order page)
-      const orderContactInfo = localStorage.getItem('orderContactInfo');
-      if (!orderContactInfo) {
-        toast.error("Please start from the pricing page to place an order");
-        navigate("/pricing");
-        return;
-      }
+      // Get contact info - prefer logged-in user's profile, fallback to localStorage
+      let contactInfo;
       
-      const contactInfo = JSON.parse(orderContactInfo);
+      if (user && userProfile) {
+        // Use logged-in user's info
+        const nameParts = userProfile.name ? userProfile.name.split(' ') : ['', ''];
+        contactInfo = {
+          email: userProfile.email || user.email,
+          firstName: nameParts[0] || 'Customer',
+          lastName: nameParts.slice(1).join(' ') || '',
+          phoneNumber: userProfile.phone || '',
+        };
+      } else {
+        // Fallback to localStorage (from place-order page)
+        const orderContactInfo = localStorage.getItem('orderContactInfo');
+        if (!orderContactInfo) {
+          toast.error("Please start from the pricing page to place an order");
+          navigate("/pricing");
+          return;
+        }
+        contactInfo = JSON.parse(orderContactInfo);
+      }
       
       // Find the selected bundle
       const bundle = bundles.find(b => b.id === selectedBundle);
