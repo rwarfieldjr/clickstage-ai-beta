@@ -127,9 +127,9 @@ const Home = () => {
                 <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Clock className="w-6 h-6 text-accent dark:text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground dark:text-white">Rush Delivery Available</h3>
+                <h3 className="text-xl font-semibold mb-3 text-foreground dark:text-white">Save 70%</h3>
                 <p className="text-muted-foreground dark:text-white/70 text-sm">
-                  Get your professionally staged photos back quickly with our rush service
+                  Massive cost savings over traditional virtual staging
                 </p>
               </div>
 
