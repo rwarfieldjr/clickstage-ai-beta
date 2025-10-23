@@ -93,8 +93,8 @@ const Home = () => {
                 <div className="text-white/80 text-sm md:text-base">of buyers say they connect emotionally with staged homes</div>
               </div>
               <div className="text-center">
-                <div className="text-4xl md:text-5xl font-bold mb-2">24hr</div>
-                <div className="text-white/80 text-sm md:text-base">Delivery</div>
+                <div className="text-4xl md:text-5xl font-bold mb-2">49%</div>
+                <div className="text-white/80 text-sm md:text-base">faster time on market vs. non-staged homes</div>
               </div>
             </div>
           </div>
