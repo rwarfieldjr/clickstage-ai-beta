@@ -85,8 +85,8 @@ const Home = () => {
             {/* Statistics */}
             <div className="grid grid-cols-3 gap-8 mt-16 max-w-3xl mx-auto">
               <div className="text-center">
-                <div className="text-4xl md:text-5xl font-bold mb-2">73%</div>
-                <div className="text-white/80 text-sm md:text-base">Faster Sales</div>
+                <div className="text-4xl md:text-5xl font-bold mb-2">97%</div>
+                <div className="text-white/80 text-sm md:text-base">of first showings happen online</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl md:text-5xl font-bold mb-2">15%</div>
