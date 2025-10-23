@@ -39,7 +39,7 @@ const Navbar = () => {
             <img 
               src={logoMain} 
               alt="ClickStage Pro - Virtual Staging Powered by AI" 
-              className="h-20 w-auto dark:invert transition-all duration-300"
+              className="h-20 w-auto dark:brightness-0 dark:invert transition-all duration-300"
               width="238"
               height="80"
               decoding="async"
