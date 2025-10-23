@@ -109,7 +109,7 @@ const Home = () => {
               Why Agents and Photographers Love ClickStagePro
             </h2>
             <p className="text-center text-muted-foreground dark:text-white/70 mb-12 text-lg">
-              Show listings at their best with fast, realistic virtual staging.
+              You Can Make All Your Listings Scroll Stopping
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
