@@ -67,11 +67,8 @@ const Home = () => {
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
               AI Virtual Staging for Real Estate Professionals
             </h1>
-            <h2 className="text-2xl md:text-3xl mb-6 text-white/90">
+            <p className="text-2xl md:text-3xl mb-6 text-white/90">
               Photorealistic, MLS-compliant staging delivered in 24 hours — as low as $7 per photo.
-            </h2>
-            <p className="text-lg md:text-xl mb-8 text-white/80 max-w-3xl mx-auto">
-              Transform your listing photos with ClickStagePro's AI-powered virtual staging. Fast, affordable, and designed for agents, photographers, and teams who want homes to sell faster.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/pricing">
