@@ -59,6 +59,9 @@ const Home = () => {
         </div>
         <div className="absolute inset-y-0 left-1/2 w-1.5 bg-white/40 -translate-x-1/2"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70"></div>
+        <div className="absolute bottom-4 right-4 text-white/60 text-xs md:text-sm z-10">
+          *NAR Home Buyers and Sellers Generational Trends Report
+        </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8 mt-8">
