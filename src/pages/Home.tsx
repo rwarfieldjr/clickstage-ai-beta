@@ -89,8 +89,8 @@ const Home = () => {
                 <div className="text-white/80 text-sm md:text-base">of first showings happen online</div>
               </div>
               <div className="text-center">
-                <div className="text-4xl md:text-5xl font-bold mb-2">15%</div>
-                <div className="text-white/80 text-sm md:text-base">Higher Offers</div>
+                <div className="text-4xl md:text-5xl font-bold mb-2">83%</div>
+                <div className="text-white/80 text-sm md:text-base">of buyers say they connect emotionally with staged homes</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl md:text-5xl font-bold mb-2">24hr</div>
