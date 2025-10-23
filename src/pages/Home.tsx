@@ -117,9 +117,9 @@ const Home = () => {
                 <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-6 h-6 text-accent dark:text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground dark:text-white">Sell 73% Faster</h3>
+                <h3 className="text-xl font-semibold mb-3 text-foreground dark:text-white">Powered By AI</h3>
                 <p className="text-muted-foreground dark:text-white/70 text-sm">
-                  Staged homes sell significantly faster than empty properties
+                  Cutting Edge Photorealistic Technology
                 </p>
               </div>
 
