@@ -109,7 +109,7 @@ const Home = () => {
               Why Professionals Trust ClickStage Pro
             </h2>
             <p className="text-center text-muted-foreground dark:text-white/70 mb-12 text-lg">
-              You Can Make All Your Listings Scroll Stopping
+              Built By an Agent for ALL Agents
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
