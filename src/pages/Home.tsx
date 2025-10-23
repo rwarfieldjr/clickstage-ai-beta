@@ -106,7 +106,7 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-primary dark:text-white">
-              Why More Agents Trust ClickStagePro
+              Why Professionals Trust ClickStage Pro
             </h2>
             <p className="text-center text-muted-foreground dark:text-white/70 mb-12 text-lg">
               You Can Make All Your Listings Scroll Stopping
