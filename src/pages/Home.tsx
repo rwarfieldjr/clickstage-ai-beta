@@ -147,9 +147,9 @@ const Home = () => {
                 <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Award className="w-6 h-6 text-accent dark:text-white" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground dark:text-white">Premium Quality</h3>
+                <h3 className="text-xl font-semibold mb-3 text-foreground dark:text-white">Delivery in 24hrs or Less!</h3>
                 <p className="text-muted-foreground dark:text-white/70 text-sm">
-                  Photorealistic staging that looks indistinguishable from real furniture
+                  Turn-around speed that redefines the industry
                 </p>
               </div>
             </div>
