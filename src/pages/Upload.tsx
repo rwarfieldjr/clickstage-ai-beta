@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -40,6 +41,7 @@ const Upload = () => {
   const [magnifiedImage, setMagnifiedImage] = useState<{ name: string; image: string } | null>(null);
   const [smsConsent, setSmsConsent] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "credits">("stripe");
+  const [stagingNotes, setStagingNotes] = useState("");
   const { credits, creditSummary, loading: creditsLoading, refetchCredits } = useCredits(user);
   const { theme } = useTheme();
 
@@ -233,6 +235,7 @@ const Upload = () => {
             stagingStyle: stagingStyle,
             photosCount: files.length,
             sessionId: sessionId,
+            stagingNotes: stagingNotes,
           },
         });
 
@@ -287,6 +290,7 @@ const Upload = () => {
         stagingStyle: stagingStyle,
         photosCount: files.length,
         bundleName: bundle.name,
+        stagingNotes: stagingNotes,
         timestamp: new Date().toISOString(),
       }));
 
@@ -591,6 +595,24 @@ const Upload = () => {
                      }
                      return null;
                    })()}
+                </div>
+
+                {/* Notes for Staging Team */}
+                <div className="space-y-3">
+                  <Label htmlFor="staging-notes" className="text-lg font-semibold">
+                    Notes for the Staging Team
+                  </Label>
+                  <Textarea
+                    id="staging-notes"
+                    placeholder="Add any special instructions or preferences for the staging team (optional)..."
+                    value={stagingNotes}
+                    onChange={(e) => setStagingNotes(e.target.value)}
+                    className="min-h-[100px] resize-none"
+                    maxLength={500}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {stagingNotes.length}/500 characters
+                  </p>
                 </div>
 
                 {/* SMS Consent Checkbox */}
