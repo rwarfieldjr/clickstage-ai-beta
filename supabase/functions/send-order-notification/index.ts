@@ -14,9 +14,11 @@ const NotificationSchema = z.object({
   customerName: z.string().min(1),
   customerEmail: z.string().email(),
   photosCount: z.number().int().positive(),
-  amountPaid: z.number().positive(),
+  amountPaid: z.number().nonnegative(), // Allow 0 for credit orders
   files: z.array(z.string()).min(1),
   stagingStyle: z.string().optional(),
+  stagingNotes: z.string().optional(),
+  paymentMethod: z.string().optional(),
 });
 
 const sendResendEmail = async (to: string[], subject: string, html: string, from: string) => {
@@ -60,17 +62,33 @@ serve(async (req) => {
       );
     }
 
-    const { sessionId, orderNumber, customerName, customerEmail, photosCount, amountPaid, files, stagingStyle } = validation.data;
+    const { sessionId, orderNumber, customerName, customerEmail, photosCount, amountPaid, files, stagingStyle, stagingNotes, paymentMethod } = validation.data;
     
     // Use orderNumber if provided, otherwise fallback to sessionId slice
     const displayOrderNumber = orderNumber || sessionId.slice(-20);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
-    // Generate proper public URLs for the uploaded images
-    const imageUrls = files.map(file => 
-      `${supabaseUrl}/storage/v1/object/public/original-images/${file}`
-    );
+    // Create Supabase client for generating signed URLs
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+    
+    // Generate signed URLs for the uploaded images (valid for 7 days)
+    const imageUrlPromises = files.map(async (file) => {
+      const { data, error } = await supabase.storage
+        .from('original-images')
+        .createSignedUrl(file, 604800); // 7 days in seconds
+      
+      if (error) {
+        console.error(`Error generating signed URL for ${file}:`, error);
+        return { file, url: null };
+      }
+      
+      return { file, url: data.signedUrl };
+    });
+    
+    const imageUrlResults = await Promise.all(imageUrlPromises);
+    const imageUrls = imageUrlResults.filter(result => result.url !== null);
 
     // Send confirmation email to customer
     const customerEmailHtml = `
@@ -98,19 +116,33 @@ serve(async (req) => {
               ${stagingStyle ? `
               <tr>
                 <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;"><strong>Staging Style:</strong></td>
-                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; text-transform: capitalize;">${stagingStyle}</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0; text-transform: capitalize;">${stagingStyle.replace(/-/g, ' ')}</td>
               </tr>
               ` : ''}
               <tr>
-                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;"><strong>Credit Pack:</strong></td>
-                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;">${photosCount} credit${photosCount > 1 ? 's' : ''}</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;"><strong>Photos Count:</strong></td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;">${photosCount} photo${photosCount > 1 ? 's' : ''}</td>
               </tr>
+              ${paymentMethod === 'credits' ? `
+              <tr>
+                <td style="padding: 10px 0;"><strong>Payment Method:</strong></td>
+                <td style="padding: 10px 0;">Credits (${photosCount} credits used)</td>
+              </tr>
+              ` : `
               <tr>
                 <td style="padding: 10px 0;"><strong>Total Paid:</strong></td>
                 <td style="padding: 10px 0;">$${amountPaid.toFixed(2)}</td>
               </tr>
+              `}
             </table>
           </div>
+
+          ${stagingNotes ? `
+          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #667eea; margin-top: 0;">📝 Your Special Notes</h3>
+            <p style="color: #2d3748; margin: 0;">${stagingNotes}</p>
+          </div>
+          ` : ''}
 
           <div style="background: #ebf4ff; padding: 20px; border-left: 4px solid #667eea; border-radius: 4px; margin: 20px 0;">
             <h3 style="color: #667eea; margin-top: 0;">What Happens Next?</h3>
@@ -161,8 +193,12 @@ serve(async (req) => {
             <p style="margin: 5px 0;"><strong>Customer:</strong> ${customerName}</p>
             <p style="margin: 5px 0;"><strong>Email:</strong> ${customerEmail}</p>
             <p style="margin: 5px 0;"><strong>Photos to Stage:</strong> ${photosCount}</p>
-            <p style="margin: 5px 0;"><strong>Amount Paid:</strong> $${amountPaid.toFixed(2)}</p>
-            ${stagingStyle ? `<p style="margin: 5px 0;"><strong>Staging Style:</strong> <span style="text-transform: capitalize;">${stagingStyle}</span></p>` : ''}
+            ${paymentMethod === 'credits' 
+              ? `<p style="margin: 5px 0;"><strong>Payment Method:</strong> Credits (${photosCount} credits used)</p>`
+              : `<p style="margin: 5px 0;"><strong>Amount Paid:</strong> $${amountPaid.toFixed(2)}</p>`
+            }
+            ${stagingStyle ? `<p style="margin: 5px 0;"><strong>Staging Style:</strong> <span style="text-transform: capitalize;">${stagingStyle.replace(/-/g, ' ')}</span></p>` : ''}
+            ${stagingNotes ? `<p style="margin: 5px 0;"><strong>Special Notes:</strong> ${stagingNotes}</p>` : ''}
           </div>
 
           <div style="background: #1e40af; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -170,13 +206,16 @@ serve(async (req) => {
             <p style="color: #93c5fd; margin-bottom: 15px;">
               Click the links below to download the uploaded photos:
             </p>
-            ${imageUrls.map((url, index) => `
+            ${imageUrls.map((result, index) => `
               <div style="margin: 10px 0;">
-                <a href="${url}" 
+                <a href="${result.url}" 
                    target="_blank"
                    style="color: #60a5fa; text-decoration: underline; word-break: break-all;">
-                  📥 Download Photo ${index + 1}
+                   📥 Download Photo ${index + 1}
                 </a>
+                <span style="color: #9ca3af; font-size: 12px; display: block; margin-top: 5px;">
+                  Link expires in 7 days
+                </span>
               </div>
             `).join('')}
           </div>

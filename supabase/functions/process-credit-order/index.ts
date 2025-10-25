@@ -15,6 +15,7 @@ interface CreditOrderRequest {
   stagingStyle: string;
   photosCount: number;
   sessionId: string;
+  stagingNotes?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -39,7 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Unauthorized");
     }
 
-    const { files, stagingStyle, photosCount, sessionId }: CreditOrderRequest = await req.json();
+    const { files, stagingStyle, photosCount, sessionId, stagingNotes }: CreditOrderRequest = await req.json();
 
     console.log(`Processing credit order for user ${user.id}: ${photosCount} photos`);
 
@@ -150,10 +151,16 @@ const handler = async (req: Request): Promise<Response> => {
     try {
       await supabase.functions.invoke("send-order-notification", {
         body: {
-          email: profileData.email,
-          name: profileData.name || "Customer",
-          ordersCount: createdOrders.length,
-          orderNumbers: createdOrders.map(o => o.order_number),
+          sessionId: sessionId,
+          orderNumber: createdOrders[0]?.order_number,
+          customerName: profileData.name || "Customer",
+          customerEmail: profileData.email,
+          photosCount: photosCount,
+          amountPaid: 0, // Credit order, no payment
+          files: files,
+          stagingStyle: stagingStyle,
+          stagingNotes: stagingNotes,
+          paymentMethod: "credits",
         },
       });
     } catch (emailError) {
