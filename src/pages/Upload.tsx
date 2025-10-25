@@ -55,12 +55,12 @@ const Upload = () => {
   ];
 
   const bundles = [
-    { id: "single", name: "Single Photo", price: "$10", priceId: "price_1SD8lsIG3TLqP9yabBsx4jyZ", description: "Perfect for testing", photos: 1, expiration: "Credits expire 6 months after purchase." },
-    { id: "5-photos", name: "5 Photos", price: "$45", priceId: "price_1SD8nJIG3TLqP9yaGAjd2WdP", description: "$9 per photo", photos: 5, expiration: "Credits expire 6 months after purchase." },
-    { id: "10-photos", name: "10 Photos", price: "$85", priceId: "price_1SD8nNIG3TLqP9yazPngAIN0", description: "$8.50 per photo", photos: 10, expiration: "Credits expire 6 months after purchase." },
-    { id: "20-photos", name: "20 Photos", price: "$160", priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG", description: "$8 per photo", photos: 20, expiration: "Credits expire 12 months after purchase." },
-    { id: "50-photos", name: "50 Photos", price: "$375", priceId: "price_1SD8nTIG3TLqP9yaTOhRMNFq", description: "$7.50 per photo", photos: 50, expiration: "Credits expire 12 months after purchase." },
-    { id: "100-photos", name: "100 Photos", price: "$700", priceId: "price_1SD8nWIG3TLqP9yaH0D0oIpW", description: "$7 per photo", photos: 100, expiration: "Credits expire 12 months after purchase." },
+    { id: "single", name: "Single Photo", price: "$10", priceId: "price_1SD8lsIG3TLqP9yabBsx4jyZ", description: "Perfect for testing", photos: 1, expiration: "Credits expire 6 months after purchase.", checkoutUrl: "https://buy.stripe.com/7sY9AU3eU0tn4DkcHCdZ601" },
+    { id: "5-photos", name: "5 Photos", price: "$45", priceId: "price_1SD8nJIG3TLqP9yaGAjd2WdP", description: "$9 per photo", photos: 5, expiration: "Credits expire 6 months after purchase.", checkoutUrl: "https://buy.stripe.com/fZu4gA6r68ZT6Ls7nidZ602" },
+    { id: "10-photos", name: "10 Photos", price: "$85", priceId: "price_1SD8nNIG3TLqP9yazPngAIN0", description: "$8.50 per photo", photos: 10, expiration: "Credits expire 6 months after purchase.", checkoutUrl: "https://buy.stripe.com/eVqaEYeXC4JDd9Q6jedZ603" },
+    { id: "20-photos", name: "20 Photos", price: "$160", priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG", description: "$8 per photo", photos: 20, expiration: "Credits expire 12 months after purchase.", checkoutUrl: "https://buy.stripe.com/3cI9AUdTyekd8TA8rmdZ604" },
+    { id: "50-photos", name: "50 Photos", price: "$375", priceId: "price_1SD8nTIG3TLqP9yaTOhRMNFq", description: "$7.50 per photo", photos: 50, expiration: "Credits expire 12 months after purchase.", checkoutUrl: "https://buy.stripe.com/aFa14o3eUgsl8TAfTOdZ605" },
+    { id: "100-photos", name: "100 Photos", price: "$700", priceId: "price_1SD8nWIG3TLqP9yaH0D0oIpW", description: "$7 per photo", photos: 100, expiration: "Credits expire 12 months after purchase.", checkoutUrl: "https://buy.stripe.com/7sYeVe6r64JD4Dk22YdZ606" },
   ];
 
   useEffect(() => {
@@ -248,34 +248,15 @@ const Upload = () => {
         return;
       }
 
-      // Handle Stripe payment (existing code)
-      // Get contact info - prefer logged-in user's profile, fallback to localStorage
-      let contactInfo;
-      
-      if (user && userProfile) {
-        // Use logged-in user's info
-        const nameParts = userProfile.name ? userProfile.name.split(' ') : ['', ''];
-        contactInfo = {
-          email: userProfile.email || user.email,
-          firstName: nameParts[0] || 'Customer',
-          lastName: nameParts.slice(1).join(' ') || '',
-          phoneNumber: userProfile.phone || '',
-        };
-      } else {
-        // Fallback to localStorage (from place-order page)
-        const orderContactInfo = localStorage.getItem('orderContactInfo');
-        if (!orderContactInfo) {
-          toast.error("Please start from the pricing page to place an order");
-          navigate("/pricing");
-          return;
-        }
-        contactInfo = JSON.parse(orderContactInfo);
-      }
-      
+      // Handle Stripe payment - redirect to checkout URL
       // Find the selected bundle
       const bundle = bundles.find(b => b.id === selectedBundle);
       if (!bundle) {
         throw new Error("Selected bundle not found");
+      }
+
+      if (!bundle.checkoutUrl) {
+        throw new Error("Checkout URL not found for this bundle");
       }
 
       // Generate a unique session ID for this upload
@@ -299,29 +280,19 @@ const Upload = () => {
       const uploadedFiles = await Promise.all(uploadPromises);
       toast.dismiss();
 
-      // Create checkout session with file references
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: {
-          priceId: bundle.priceId,
-          contactInfo: {
-            email: contactInfo.email,
-            firstName: contactInfo.firstName,
-            lastName: contactInfo.lastName,
-            phoneNumber: contactInfo.phoneNumber,
-          },
-          files: uploadedFiles,
-          stagingStyle: stagingStyle,
-          photosCount: bundle.photos,
-          sessionId: sessionId,
-        },
-      });
+      // Store order details in localStorage for post-payment processing
+      localStorage.setItem('pendingOrder', JSON.stringify({
+        sessionId: sessionId,
+        files: uploadedFiles,
+        stagingStyle: stagingStyle,
+        photosCount: files.length,
+        bundleName: bundle.name,
+        timestamp: new Date().toISOString(),
+      }));
 
-      if (error) throw error;
-
-      if (data?.url) {
-        toast.success("Opening payment page...");
-        window.open(data.url, '_blank');
-      }
+      // Redirect to Stripe checkout
+      toast.success("Opening payment page...");
+      window.open(bundle.checkoutUrl, '_blank');
     } catch (error: any) {
       console.error("Checkout error:", error);
       toast.error(error.message || "Failed to process checkout");

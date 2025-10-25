@@ -41,6 +41,19 @@ const Pricing = () => {
     });
   }, []);
 
+  const handleSelectPlan = async (planName: string, priceId: string, credits: number, checkoutUrl: string) => {
+    // Store selected bundle info in localStorage including checkout URL
+    localStorage.setItem('selectedBundle', JSON.stringify({
+      name: planName,
+      priceId: priceId,
+      credits: credits,
+      checkoutUrl: checkoutUrl,
+    }));
+    
+    // Navigate to upload page
+    navigate('/upload');
+  };
+
   const pricingTiers = [
     {
       name: "1 Photo",
@@ -177,11 +190,9 @@ const Pricing = () => {
                     <Button
                       className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
-                      asChild
+                      onClick={() => handleSelectPlan(tier.name, tier.priceId, tier.credits, tier.checkoutUrl)}
                     >
-                      <a href={tier.checkoutUrl} target="_blank" rel="noopener noreferrer">
-                        Buy {tier.name} – {tier.price}
-                      </a>
+                      Select {tier.name}
                     </Button>
                   </CardContent>
                 </Card>
