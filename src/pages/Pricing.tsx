@@ -41,18 +41,6 @@ const Pricing = () => {
     });
   }, []);
 
-  const handleSelectPlan = async (planName: string, priceId: string, credits: number) => {
-    // Store selected bundle info in localStorage
-    localStorage.setItem('selectedBundle', JSON.stringify({
-      name: planName,
-      priceId: priceId,
-      credits: credits,
-    }));
-    
-    // Navigate to place-order page
-    navigate('/place-order');
-  };
-
   const pricingTiers = [
     {
       name: "1 Photo",
@@ -62,6 +50,7 @@ const Pricing = () => {
       perPhoto: "$10 per photo",
       competitive: "Save 70% vs. our competition ($30 to $40 per photo)",
       description: "Test Drive our service - see the difference",
+      checkoutUrl: "https://buy.stripe.com/7sY9AU3eU0tn4DkcHCdZ601",
     },
     {
       name: "5 Photos",
@@ -71,6 +60,7 @@ const Pricing = () => {
       perPhoto: "$9 per photo",
       savings: "Bundle and Save $5",
       description: "Perfect for a single listing",
+      checkoutUrl: "https://buy.stripe.com/fZu4gA6r68ZT6Ls7nidZ602",
     },
     {
       name: "10 Photos",
@@ -80,6 +70,7 @@ const Pricing = () => {
       perPhoto: "$8.5 per photo",
       savings: "Bundle and Save $15",
       description: "Great for 2-3 listings",
+      checkoutUrl: "https://buy.stripe.com/eVqaEYeXC4JDd9Q6jedZ603",
     },
     {
       name: "20 Photos",
@@ -90,6 +81,7 @@ const Pricing = () => {
       savings: "Bundle and Save $40",
       description: "Ideal for multiple projects",
       popular: true,
+      checkoutUrl: "https://buy.stripe.com/3cI9AUdTyekd8TA8rmdZ604",
     },
     {
       name: "50 Photos",
@@ -99,6 +91,7 @@ const Pricing = () => {
       perPhoto: "$7.5 per photo",
       savings: "Bundle and Save $125",
       description: "Perfect for agencies",
+      checkoutUrl: "https://buy.stripe.com/aFa14o3eUgsl8TAfTOdZ605",
     },
     {
       name: "100 Photos",
@@ -108,6 +101,7 @@ const Pricing = () => {
       perPhoto: "$7 per photo",
       savings: "Bundle and Save $300",
       description: "Maximum value for teams",
+      checkoutUrl: "https://buy.stripe.com/7sYeVe6r64JD4Dk22YdZ606",
     },
   ];
 
@@ -183,9 +177,11 @@ const Pricing = () => {
                     <Button
                       className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
-                      onClick={() => handleSelectPlan(tier.name, tier.priceId, tier.credits)}
+                      asChild
                     >
-                      Select {tier.name}
+                      <a href={tier.checkoutUrl} target="_blank" rel="noopener noreferrer">
+                        Buy {tier.name} – {tier.price}
+                      </a>
                     </Button>
                   </CardContent>
                 </Card>
