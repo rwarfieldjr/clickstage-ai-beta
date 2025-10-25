@@ -228,12 +228,18 @@ const Upload = () => {
         const uploadedFiles = await Promise.all(uploadPromises);
         toast.dismiss();
 
-        // Process order with credits
+        // Find the selected bundle to get the correct credit amount
+        const bundle = bundles.find(b => b.id === selectedBundle);
+        if (!bundle) {
+          throw new Error("Selected bundle not found");
+        }
+
+        // Process order with credits - deduct the bundle's photo count as credits
         const { data, error } = await supabase.functions.invoke('process-credit-order', {
           body: {
             files: uploadedFiles,
             stagingStyle: stagingStyle,
-            photosCount: files.length,
+            photosCount: bundle.photos,
             sessionId: sessionId,
             stagingNotes: stagingNotes,
           },
