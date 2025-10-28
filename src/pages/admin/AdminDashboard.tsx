@@ -126,7 +126,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/admin/images")}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Images</CardTitle>
               <ImageIcon className="h-4 w-4 text-muted-foreground" />
@@ -175,6 +175,16 @@ export default function AdminDashboard() {
             <CardContent>
               <p className="text-muted-foreground mb-4">View and manage all orders</p>
               <Button variant="outline" className="w-full">Go to Orders</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/admin/images")}>
+            <CardHeader>
+              <CardTitle>Uploaded Images</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">View and download all uploaded customer images</p>
+              <Button variant="outline" className="w-full">Go to Images</Button>
             </CardContent>
           </Card>
         </div>
