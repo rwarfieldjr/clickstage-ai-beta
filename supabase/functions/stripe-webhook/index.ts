@@ -144,6 +144,16 @@ serve(async (req) => {
 
       // Send notification emails with proper order number
       if (orderNumbers.length > 0) {
+        // Extract file paths from full URLs for signed URL generation
+        const filePaths = files.map((fileUrl: string) => {
+          // If it's a full URL, extract just the path after the bucket name
+          if (fileUrl.includes('/storage/v1/object/')) {
+            const parts = fileUrl.split('/original-images/');
+            return parts[1] || fileUrl;
+          }
+          return fileUrl;
+        });
+
         const { error: notificationError } = await supabaseAdmin.functions.invoke("send-order-notification", {
           body: {
             sessionId: session.id,
@@ -152,8 +162,9 @@ serve(async (req) => {
             customerEmail: customerEmail,
             photosCount: photosCount,
             amountPaid: (session.amount_total || 0) / 100, // Convert from cents to dollars
-            files: files,
+            files: filePaths,
             stagingStyle: stagingStyle,
+            paymentMethod: "stripe",
           },
         });
 
