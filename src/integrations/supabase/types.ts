@@ -169,6 +169,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          archived: boolean
           created_at: string
           credits_used: number | null
           id: string
@@ -182,6 +183,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived?: boolean
           created_at?: string
           credits_used?: number | null
           id?: string
@@ -195,6 +197,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archived?: boolean
           created_at?: string
           credits_used?: number | null
           id?: string

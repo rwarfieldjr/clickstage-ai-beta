@@ -17,6 +17,7 @@ interface OrderWithUser {
   status: string;
   staging_style: string;
   user_id: string;
+  archived: boolean;
   profiles: {
     name: string;
     email: string;
@@ -28,6 +29,7 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<OrderWithUser[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<OrderWithUser[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export default function AdminOrders() {
 
   useEffect(() => {
     filterOrders();
-  }, [searchTerm, orders]);
+  }, [searchTerm, orders, showArchived]);
 
   const fetchOrders = async () => {
     try {
@@ -65,17 +67,16 @@ export default function AdminOrders() {
   };
 
   const filterOrders = () => {
-    if (!searchTerm) {
-      setFilteredOrders(orders);
-      return;
+    let filtered = orders.filter(order => showArchived ? order.archived : !order.archived);
+    
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (order) =>
+          order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
-
-    const filtered = orders.filter(
-      (order) =>
-        order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     setFilteredOrders(filtered);
   };
@@ -96,6 +97,23 @@ export default function AdminOrders() {
     } catch (error: any) {
       console.error("Error updating order status:", error);
       toast.error("Failed to update order status");
+    }
+  };
+
+  const toggleArchiveStatus = async (orderId: string, isArchived: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ archived: !isArchived })
+        .eq("id", orderId);
+
+      if (error) throw error;
+
+      toast.success(isArchived ? "Order unarchived" : "Order archived");
+      await fetchOrders();
+    } catch (error: any) {
+      console.error("Error archiving order:", error);
+      toast.error("Failed to archive order");
     }
   };
 
@@ -120,7 +138,7 @@ export default function AdminOrders() {
 
         <h1 className="text-3xl font-bold mb-6">Order Management</h1>
 
-        <div className="mb-6">
+        <div className="mb-6 space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -129,6 +147,15 @@ export default function AdminOrders() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={showArchived ? "default" : "outline"}
+              onClick={() => setShowArchived(!showArchived)}
+              size="sm"
+            >
+              {showArchived ? "Show Active Orders" : "Show Archived Orders"}
+            </Button>
           </div>
         </div>
 
@@ -162,13 +189,22 @@ export default function AdminOrders() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => navigate(`/admin/orders/${order.id}`)}
-                    >
-                      View Details
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/admin/orders/${order.id}`)}
+                      >
+                        View Details
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => toggleArchiveStatus(order.id, order.archived)}
+                      >
+                        {order.archived ? "Unarchive" : "Archive"}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
