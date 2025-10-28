@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Search } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { toast } from "sonner";
 
 interface OrderWithUser {
   id: string;
@@ -79,6 +80,25 @@ export default function AdminOrders() {
     setFilteredOrders(filtered);
   };
 
+  const toggleOrderStatus = async (orderId: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === "pending" ? "completed" : "pending";
+      
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: newStatus })
+        .eq("id", orderId);
+
+      if (error) throw error;
+
+      toast.success(`Order status updated to ${newStatus}`);
+      await fetchOrders();
+    } catch (error: any) {
+      console.error("Error updating order status:", error);
+      toast.error("Failed to update order status");
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -134,7 +154,12 @@ export default function AdminOrders() {
                   <TableCell>{order.profiles?.email}</TableCell>
                   <TableCell className="capitalize">{order.staging_style}</TableCell>
                   <TableCell>
-                    <Badge>{order.status}</Badge>
+                    <Badge 
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => toggleOrderStatus(order.id, order.status)}
+                    >
+                      {order.status}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Button

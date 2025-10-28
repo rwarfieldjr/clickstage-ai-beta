@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { toast } from "sonner";
 
 interface OrderDetail {
   id: string;
@@ -98,6 +99,27 @@ export default function AdminOrderDetail() {
     }
   };
 
+  const toggleOrderStatus = async () => {
+    if (!order) return;
+    
+    try {
+      const newStatus = order.status === "pending" ? "completed" : "pending";
+      
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: newStatus })
+        .eq("id", order.id);
+
+      if (error) throw error;
+
+      toast.success(`Order status updated to ${newStatus}`);
+      await fetchOrder();
+    } catch (error: any) {
+      console.error("Error updating order status:", error);
+      toast.error("Failed to update order status");
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -132,7 +154,12 @@ export default function AdminOrderDetail() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge>{order.status}</Badge>
+                  <Badge 
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={toggleOrderStatus}
+                  >
+                    {order.status}
+                  </Badge>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Date</p>
