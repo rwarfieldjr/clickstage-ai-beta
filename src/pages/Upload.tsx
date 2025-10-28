@@ -257,52 +257,82 @@ const Upload = () => {
         return;
       }
 
-      // Handle Stripe payment - redirect to checkout URL
-      // Find the selected bundle
+      // Handle Stripe payment - use create-checkout edge function
       const bundle = bundles.find(b => b.id === selectedBundle);
       if (!bundle) {
         throw new Error("Selected bundle not found");
       }
 
-      if (!bundle.checkoutUrl) {
-        throw new Error("Checkout URL not found for this bundle");
-      }
-
       // Generate a unique session ID for this upload
       const sessionId = crypto.randomUUID();
 
-      // Upload files to temporary storage (public bucket, anyone can upload)
+      // Upload files to storage first
       toast.loading("Uploading photos...");
       const uploadPromises = files.map(async (file) => {
         const fileExt = file.name.split(".").pop();
-        const fileName = `temp/${sessionId}/${crypto.randomUUID()}.${fileExt}`;
+        const fileName = user 
+          ? `${user.id}/${sessionId}/${crypto.randomUUID()}.${fileExt}`
+          : `guest/${sessionId}/${crypto.randomUUID()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("uploads")
+          .from("original-images")
           .upload(fileName, file);
 
         if (uploadError) throw uploadError;
 
-        return fileName;
+        // Get the public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from("original-images")
+          .getPublicUrl(fileName);
+
+        return publicUrl;
       });
 
       const uploadedFiles = await Promise.all(uploadPromises);
       toast.dismiss();
 
-      // Store order details in localStorage for post-payment processing
-      localStorage.setItem('pendingOrder', JSON.stringify({
-        sessionId: sessionId,
-        files: uploadedFiles,
-        stagingStyle: stagingStyle,
-        photosCount: files.length,
-        bundleName: bundle.name,
-        stagingNotes: stagingNotes,
-        timestamp: new Date().toISOString(),
-      }));
+      // Get contact info from localStorage
+      const orderData = localStorage.getItem('orderContactInfo');
+      let contactInfo = {
+        email: user?.email || '',
+        firstName: '',
+        lastName: '',
+        phoneNumber: '',
+      };
 
-      // Redirect to Stripe checkout
-      toast.success("Opening payment page...");
-      window.open(bundle.checkoutUrl, '_blank');
+      if (orderData) {
+        const parsedData = JSON.parse(orderData);
+        contactInfo = {
+          email: parsedData.email || user?.email || '',
+          firstName: parsedData.firstName || '',
+          lastName: parsedData.lastName || '',
+          phoneNumber: parsedData.phoneNumber || '',
+        };
+      }
+
+      // Create checkout session with all metadata
+      toast.loading("Creating checkout session...");
+      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          priceId: bundle.priceId,
+          contactInfo: contactInfo,
+          files: uploadedFiles,
+          stagingStyle: stagingStyle,
+          photosCount: files.length,
+          sessionId: sessionId,
+        },
+      });
+
+      toast.dismiss();
+
+      if (checkoutError) throw checkoutError;
+
+      if (checkoutData?.url) {
+        toast.success("Opening payment page...");
+        window.open(checkoutData.url, '_blank');
+      } else {
+        throw new Error("No checkout URL received");
+      }
     } catch (error: any) {
       console.error("Checkout error:", error);
       toast.error(error.message || "Failed to process checkout");
