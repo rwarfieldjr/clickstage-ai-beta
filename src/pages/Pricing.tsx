@@ -50,8 +50,8 @@ const Pricing = () => {
       checkoutUrl: checkoutUrl,
     }));
     
-    // Navigate to upload page
-    navigate('/upload');
+    // Navigate to place order page
+    navigate('/place-order');
   };
 
   const pricingTiers = [
