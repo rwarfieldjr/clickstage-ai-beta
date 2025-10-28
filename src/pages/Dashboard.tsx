@@ -19,11 +19,16 @@ interface Order {
   created_at: string;
 }
 
+interface OrderWithSignedUrls extends Order {
+  signedOriginalUrl?: string;
+  signedStagedUrl?: string;
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [user, setUser] = useState(null);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<OrderWithSignedUrls[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { credits, refetchCredits } = useCredits(user);
@@ -80,7 +85,51 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      setOrders(data || []);
+      // Generate signed URLs for images
+      const ordersWithSignedUrls = await Promise.all(
+        (data || []).map(async (order) => {
+          const orderWithUrls: OrderWithSignedUrls = { ...order };
+          
+          // Get signed URL for original image
+          if (order.original_image_url) {
+            // Extract the path from full URL or use as-is if it's just a path
+            const originalPath = order.original_image_url.includes('storage/v1/object/public/')
+              ? order.original_image_url.split('storage/v1/object/public/original-images/')[1]
+              : order.original_image_url;
+            
+            if (originalPath) {
+              const { data: signedData } = await supabase.storage
+                .from('original-images')
+                .createSignedUrl(originalPath, 3600); // 1 hour expiry
+              
+              if (signedData?.signedUrl) {
+                orderWithUrls.signedOriginalUrl = signedData.signedUrl;
+              }
+            }
+          }
+          
+          // Get signed URL for staged image
+          if (order.staged_image_url) {
+            const stagedPath = order.staged_image_url.includes('storage/v1/object/public/')
+              ? order.staged_image_url.split('storage/v1/object/public/staged/')[1]
+              : order.staged_image_url;
+            
+            if (stagedPath) {
+              const { data: signedData } = await supabase.storage
+                .from('staged')
+                .createSignedUrl(stagedPath, 3600);
+              
+              if (signedData?.signedUrl) {
+                orderWithUrls.signedStagedUrl = signedData.signedUrl;
+              }
+            }
+          }
+          
+          return orderWithUrls;
+        })
+      );
+
+      setOrders(ordersWithSignedUrls);
     } catch (error: any) {
       console.error("Error fetching orders:", error);
       setError(error.message || "Failed to fetch orders");
@@ -172,19 +221,29 @@ const Dashboard = () => {
                       {orders.map((order) => (
                         <TableRow key={order.id}>
                           <TableCell>
-                            <img
-                              src={order.original_image_url}
-                              alt="Original"
-                              className="w-20 h-20 object-cover rounded-lg"
-                            />
+                            {order.signedOriginalUrl ? (
+                              <img
+                                src={order.signedOriginalUrl}
+                                alt="Original"
+                                className="w-20 h-20 object-cover rounded-lg"
+                              />
+                            ) : (
+                              <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center text-sm text-muted-foreground">
+                                Loading...
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell>
-                            {order.staged_image_url ? (
+                            {order.signedStagedUrl ? (
                               <img
-                                src={order.staged_image_url}
+                                src={order.signedStagedUrl}
                                 alt="Staged"
                                 className="w-20 h-20 object-cover rounded-lg"
                               />
+                            ) : order.staged_image_url ? (
+                              <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center text-sm text-muted-foreground">
+                                Loading...
+                              </div>
                             ) : (
                               <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center text-sm text-muted-foreground">
                                 Pending
