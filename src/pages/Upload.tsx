@@ -213,9 +213,13 @@ const Upload = () => {
         toast.loading("Uploading photos...");
         const sessionId = crypto.randomUUID();
         
-        const uploadPromises = files.map(async (file) => {
+        // Get client name for filename
+        const clientName = userProfile?.name || 'client';
+        const sanitizedName = clientName.replace(/[^a-zA-Z0-9]/g, '_');
+        
+        const uploadPromises = files.map(async (file, index) => {
           const fileExt = file.name.split(".").pop();
-          const fileName = `${user.id}/${sessionId}/${crypto.randomUUID()}.${fileExt}`;
+          const fileName = `${user.id}/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`;
 
           const { error: uploadError } = await supabase.storage
             .from("original-images")
@@ -268,11 +272,24 @@ const Upload = () => {
 
       // Upload files to storage first
       toast.loading("Uploading photos...");
-      const uploadPromises = files.map(async (file) => {
+      
+      // Get contact info to use in filename
+      const contactData = localStorage.getItem('orderContactInfo');
+      let clientName = 'guest';
+      if (contactData) {
+        const parsedData = JSON.parse(contactData);
+        const fullName = `${parsedData.firstName || ''}_${parsedData.lastName || ''}`.trim();
+        clientName = fullName || 'guest';
+      } else if (userProfile?.name) {
+        clientName = userProfile.name;
+      }
+      const sanitizedName = clientName.replace(/[^a-zA-Z0-9]/g, '_');
+      
+      const uploadPromises = files.map(async (file, index) => {
         const fileExt = file.name.split(".").pop();
         const fileName = user 
-          ? `${user.id}/${sessionId}/${crypto.randomUUID()}.${fileExt}`
-          : `guest/${sessionId}/${crypto.randomUUID()}.${fileExt}`;
+          ? `${user.id}/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`
+          : `guest/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from("original-images")

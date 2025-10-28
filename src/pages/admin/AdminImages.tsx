@@ -26,6 +26,7 @@ interface OrderInfo {
 const AdminImages = () => {
   const [files, setFiles] = useState<StorageFile[]>([]);
   const [orders, setOrders] = useState<Record<string, OrderInfo>>({});
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -130,6 +131,21 @@ const AdminImages = () => {
       });
       setOrders(ordersMap);
 
+      // Generate signed URLs for all files
+      const urlsMap: Record<string, string> = {};
+      await Promise.all(
+        allFiles.map(async (file) => {
+          const { data } = await supabase
+            .storage
+            .from("original-images")
+            .createSignedUrl(file.name, 3600);
+          if (data?.signedUrl) {
+            urlsMap[file.name] = data.signedUrl;
+          }
+        })
+      );
+      setSignedUrls(urlsMap);
+
     } catch (error) {
       console.error("Error fetching files:", error);
       toast.error("Failed to load files");
@@ -206,42 +222,71 @@ const AdminImages = () => {
         <div className="grid gap-4">
           {files.map((file) => {
             const orderInfo = orders[file.name];
+            const signedUrl = signedUrls[file.name];
+            
             return (
               <Card key={file.id} className="p-4">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="font-medium mb-1">{file.name}</div>
-                    {orderInfo && (
-                      <div className="text-sm text-muted-foreground space-y-1">
-                        <div>Order: {orderInfo.order_number}</div>
-                        <div>Customer: {orderInfo.name} ({orderInfo.email})</div>
-                        <div>Style: {orderInfo.staging_style}</div>
-                        <div>Status: {orderInfo.status}</div>
-                      </div>
-                    )}
-                    <div className="text-sm text-muted-foreground mt-2">
-                      <div>Size: {formatFileSize(file.metadata?.size || 0)}</div>
-                      <div>Type: {file.metadata?.mimetype || "Unknown"}</div>
-                      <div>Uploaded: {new Date(file.created_at).toLocaleString()}</div>
+                <div className="flex flex-col md:flex-row gap-4">
+                  {/* Image Preview */}
+                  {signedUrl && (
+                    <div className="w-full md:w-48 h-48 flex-shrink-0">
+                      <img 
+                        src={signedUrl} 
+                        alt={file.name}
+                        className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => getSignedUrl(file.name)}
+                      />
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => downloadFile(file.name)}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
-                    </Button>
-                    <Button
-                      onClick={() => getSignedUrl(file.name)}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      View
-                    </Button>
+                  )}
+                  
+                  {/* File Info */}
+                  <div className="flex-1 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="font-medium mb-1 text-lg">
+                        {file.name.split('/').pop()}
+                      </div>
+                      {orderInfo && (
+                        <div className="text-sm space-y-1 mb-3">
+                          <div className="font-semibold text-base">{orderInfo.name}</div>
+                          <div className="text-muted-foreground">{orderInfo.email}</div>
+                          <div className="mt-2">
+                            <span className="font-medium">Order:</span> {orderInfo.order_number}
+                          </div>
+                          <div>
+                            <span className="font-medium">Style:</span> {orderInfo.staging_style}
+                          </div>
+                          <div>
+                            <span className="font-medium">Status:</span> {orderInfo.status}
+                          </div>
+                        </div>
+                      )}
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div>Size: {formatFileSize(file.metadata?.size || 0)}</div>
+                        <div>Type: {file.metadata?.mimetype || "Unknown"}</div>
+                        <div>Uploaded: {new Date(file.created_at).toLocaleString()}</div>
+                        <div className="text-xs mt-1 opacity-70">Path: {file.name}</div>
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => downloadFile(file.name)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                      <Button
+                        onClick={() => getSignedUrl(file.name)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        View Full
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </Card>
