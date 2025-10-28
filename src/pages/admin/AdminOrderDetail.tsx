@@ -29,6 +29,8 @@ export default function AdminOrderDetail() {
   const { id } = useParams();
   const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
   const [order, setOrder] = useState<OrderDetail | null>(null);
+  const [signedOriginalUrl, setSignedOriginalUrl] = useState<string>("");
+  const [signedStagedUrl, setSignedStagedUrl] = useState<string>("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -58,14 +60,42 @@ export default function AdminOrderDetail() {
 
       if (error) throw error;
       setOrder(data);
+
+      // Generate signed URLs for images
+      if (data.original_image_url) {
+        const originalPath = data.original_image_url.includes('storage/v1/object/public/')
+          ? data.original_image_url.split('storage/v1/object/public/original-images/')[1]
+          : data.original_image_url;
+        
+        if (originalPath) {
+          const { data: signedData } = await supabase.storage
+            .from('original-images')
+            .createSignedUrl(originalPath, 3600);
+          
+          if (signedData?.signedUrl) {
+            setSignedOriginalUrl(signedData.signedUrl);
+          }
+        }
+      }
+
+      if (data.staged_image_url) {
+        const stagedPath = data.staged_image_url.includes('storage/v1/object/public/')
+          ? data.staged_image_url.split('storage/v1/object/public/staged/')[1]
+          : data.staged_image_url;
+        
+        if (stagedPath) {
+          const { data: signedData } = await supabase.storage
+            .from('staged')
+            .createSignedUrl(stagedPath, 3600);
+          
+          if (signedData?.signedUrl) {
+            setSignedStagedUrl(signedData.signedUrl);
+          }
+        }
+      }
     } catch (error) {
       console.error("Error fetching order:", error);
     }
-  };
-
-  const getImageUrl = (path: string) => {
-    const { data } = supabase.storage.from("uploads").getPublicUrl(path);
-    return data.publicUrl;
   };
 
   if (loading) {
@@ -154,19 +184,27 @@ export default function AdminOrderDetail() {
               <CardTitle>Original Image</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="aspect-video bg-muted rounded-lg overflow-hidden mb-4">
-                <img
-                  src={getImageUrl(order.original_image_url)}
-                  alt="Original"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <Button variant="outline" className="w-full" asChild>
-                <a href={getImageUrl(order.original_image_url)} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  View Full Size
-                </a>
-              </Button>
+              {signedOriginalUrl ? (
+                <>
+                  <div className="aspect-video bg-muted rounded-lg overflow-hidden mb-4">
+                    <img
+                      src={signedOriginalUrl}
+                      alt="Original"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <Button variant="outline" className="w-full" asChild>
+                    <a href={signedOriginalUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      View Full Size
+                    </a>
+                  </Button>
+                </>
+              ) : (
+                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                  <p className="text-muted-foreground">Loading image...</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -175,22 +213,26 @@ export default function AdminOrderDetail() {
               <CardTitle>Staged Image</CardTitle>
             </CardHeader>
             <CardContent>
-              {order.staged_image_url ? (
+              {signedStagedUrl ? (
                 <>
                   <div className="aspect-video bg-muted rounded-lg overflow-hidden mb-4">
                     <img
-                      src={getImageUrl(order.staged_image_url)}
+                      src={signedStagedUrl}
                       alt="Staged"
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <Button variant="outline" className="w-full" asChild>
-                    <a href={getImageUrl(order.staged_image_url)} target="_blank" rel="noopener noreferrer">
+                    <a href={signedStagedUrl} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="mr-2 h-4 w-4" />
                       View Full Size
                     </a>
                   </Button>
                 </>
+              ) : order.staged_image_url ? (
+                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                  <p className="text-muted-foreground">Loading image...</p>
+                </div>
               ) : (
                 <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
                   <p className="text-muted-foreground">No staged image available</p>
