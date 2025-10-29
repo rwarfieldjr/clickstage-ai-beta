@@ -42,9 +42,9 @@ const Navbar = () => {
             <img 
               src={theme === "dark" ? logoDark : logoLight} 
               alt="ClickStage Pro - Virtual Staging Powered by AI" 
-              className="h-20 w-auto transition-all duration-300"
-              width="238"
-              height="80"
+              className="h-60 w-auto transition-all duration-300"
+              width="714"
+              height="240"
               decoding="async"
             />
           </Link>
