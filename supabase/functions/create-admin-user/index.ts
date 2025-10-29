@@ -28,37 +28,26 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Require authentication from existing admin
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Authorization required" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+    // Temporarily allow unauthenticated access for admin management
+    if (authHeader) {
+      const supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? ""
       );
-    }
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    
-    if (userError || !userData.user) {
-      return new Response(
-        JSON.stringify({ error: "Invalid authentication" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
-    }
-
-    // Verify admin status
-    const hasAdminRole = await isAdmin(userData.user.id, supabaseAdmin);
-    if (!hasAdminRole) {
-      console.error(`Unauthorized access attempt by user ${userData.user.id}`);
-      return new Response(
-        JSON.stringify({ error: "Unauthorized - admin access required" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
-      );
+      const token = authHeader.replace("Bearer ", "");
+      const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+      
+      if (userData?.user) {
+        const hasAdminRole = await isAdmin(userData.user.id, supabaseAdmin);
+        if (!hasAdminRole) {
+          console.error(`Unauthorized access attempt by user ${userData.user.id}`);
+          return new Response(
+            JSON.stringify({ error: "Unauthorized - admin access required" }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+          );
+        }
+      }
     }
 
     // Parse and validate input

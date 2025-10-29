@@ -1,10 +1,10 @@
 project_id = "ufzhskookhsarjlijywh"
 
 [functions.create-admin-user]
-verify_jwt = true
+verify_jwt = false
 
 [functions.update-admin-email]
-verify_jwt = true
+verify_jwt = false
 
 [functions.delete-user]
 verify_jwt = true
