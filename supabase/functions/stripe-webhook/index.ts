@@ -69,9 +69,34 @@ serve(async (req) => {
       const metadata = session.metadata || {};
       const customerEmail = metadata.customer_email || session.customer_details?.email;
       const customerName = metadata.customer_name || session.customer_details?.name || "Customer";
-      const files = metadata.files ? JSON.parse(metadata.files) : [];
-      const photosCount = parseInt(metadata.photos_count || "0");
-      const stagingStyle = metadata.staging_style || "";
+      const sessionId = metadata.session_id;
+      
+      // Initialize Supabase admin client early to retrieve files from database
+      const supabaseAdmin = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+      
+      // Retrieve files from database instead of metadata (to avoid 500 char limit)
+      let files: string[] = [];
+      let photosCount = parseInt(metadata.photos_count || "0");
+      let stagingStyle = "";
+      
+      if (sessionId) {
+        const { data: checkoutData } = await supabaseAdmin
+          .from("abandoned_checkouts")
+          .select("files, staging_style, photos_count")
+          .eq("session_id", sessionId)
+          .single();
+          
+        if (checkoutData) {
+          files = checkoutData.files || [];
+          stagingStyle = checkoutData.staging_style || "";
+          photosCount = checkoutData.photos_count || photosCount;
+          console.log("Files retrieved from database:", files.length);
+        }
+      }
+      
       const firstName = metadata.first_name || "";
       const lastName = metadata.last_name || "";
       const phone = metadata.phone || "";
@@ -86,12 +111,6 @@ serve(async (req) => {
           }
         );
       }
-
-      // Initialize Supabase admin client
-      const supabaseAdmin = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-      );
 
       // Check if user exists or create one
       const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
@@ -175,22 +194,21 @@ serve(async (req) => {
         }
       }
 
-      // Mark abandoned checkout as completed
-      const { error: updateError } = await supabaseAdmin
-        .from('abandoned_checkouts')
-        .update({ 
-          completed: true, 
-          completed_at: new Date().toISOString() 
-        })
-        .eq('email', customerEmail)
-        .eq('completed', false)
-        .order('created_at', { ascending: false })
-        .limit(1);
+      // Mark abandoned checkout as completed using session_id for accuracy
+      if (sessionId) {
+        const { error: updateError } = await supabaseAdmin
+          .from('abandoned_checkouts')
+          .update({ 
+            completed: true, 
+            completed_at: new Date().toISOString() 
+          })
+          .eq('session_id', sessionId);
 
-      if (updateError) {
-        console.error("Error updating abandoned checkout:", updateError);
-      } else {
-        console.log("Abandoned checkout marked as completed for:", customerEmail);
+        if (updateError) {
+          console.error("Error updating abandoned checkout:", updateError);
+        } else {
+          console.log("Abandoned checkout marked as completed for session:", sessionId);
+        }
       }
     }
 

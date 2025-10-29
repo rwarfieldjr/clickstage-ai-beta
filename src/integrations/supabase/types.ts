@@ -23,11 +23,15 @@ export type Database = {
           completed_at: string | null
           created_at: string
           email: string
+          files: Json | null
           first_name: string
           id: string
           last_name: string
           marketing_consent: boolean | null
           phone_number: string
+          photos_count: number | null
+          session_id: string | null
+          staging_style: string | null
           transactional_consent: boolean | null
           updated_at: string
         }
@@ -39,11 +43,15 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           email: string
+          files?: Json | null
           first_name: string
           id?: string
           last_name: string
           marketing_consent?: boolean | null
           phone_number: string
+          photos_count?: number | null
+          session_id?: string | null
+          staging_style?: string | null
           transactional_consent?: boolean | null
           updated_at?: string
         }
@@ -55,11 +63,15 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           email?: string
+          files?: Json | null
           first_name?: string
           id?: string
           last_name?: string
           marketing_consent?: boolean | null
           phone_number?: string
+          photos_count?: number | null
+          session_id?: string | null
+          staging_style?: string | null
           transactional_consent?: boolean | null
           updated_at?: string
         }

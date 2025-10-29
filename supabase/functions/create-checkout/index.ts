@@ -168,17 +168,13 @@ serve(async (req) => {
       logStep("No existing customer found");
     }
 
-    // Store order metadata
+    // Store order metadata (avoid long strings due to Stripe's 500 char limit)
     const metadata: any = {
       customer_name: contactInfo.firstName && contactInfo.lastName 
         ? `${contactInfo.firstName} ${contactInfo.lastName}`
         : user?.user_metadata?.name || customerEmail.split('@')[0] || 'Customer',
       customer_email: customerEmail,
     };
-    
-    if (stagingStyle) {
-      metadata.staging_style = stagingStyle;
-    }
     
     metadata.first_name = contactInfo.firstName;
     metadata.last_name = contactInfo.lastName;
@@ -196,10 +192,24 @@ serve(async (req) => {
 
     if (sessionId) {
       metadata.session_id = sessionId;
-    }
-
-    if (files && files.length > 0) {
-      metadata.files = JSON.stringify(files);
+      
+      // Store checkout data in database (files stored here to avoid Stripe's 500 char metadata limit)
+      await supabaseAdmin
+        .from("abandoned_checkouts")
+        .upsert({
+          session_id: sessionId,
+          first_name: contactInfo.firstName,
+          last_name: contactInfo.lastName,
+          email: customerEmail,
+          phone_number: contactInfo.phoneNumber || '',
+          files: files || [],
+          staging_style: stagingStyle,
+          photos_count: photosCount,
+          completed: false
+        }, {
+          onConflict: 'session_id'
+        });
+      logStep("Checkout data stored in database", { sessionId, fileCount: files?.length || 0 });
     }
 
     // Create a one-time payment session
