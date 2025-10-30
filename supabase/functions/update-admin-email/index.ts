@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { isAdmin } from "../_shared/admin-check.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +19,47 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Authorization required" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    
+    if (userError || !userData.user) {
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    // Create admin client
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    // Verify admin status
+    const hasAdminRole = await isAdmin(userData.user.id, supabaseAdmin);
+    if (!hasAdminRole) {
+      console.error(`Unauthorized email update attempt by user ${userData.user.id}`);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - admin access required" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+      );
+    }
+
     // Parse and validate input
     const body = await req.json();
     const validation = UpdateEmailSchema.safeParse(body);
@@ -30,13 +72,6 @@ serve(async (req) => {
     }
 
     const { userId, newEmail } = validation.data;
-
-    // Create admin client
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
 
     // Update user email
     const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
@@ -58,7 +93,15 @@ serve(async (req) => {
       .update({ email: newEmail })
       .eq("id", userId);
 
-    console.log(`Updated email for user ${userId} to ${newEmail}`);
+    // Log admin action
+    await supabaseAdmin.from("admin_actions").insert({
+      admin_id: userData.user.id,
+      target_user_id: userId,
+      action_type: "update_email",
+      details: { userId, newEmail },
+    });
+
+    console.log(`Admin ${userData.user.id} updated email for user ${userId} to ${newEmail}`);
 
     return new Response(
       JSON.stringify({ 

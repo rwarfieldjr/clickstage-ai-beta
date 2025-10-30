@@ -23,14 +23,26 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
   try {
     // Get user from authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       throw new Error("Missing authorization header");
     }
+
+    // Create user-level client to respect RLS
+    const supabase = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      {
+        global: {
+          headers: { Authorization: authHeader }
+        }
+      }
+    );
+
+    // Create service role client only for transaction updates (legitimately needs elevated privileges)
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Verify the user
     const token = authHeader.replace("Bearer ", "");
@@ -60,11 +72,19 @@ const handler = async (req: Request): Promise<Response> => {
 
     const currentCredits = profileData?.credits || 0;
 
-    // Check if user has enough credits
-    if (currentCredits < photosCount) {
+    // Atomically deduct credits with constraint check (prevents race conditions)
+    const { data: updatedProfile, error: creditError } = await supabase
+      .from("profiles")
+      .update({ credits: currentCredits - photosCount })
+      .eq("id", user.id)
+      .gte("credits", photosCount)  // Atomic check: only update if still enough credits
+      .select("credits")
+      .single();
+
+    if (creditError || !updatedProfile) {
       return new Response(
         JSON.stringify({
-          error: "Insufficient credits",
+          error: "Insufficient credits or concurrent order detected",
           required: photosCount,
           available: currentCredits,
         }),
@@ -75,9 +95,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Deduct credits from non-expired transactions (FIFO)
+    // Deduct credits from non-expired transactions (FIFO) using admin client for transaction updates
     let creditsToDeduct = photosCount;
-    const { data: transactions, error: transError } = await supabase
+    const { data: transactions, error: transError } = await supabaseAdmin
       .from("credits_transactions")
       .select("*")
       .eq("user_id", user.id)
@@ -94,8 +114,8 @@ const handler = async (req: Request): Promise<Response> => {
 
       const deductAmount = Math.min(transaction.amount, creditsToDeduct);
       
-      // Update the transaction
-      const { error: updateError } = await supabase
+      // Update the transaction using admin client
+      const { error: updateError } = await supabaseAdmin
         .from("credits_transactions")
         .update({ amount: transaction.amount - deductAmount })
         .eq("id", transaction.id);
@@ -125,7 +145,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const createdOrders = await Promise.all(orderPromises);
 
-    // Record the credit usage transaction
+    // Record the credit usage transaction (user-level client respects RLS)
     const { error: transactionError } = await supabase
       .from("credits_transactions")
       .insert({
@@ -136,14 +156,6 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
     if (transactionError) throw transactionError;
-
-    // Update user's total credits
-    const { error: updateCreditsError } = await supabase
-      .from("profiles")
-      .update({ credits: currentCredits - photosCount })
-      .eq("id", user.id);
-
-    if (updateCreditsError) throw updateCreditsError;
 
     console.log(`Successfully created ${createdOrders.length} orders using ${photosCount} credits`);
 
@@ -173,7 +185,7 @@ const handler = async (req: Request): Promise<Response> => {
         success: true,
         orders: createdOrders,
         creditsUsed: photosCount,
-        remainingCredits: currentCredits - photosCount,
+        remainingCredits: updatedProfile.credits,
       }),
       {
         status: 200,
