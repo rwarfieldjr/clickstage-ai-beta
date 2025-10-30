@@ -490,7 +490,6 @@ const Upload = () => {
                       <SelectItem value="mountain-rustic">Mountain Rustic</SelectItem>
                       <SelectItem value="transitional">Transitional</SelectItem>
                       <SelectItem value="japandi">Japandi</SelectItem>
-                      <SelectItem value="industrial">Industrial</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
