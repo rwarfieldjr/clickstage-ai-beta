@@ -487,7 +487,6 @@ const Upload = () => {
                       <SelectItem value="scandinavian">Scandinavian</SelectItem>
                       <SelectItem value="contemporary">Contemporary</SelectItem>
                       <SelectItem value="mid-century-modern">Mid-Century Modern</SelectItem>
-                      <SelectItem value="shabby-chic">Shabby Chic</SelectItem>
                       <SelectItem value="mountain-rustic">Mountain Rustic</SelectItem>
                       <SelectItem value="transitional">Transitional</SelectItem>
                       <SelectItem value="japandi">Japandi</SelectItem>
