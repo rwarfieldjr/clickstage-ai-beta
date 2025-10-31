@@ -110,6 +110,22 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
           message: error.message,
           attempt: attempt + 1 
         });
+        
+        // Fire-and-forget notification for 4xx errors
+        supabase.functions.invoke('notify-alert', {
+          body: {
+            subject: `Edge Function 4xx Error – ${functionName}`,
+            details: {
+              function: functionName,
+              status: error.status,
+              message: error.message,
+              path: window.location.pathname,
+              hostname: window.location.hostname,
+              attempt: attempt + 1,
+            }
+          }
+        }).catch(() => {});
+        
         return { data: null, error };
       }
       
@@ -122,6 +138,22 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
             status: error.status, 
             message: error.message 
           });
+          
+          // Fire-and-forget notification for 5xx errors after all retries exhausted
+          supabase.functions.invoke('notify-alert', {
+            body: {
+              subject: `Edge Function 5xx Error After Retries – ${functionName}`,
+              details: {
+                function: functionName,
+                status: error.status,
+                message: error.message,
+                path: window.location.pathname,
+                hostname: window.location.hostname,
+                attempts: maxRetries + 1,
+              }
+            }
+          }).catch(() => {});
+          
           return { data: null, error };
         }
         
@@ -337,6 +369,23 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     }
   } catch (error: any) {
     console.error("Checkout error:", error);
+    
+    // Fire-and-forget client-side error notification (no await; don't block UX)
+    supabase.functions.invoke('notify-alert', {
+      body: {
+        subject: "Client-Side Checkout Error",
+        details: {
+          error: error.message || String(error),
+          stack: error.stack,
+          path: window.location.pathname,
+          hostname: window.location.hostname,
+          paymentMethod,
+          fileCount: files.length,
+          selectedBundle,
+        }
+      }
+    }).catch(() => {}); // Silently fail - don't block user flow
+    
     toast.error(error.message || "Failed to process checkout");
   } finally {
     setLoading(false);
