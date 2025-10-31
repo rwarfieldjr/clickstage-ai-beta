@@ -274,12 +274,14 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
 
       if (uploadError) throw uploadError;
 
-      // Get the public URL
-      const { data: { publicUrl } } = supabase.storage
+      // Get a signed URL with 24-hour expiration for security
+      const { data, error: signedUrlError } = await supabase.storage
         .from("original-images")
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 86400); // 24 hours in seconds
 
-      return publicUrl;
+      if (signedUrlError) throw signedUrlError;
+      
+      return data.signedUrl;
     });
 
     const uploadedFiles = await Promise.all(uploadPromises);

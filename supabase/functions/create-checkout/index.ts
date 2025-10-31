@@ -260,13 +260,8 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in create-checkout", { message: errorMessage });
     
-    // Return generic error to client (security best practice)
-    return new Response(
-      JSON.stringify({ error: 'An error occurred while processing your request. Please try again.' }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
-    );
+    // Use sanitized error response
+    const { createErrorResponse } = await import("../_shared/sanitize-error.ts");
+    return createErrorResponse(error, 500, corsHeaders);
   }
 });

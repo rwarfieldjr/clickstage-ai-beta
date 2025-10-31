@@ -221,11 +221,13 @@ const handler = async (req: Request): Promise<Response> => {
     );
   } catch (error: any) {
     console.error("[process-credit-order] Server error:", error);
+    
+    // Use sanitized error response
+    const { sanitizeError } = await import("../_shared/sanitize-error.ts");
+    const sanitized = sanitizeError(error, "Unable to process order. Please try again later.");
+    
     return new Response(
-      JSON.stringify({
-        error: "Unable to process order. Please try again later.",
-        code: "ORDER_PROCESSING_ERROR"
-      }),
+      JSON.stringify(sanitized),
       {
         status: error.message === "Unauthorized" ? 401 : 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
