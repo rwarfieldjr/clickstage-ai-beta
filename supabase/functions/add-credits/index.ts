@@ -65,37 +65,26 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Add credits to user profile
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("credits")
-      .eq("id", userId)
-      .single();
+    // Use atomic credit update system
+    const { data, error } = await supabaseAdmin.rpc("update_user_credits_atomic", {
+      p_user_id: userId,
+      p_delta: credits,
+      p_reason: "purchase",
+      p_order_id: null,
+    });
 
-    if (profileError) throw profileError;
+    if (error) {
+      console.error('RPC error:', error);
+      throw new Error(`Failed to add credits: ${error.message}`);
+    }
 
-    const newCredits = (profile.credits || 0) + credits;
+    const result = Array.isArray(data) ? data[0] : data;
+    
+    if (!result || !result.ok) {
+      throw new Error(result?.message || "Failed to add credits");
+    }
 
-    const { error: updateError } = await supabaseAdmin
-      .from("profiles")
-      .update({ credits: newCredits })
-      .eq("id", userId);
-
-    if (updateError) throw updateError;
-
-    // Record transaction
-    const { error: transactionError } = await supabaseAdmin
-      .from("credits_transactions")
-      .insert({
-        user_id: userId,
-        amount: credits,
-        transaction_type: "purchase",
-        stripe_payment_id: stripePaymentId,
-        description: `Purchased ${credits} photo credits`,
-      });
-
-    if (transactionError) throw transactionError;
-
+    const newCredits = result.balance;
     console.log(`Added ${credits} credits to user ${userId}. New balance: ${newCredits}`);
 
     return new Response(

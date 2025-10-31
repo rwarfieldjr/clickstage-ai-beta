@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdmin } from "@/hooks/use-admin";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, ExternalLink } from "lucide-react";
@@ -24,46 +25,24 @@ interface OrderInfo {
 }
 
 const AdminImages = () => {
+  const { isAdmin, loading: adminLoading, requireAdmin, shouldRenderAdmin } = useAdmin();
   const [files, setFiles] = useState<StorageFile[]>([]);
   const [orders, setOrders] = useState<Record<string, OrderInfo>>({});
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAdminAndFetchFiles();
-  }, []);
+    requireAdmin();
+  }, [requireAdmin]);
 
-  const checkAdminAndFetchFiles = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("Not authenticated");
-        return;
-      }
-
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .single();
-
-      if (!roles) {
-        toast.error("Admin access required");
-        return;
-      }
-
-      await fetchFiles();
-    } catch (error) {
-      console.error("Error checking admin status:", error);
-      toast.error("Failed to verify admin access");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (isAdmin) {
+      fetchFiles();
     }
-  };
+  }, [isAdmin]);
 
   const fetchFiles = async () => {
+    setLoading(true);
     try {
       const { data: storageFiles, error: storageError } = await supabase
         .storage
@@ -202,7 +181,11 @@ const AdminImages = () => {
     return (bytes / (1024 * 1024)).toFixed(2) + " MB";
   };
 
-  if (loading) {
+  if (!shouldRenderAdmin) {
+    return null;
+  }
+
+  if (loading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Loading...</p>

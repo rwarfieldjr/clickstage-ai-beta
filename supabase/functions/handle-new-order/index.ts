@@ -21,23 +21,48 @@ const HandleNewOrderSchema = z.object({
   files: z.array(z.string().max(500)).max(100).optional()
 });
 
-// Rate limiting store (in-memory, resets on function restart)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+// Database-backed rate limiting (persistent across function restarts)
+const checkRateLimit = async (supabaseAdmin: any, identifier: string, maxRequests = 10, windowMs = 3600000): Promise<boolean> => {
+  const now = new Date();
+  const oneHourAgo = new Date(now.getTime() - windowMs);
 
-const checkRateLimit = (identifier: string, maxRequests = 10, windowMs = 3600000): boolean => {
-  const now = Date.now();
-  const record = rateLimitStore.get(identifier);
+  // Clean up old records
+  await supabaseAdmin
+    .from("checkout_rate_limits")
+    .delete()
+    .lt("window_start", oneHourAgo.toISOString());
 
-  if (!record || now > record.resetTime) {
-    rateLimitStore.set(identifier, { count: 1, resetTime: now + windowMs });
+  // Get or create rate limit record
+  const { data: existing, error: fetchError } = await supabaseAdmin
+    .from("checkout_rate_limits")
+    .select("*")
+    .eq("ip_address", identifier)
+    .gte("window_start", oneHourAgo.toISOString())
+    .maybeSingle();
+
+  if (fetchError) {
+    console.error("Rate limit fetch error:", fetchError);
+    return true; // Fail open on errors
+  }
+
+  if (!existing) {
+    // Create new record
+    await supabaseAdmin
+      .from("checkout_rate_limits")
+      .insert({ ip_address: identifier, attempt_count: 1, window_start: now.toISOString() });
     return true;
   }
 
-  if (record.count >= maxRequests) {
-    return false;
+  if (existing.attempt_count >= maxRequests) {
+    return false; // Rate limited
   }
 
-  record.count++;
+  // Increment counter
+  await supabaseAdmin
+    .from("checkout_rate_limits")
+    .update({ attempt_count: existing.attempt_count + 1 })
+    .eq("id", existing.id);
+
   return true;
 };
 
@@ -48,14 +73,22 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limiting by IP
+    // Initialize Supabase admin client early for rate limiting
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // Database-backed rate limiting by IP
     const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
-    if (!checkRateLimit(clientIp, 10, 3600000)) { // 10 requests per hour
+    const rateLimitOk = await checkRateLimit(supabaseAdmin, clientIp, 10, 3600000); // 10 requests per hour
+    
+    if (!rateLimitOk) {
       console.warn(`Rate limit exceeded for IP: ${clientIp}`);
       return new Response(
         JSON.stringify({ error: "Too many requests. Please try again later." }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "3600" },
           status: 429,
         }
       );
@@ -89,12 +122,6 @@ serve(async (req) => {
     } = validation.data;
 
     console.log("Processing new order notification for:", email);
-
-    // Initialize Supabase admin client
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
 
     // Initialize Resend client
     const resend = new Resend(Deno.env.get("RESEND_API_KEY") ?? "");
