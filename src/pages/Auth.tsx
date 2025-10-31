@@ -64,7 +64,7 @@ const Auth = () => {
           // Don't block signup if email fails
         }
 
-        toast.success("Account created! Check your email to verify your account.");
+        toast.success("✅ Account created successfully! Check your email for confirmation.");
         setIsSignUp(false);
         setPassword("");
         setConfirmPassword("");
