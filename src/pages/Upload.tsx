@@ -644,7 +644,7 @@ const Upload = () => {
                   <div 
                     ref={turnstileRef}
                     className="cf-turnstile" 
-                    data-sitekey="0x4AAAAAAAzXYcDdPE4G0mS9"
+                    data-sitekey="0x4AAAAAAB9xdhqE9Qyud_D6"
                     data-theme={theme === 'dark' ? 'dark' : 'light'}
                     data-callback={(token: string) => setTurnstileToken(token)}
                   ></div>
