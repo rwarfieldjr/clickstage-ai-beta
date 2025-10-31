@@ -3,12 +3,14 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { format } from "date-fns";
 import { useCredits } from "@/hooks/use-credits";
+import { Coins, CreditCard } from "lucide-react";
 
 interface Order {
   id: string;
@@ -138,6 +140,31 @@ const Dashboard = () => {
     }
   };
 
+  const handlePurchaseCredits = (priceId: string, credits: number, bundleName: string, bundlePrice: string) => {
+    if (!user) return;
+
+    // Store bundle info for upload page
+    const bundle = {
+      id: `${credits}-photos`,
+      name: bundleName,
+      price: bundlePrice,
+      priceId: priceId,
+      photos: credits,
+    };
+
+    localStorage.setItem('selectedBundle', JSON.stringify(bundle));
+    
+    // Navigate to upload page
+    navigate('/upload');
+  };
+
+  const creditBundles = [
+    { name: "5 Photos", price: "$45", priceId: "price_1SD8nJIG3TLqP9yaGAjd2WdP", credits: 5 },
+    { name: "10 Photos", price: "$85", priceId: "price_1SD8nNIG3TLqP9yazPngAIN0", credits: 10 },
+    { name: "20 Photos", price: "$160", priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG", credits: 20 },
+    { name: "50 Photos", price: "$375", priceId: "price_1SD8nTIG3TLqP9yaT0hRMNFq", credits: 50 },
+  ];
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
       pending: "secondary",
@@ -167,7 +194,48 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-bold text-accent">{credits} Credits</div>
+              <div className="text-4xl font-bold text-accent mb-4">{credits} Credits</div>
+              <Button 
+                onClick={() => document.getElementById('purchase-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="mt-2"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Purchase More Credits
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Purchase Credits Section */}
+          <Card id="purchase-section" className="shadow-custom-lg mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Purchase Credits
+              </CardTitle>
+              <CardDescription>Select a bundle to add more credits to your account</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {creditBundles.map((bundle) => (
+                  <Card key={bundle.name} className="border-2 hover:border-primary transition-smooth">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="font-semibold text-lg">{bundle.name}</h3>
+                          <p className="text-2xl font-bold text-primary">{bundle.price}</p>
+                        </div>
+                        <Coins className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <Button
+                        className="w-full"
+                        onClick={() => handlePurchaseCredits(bundle.priceId, bundle.credits, bundle.name, bundle.price)}
+                      >
+                        Purchase
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </CardContent>
           </Card>
 
