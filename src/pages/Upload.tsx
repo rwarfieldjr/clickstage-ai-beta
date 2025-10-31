@@ -21,7 +21,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { CreditsSummary } from "@/components/CreditsSummary";
 import { handleCheckout } from "@/lib/checkout";
 import { logEvent } from "@/lib/logEvent";
-import { hasEnoughCredits, deductCredits } from "@/lib/credits";
+import { hasEnoughCredits, deductCredits, getCredits } from "@/lib/credits";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
 import coastal from "@/assets/style-coastal.jpg";
 import scandinavian from "@/assets/style-scandinavian.jpg";
@@ -48,6 +48,7 @@ const Upload = () => {
   const [stagingNotes, setStagingNotes] = useState("");
   const { credits, creditSummary, loading: creditsLoading, refetchCredits } = useCredits(user);
   const { theme } = useTheme();
+  const [userCreditsBalance, setUserCreditsBalance] = useState<number>(0);
 
   const styles = [
     { id: "modern-farmhouse", name: "Modern Farmhouse", image: modernFarmhouse, description: "Blend rustic charm with modern comfort" },
@@ -104,6 +105,12 @@ const Upload = () => {
         
         if (profileData) {
           setUserProfile(profileData);
+        }
+
+        // Fetch credits from user_credits table
+        if (session.user.email) {
+          const fetchedCredits = await getCredits(session.user.email);
+          setUserCreditsBalance(fetchedCredits);
         }
       }
     });
@@ -313,6 +320,11 @@ const Upload = () => {
               </div>
             </CardHeader>
             <CardContent>
+              {user && (
+                <div className="text-right text-muted-foreground mb-3">
+                  Remaining Credits: <strong className="text-foreground">{userCreditsBalance}</strong>
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Step 1: Staging Style */}
                 <div className="space-y-2">
