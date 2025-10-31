@@ -32,10 +32,10 @@ interface Order {
 
 interface Transaction {
   id: string;
-  amount: number;
-  transaction_type: string;
-  description: string;
+  delta: number;
+  reason: string;
   created_at: string;
+  balance_after: number;
 }
 
 export default function AdminUserDetail() {
@@ -59,10 +59,10 @@ export default function AdminUserDetail() {
 
   const fetchUserData = async () => {
     try {
-      const [profileResult, ordersResult, transactionsResult] = await Promise.all([
+      const [profileResult, ordersResult, ledgerResult] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", id).single(),
         supabase.from("orders").select("*").eq("user_id", id).order("created_at", { ascending: false }),
-        supabase.from("credits_transactions").select("*").eq("user_id", id).order("created_at", { ascending: false }),
+        supabase.from("credit_ledger").select("*").eq("user_id", id).order("created_at", { ascending: false }),
       ]);
 
       if (profileResult.data) {
@@ -72,13 +72,13 @@ export default function AdminUserDetail() {
         const { data: creditsData } = await supabase
           .from("user_credits")
           .select("credits")
-          .eq("email", profileResult.data.email)
+          .eq("user_id", id)
           .maybeSingle();
         
         setUserCredits(creditsData?.credits || 0);
       }
       if (ordersResult.data) setOrders(ordersResult.data);
-      if (transactionsResult.data) setTransactions(transactionsResult.data);
+      if (ledgerResult.data) setTransactions(ledgerResult.data);
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
@@ -229,13 +229,13 @@ export default function AdminUserDetail() {
                 {transactions.map((tx) => (
                   <TableRow key={tx.id}>
                     <TableCell>{new Date(tx.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell className="capitalize">{tx.transaction_type}</TableCell>
+                    <TableCell className="capitalize">{tx.reason}</TableCell>
                     <TableCell>
-                      <span className={tx.amount > 0 ? "text-green-600" : "text-red-600"}>
-                        {tx.amount > 0 ? "+" : ""}{tx.amount}
+                      <span className={tx.delta > 0 ? "text-green-600" : "text-red-600"}>
+                        {tx.delta > 0 ? "+" : ""}{tx.delta}
                       </span>
                     </TableCell>
-                    <TableCell>{tx.description}</TableCell>
+                    <TableCell>{tx.balance_after}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

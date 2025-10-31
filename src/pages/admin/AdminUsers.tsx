@@ -67,7 +67,7 @@ export default function AdminUsers() {
           const { data: creditsData } = await supabase
             .from("user_credits")
             .select("credits")
-            .eq("email", profile.email)
+            .eq("user_id", profile.id)
             .maybeSingle();
           
           return {
@@ -123,24 +123,20 @@ export default function AdminUsers() {
     }
 
     try {
-      // Update credits in user_credits table
-      const { error: updateError } = await supabase
-        .from("user_credits")
-        .upsert({ 
-          email: selectedUser.email, 
-          credits: newCredits 
-        });
-
-      if (updateError) throw updateError;
-
-      const { error: txError } = await supabase.from("credits_transactions").insert({
-        user_id: selectedUser.id,
-        amount: finalAmount,
-        transaction_type: "admin_adjustment",
-        description: `Admin adjustment: ${creditAction === "add" ? "added" : "removed"} ${amount} credits`,
+      // Use atomic credit update function
+      const { data, error } = await supabase.rpc("update_user_credits_atomic", {
+        p_user_id: selectedUser.id,
+        p_delta: finalAmount,
+        p_reason: "admin_adjustment",
+        p_order_id: null,
       });
 
-      if (txError) throw txError;
+      if (error) throw error;
+      
+      const result = Array.isArray(data) ? data[0] : data;
+      if (!result?.ok) {
+        throw new Error(result?.message || "Failed to update credits");
+      }
 
       toast({
         title: "Success",

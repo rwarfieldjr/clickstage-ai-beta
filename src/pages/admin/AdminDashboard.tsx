@@ -35,19 +35,19 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      const [usersResult, ordersResult, transactionsResult] = await Promise.all([
+      const [usersResult, ordersResult, ledgerResult] = await Promise.all([
         supabase.from("profiles").select("status", { count: "exact" }),
         supabase.from("orders").select("*", { count: "exact" }),
-        supabase.from("credits_transactions").select("amount, transaction_type"),
+        supabase.from("credit_ledger").select("delta, reason"),
       ]);
 
       const activeUsers = usersResult.data?.filter((u) => u.status === "active").length || 0;
       const pausedUsers = usersResult.data?.filter((u) => u.status === "paused").length || 0;
 
-      const creditsIssued = transactionsResult.data?.reduce((sum, t) => 
-        t.transaction_type === "purchase" ? sum + t.amount : sum, 0) || 0;
-      const creditsUsed = transactionsResult.data?.reduce((sum, t) => 
-        t.transaction_type === "order" ? sum + Math.abs(t.amount) : sum, 0) || 0;
+      const creditsIssued = ledgerResult.data?.reduce((sum, t) => 
+        t.reason === "purchase" && t.delta > 0 ? sum + t.delta : sum, 0) || 0;
+      const creditsUsed = ledgerResult.data?.reduce((sum, t) => 
+        t.reason === "usage" && t.delta < 0 ? sum + Math.abs(t.delta) : sum, 0) || 0;
 
       setStats({
         totalUsers: usersResult.count || 0,
