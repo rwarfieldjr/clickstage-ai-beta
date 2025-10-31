@@ -1,5 +1,6 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface BeforeAfterSliderProps {
   beforeImage: string;
@@ -16,8 +17,16 @@ const BeforeAfterSlider = ({
 }: BeforeAfterSliderProps) => {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
+  const [showHint, setShowHint] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
+
+  // Hide hint after first interaction
+  useEffect(() => {
+    if (isDragging) {
+      setShowHint(false);
+    }
+  }, [isDragging]);
 
   const handleMove = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (!isDragging && e.type !== "click") return;
@@ -92,13 +101,24 @@ const BeforeAfterSlider = ({
         className="absolute top-0 bottom-0 w-1 bg-white shadow-lg"
         style={{ left: `${sliderPosition}%` }}
       >
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">
-          <div className="flex gap-1">
-            <div className="w-0.5 h-4 bg-gray-400"></div>
-            <div className="w-0.5 h-4 bg-gray-400"></div>
-          </div>
+        {/* Draggable Handle with Arrows */}
+        <div className={cn(
+          "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-110",
+          showHint && "animate-pulse"
+        )}>
+          <ChevronLeft className="w-4 h-4 text-gray-600 -mr-1" />
+          <ChevronRight className="w-4 h-4 text-gray-600 -ml-1" />
         </div>
       </div>
+
+      {/* Drag Hint - Shows initially */}
+      {showHint && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+          <div className="bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap animate-fade-in mt-20">
+            ← Drag to compare →
+          </div>
+        </div>
+      )}
     </div>
   );
 };
