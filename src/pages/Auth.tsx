@@ -17,6 +17,7 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     // Check if user is already logged in
@@ -29,6 +30,13 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate password match on signup
+    if (isSignUp && password !== confirmPassword) {
+      toast.error("Passwords do not match. Please try again.");
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -46,9 +54,20 @@ const Auth = () => {
 
         if (error) throw error;
 
-        toast.success("Account created! You can now log in.");
+        // Send welcome email
+        try {
+          await supabase.functions.invoke('send-welcome-email', {
+            body: { email, name }
+          });
+        } catch (emailError) {
+          console.error("Failed to send welcome email:", emailError);
+          // Don't block signup if email fails
+        }
+
+        toast.success("Account created! Check your email to verify your account.");
         setIsSignUp(false);
         setPassword("");
+        setConfirmPassword("");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -127,10 +146,29 @@ const Auth = () => {
                     </p>
                   )}
                 </div>
+                {isSignUp && (
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={10}
+                    />
+                    {confirmPassword && password !== confirmPassword && (
+                      <p className="text-sm text-destructive">
+                        Passwords do not match. Please try again.
+                      </p>
+                    )}
+                  </div>
+                )}
                 <Button
                   type="submit"
                   className="w-full bg-accent hover:bg-accent/90"
-                  disabled={loading}
+                  disabled={loading || (isSignUp && password !== confirmPassword)}
                 >
                   {loading ? "Loading..." : isSignUp ? "Sign Up" : "Log In"}
                 </Button>
