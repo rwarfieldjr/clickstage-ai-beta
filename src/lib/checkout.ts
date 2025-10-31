@@ -81,6 +81,28 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
   setLoading(true);
 
   try {
+    // Validate files before processing
+    toast.loading("Validating files...");
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file));
+
+    const { data: validationData, error: validationError } = await supabase.functions.invoke('validate-upload', {
+      body: formData,
+    });
+
+    toast.dismiss();
+
+    if (validationError || !validationData?.valid) {
+      const errorMessage = validationData?.invalidFiles?.[0]?.error || 
+                          validationData?.error || 
+                          "File validation failed. Please check your files and try again.";
+      toast.error(errorMessage);
+      setLoading(false);
+      return;
+    }
+
+    console.log("[checkout] File validation passed:", validationData);
+
     // Handle credit payment
     if (paymentMethod === "credits" && user) {
       // Check if user has enough credits

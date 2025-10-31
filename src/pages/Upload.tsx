@@ -121,11 +121,22 @@ const Upload = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     const validFiles = selectedFiles.filter(
-      (file) => file.type === "image/jpeg" || file.type === "image/png"
+      (file) => file.type === "image/jpeg" || file.type === "image/png" || file.type === "image/webp"
     );
 
+    // Check file size (10MB max)
+    const MAX_SIZE_MB = 10;
+    const MAX_BYTES = MAX_SIZE_MB * 1024 * 1024;
+    const oversizedFiles = validFiles.filter(file => file.size > MAX_BYTES);
+
+    if (oversizedFiles.length > 0) {
+      const fileNames = oversizedFiles.map(f => f.name).join(", ");
+      toast.error(`File(s) too large: ${fileNames}. Maximum size is ${MAX_SIZE_MB}MB per file.`);
+      return;
+    }
+
     if (validFiles.length !== selectedFiles.length) {
-      toast.error("Only JPEG and PNG files are allowed");
+      toast.error("Only JPEG, PNG, and WEBP images are allowed");
     }
 
     setFiles((prev) => [...prev, ...validFiles]);
@@ -164,11 +175,22 @@ const Upload = () => {
 
     const droppedFiles = Array.from(e.dataTransfer.files);
     const validFiles = droppedFiles.filter(
-      (file) => file.type === "image/jpeg" || file.type === "image/png"
+      (file) => file.type === "image/jpeg" || file.type === "image/png" || file.type === "image/webp"
     );
 
+    // Check file size (10MB max)
+    const MAX_SIZE_MB = 10;
+    const MAX_BYTES = MAX_SIZE_MB * 1024 * 1024;
+    const oversizedFiles = validFiles.filter(file => file.size > MAX_BYTES);
+
+    if (oversizedFiles.length > 0) {
+      const fileNames = oversizedFiles.map(f => f.name).join(", ");
+      toast.error(`File(s) too large: ${fileNames}. Maximum size is ${MAX_SIZE_MB}MB per file.`);
+      return;
+    }
+
     if (validFiles.length !== droppedFiles.length) {
-      toast.error("Only JPEG and PNG files are allowed");
+      toast.error("Only JPEG, PNG, and WEBP images are allowed");
     }
 
     if (validFiles.length > 0) {
