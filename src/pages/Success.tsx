@@ -168,7 +168,7 @@ const Success = () => {
                   Return Home
                 </Button>
                 <Button 
-                  onClick={() => navigate("/auth")} 
+                  onClick={() => navigate("/auth?mode=signup")} 
                   className="flex-1 bg-accent hover:bg-accent/90"
                 >
                   Set Up Account Now
