@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.daily-digest]
 verify_jwt = false
+
+[functions.purge-error-events]
+verify_jwt = false
