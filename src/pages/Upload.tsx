@@ -629,22 +629,43 @@ const Upload = () => {
                       }
                       
                       const photoCount = files.length;
-                      const result = await processCreditOrStripeCheckout(user?.email, photoCount);
                       
-                      if (result.method === "credits" && result.status === "success") {
-                        toast.success(`Order placed successfully! ${photoCount} credits used.`);
-                        // Refetch credits to update the display
-                        await refetchCredits();
-                        // Navigate to dashboard
-                        navigate('/dashboard');
-                      } else if (result.method === "stripe" && result.status === "redirect") {
-                        toast.info("Redirecting to payment page...");
+                      // Check if user wants to use credits
+                      if (user?.email) {
+                        const result = await processCreditOrStripeCheckout(user.email, photoCount);
+                        
+                        if (result.method === "credits" && result.status === "success") {
+                          toast.success(`Order placed successfully! ${photoCount} credits used.`);
+                          await refetchCredits();
+                          navigate('/dashboard');
+                          return;
+                        }
+                        // If insufficient credits, continue to Stripe checkout below
                       }
+                      
+                      // Proceed with Stripe checkout using handleCheckout
+                      await handleCheckout({
+                        files,
+                        stagingStyle,
+                        selectedBundle,
+                        bundles,
+                        smsConsent,
+                        paymentMethod: "stripe",
+                        stagingNotes,
+                        credits,
+                        user,
+                        userProfile,
+                        supabase,
+                        navigate,
+                        refetchCredits,
+                        setLoading,
+                      });
+                      
                     } catch (err: any) {
                       console.error(err);
                       const errorMessage = err.message === "Insufficient credits" 
                         ? "Insufficient credits. Please purchase more credits to continue."
-                        : "Something went wrong during checkout. Please try again.";
+                        : err.message || "Something went wrong during checkout. Please try again.";
                       setError(errorMessage);
                       toast.error(errorMessage);
                     } finally {
