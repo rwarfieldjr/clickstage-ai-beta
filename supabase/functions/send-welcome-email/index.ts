@@ -24,20 +24,17 @@ const handler = async (req: Request): Promise<Response> => {
     const { name, email }: WelcomeEmailRequest = await req.json();
 
     const emailResponse = await resend.emails.send({
-      from: "ClickStage Pro <onboarding@resend.dev>",
+      from: "ClickStagePro <support@clickstagepro.com>",
       to: [email],
-      subject: "Welcome to ClickStage Pro!",
-      html: `
-        <div style="font-family: Arial, sans-serif; color: #333;">
-          <h2 style="color:#1D4ED8;">Welcome to ClickStagePro!</h2>
-          <p>Hi ${name},</p>
-          <p>Thank you for creating your account. You can now log in to view and download your virtually staged photos anytime.</p>
-          <p><a href="${Deno.env.get("SUPABASE_URL")?.replace("supabase.co", "lovable.app") || "https://clickstagepro.lovable.app"}/auth" style="background:#1D4ED8;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;">Log In to Your Account</a></p>
-          <br/>
-          <p>Need help? Reply to this email or visit <a href="${Deno.env.get("SUPABASE_URL")?.replace("supabase.co", "lovable.app") || "https://clickstagepro.lovable.app"}/contact">our support page</a>.</p>
-          <p>— The ClickStagePro Team</p>
-        </div>
-      `,
+      subject: "Welcome to ClickStagePro — Your Account Is Ready!",
+      html: `<div style="font-family: Arial, sans-serif; color: #333;">
+      <h2 style="color:#1D4ED8;">Welcome to ClickStagePro!</h2>
+      <p>Hi ${name},</p>
+      <p>Thank you for creating your account. You can now log in to view and download your virtually staged photos anytime.</p>
+      <a href="https://clickstagepro.com/auth" style="background:#1D4ED8;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;">Log In to Your Account</a>
+      <p style="margin-top:16px;">Need help? Reply to this email or visit <a href="https://clickstagepro.com/contact">our support page</a>.</p>
+      <p>— The ClickStagePro Team</p>
+    </div>`,
     });
 
     console.log("Welcome email sent successfully:", emailResponse);
