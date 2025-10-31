@@ -113,10 +113,10 @@ const BeforeAfterSlider = ({
 
       {/* Drag Hint - Shows on hover, hides when dragging */}
       <div className={cn(
-        "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity",
+        "absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity",
         isDragging && "!opacity-0"
       )}>
-        <div className="bg-gray-500/90 text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap mt-20">
+        <div className="bg-gray-500/90 text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap">
           {"<--Drag to Compare-->"}
         </div>
       </div>
