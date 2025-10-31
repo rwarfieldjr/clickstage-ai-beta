@@ -179,6 +179,36 @@ export type Database = {
           },
         ]
       }
+      error_events: {
+        Row: {
+          code: number | null
+          created_at: string
+          details: Json | null
+          hostname: string | null
+          id: string
+          path: string | null
+          subject: string
+        }
+        Insert: {
+          code?: number | null
+          created_at?: string
+          details?: Json | null
+          hostname?: string | null
+          id?: string
+          path?: string | null
+          subject: string
+        }
+        Update: {
+          code?: number | null
+          created_at?: string
+          details?: Json | null
+          hostname?: string | null
+          id?: string
+          path?: string | null
+          subject?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           archived: boolean
