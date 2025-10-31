@@ -77,6 +77,14 @@ const handler = async (req: Request): Promise<Response> => {
       if (now.getTime() - windowStart.getTime() < 60 * 60 * 1000) {
         if (rateLimitData.attempt_count >= 5) {
           logStep("Rate limit exceeded", { ip: clientIp, attempts: rateLimitData.attempt_count });
+          await sendSupportAlert("Checkout Blocked – Rate Limit", {
+            hostname,
+            path,
+            code: 429,
+            reason: "rate_limit_exceeded",
+            ip: clientIp,
+            attempts: rateLimitData.attempt_count,
+          });
           return new Response(
             JSON.stringify({ 
               error: "Too many checkout attempts. Please try again in an hour.",
@@ -120,6 +128,13 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (!validation.success) {
       logStep("Validation failed", { errors: validation.error.format() });
+      await sendSupportAlert("Checkout Blocked – Validation Failed", {
+        hostname,
+        path,
+        code: 400,
+        reason: "validation_failed",
+        errors: validation.error.format(),
+      });
       return new Response(
         JSON.stringify({ error: "Invalid input parameters", details: validation.error.format() }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
@@ -133,6 +148,12 @@ const handler = async (req: Request): Promise<Response> => {
     const isTurnstileValid = await verifyTurnstile(turnstileToken);
     if (!isTurnstileValid) {
       logStep("Turnstile verification failed");
+      await sendSupportAlert("Checkout Blocked – Turnstile Failed", {
+        hostname,
+        path,
+        code: 400,
+        reason: "turnstile_failed",
+      });
       return new Response(
         JSON.stringify({
           error: "Security verification failed. Please try again.",
@@ -169,6 +190,12 @@ const handler = async (req: Request): Promise<Response> => {
     if (!customerEmail) {
       if (!contactInfo?.email) {
         logStep("Guest checkout requires email in contactInfo");
+        await sendSupportAlert("Checkout Blocked – Missing Email", {
+          hostname,
+          path,
+          code: 400,
+          reason: "missing_email",
+        });
         return new Response(
           JSON.stringify({ error: "Email is required for checkout" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }

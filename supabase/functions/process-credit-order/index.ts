@@ -65,6 +65,12 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('[process-credit-order] Verifying Turnstile token...');
     const isTurnstileValid = await verifyTurnstile(turnstileToken);
     if (!isTurnstileValid) {
+      await sendSupportAlert("Credit Order Blocked – Turnstile Failed", {
+        hostname,
+        path,
+        code: 400,
+        reason: "turnstile_failed",
+      });
       return new Response(
         JSON.stringify({
           error: "Security verification failed. Please try again.",
@@ -108,6 +114,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     const result = deductResult as { success: boolean };
     if (!result?.success) {
+      await sendSupportAlert("Credit Order Blocked – Insufficient Credits", {
+        hostname,
+        path,
+        code: 400,
+        reason: "insufficient_credits",
+        required: photosCount,
+        user_id: user.id,
+      });
       return new Response(
         JSON.stringify({
           error: "Insufficient credits",
