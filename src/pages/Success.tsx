@@ -13,6 +13,8 @@ const Success = () => {
   const [loading, setLoading] = useState(true);
   const [orderNumber, setOrderNumber] = useState("");
   const [error, setError] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [checkingAccount, setCheckingAccount] = useState(false);
 
   useEffect(() => {
     const sessionId = searchParams.get("session_id");
@@ -29,19 +31,40 @@ const Success = () => {
         // Wait 3 seconds for webhook to process
         await new Promise(resolve => setTimeout(resolve, 3000));
         
-        // Try to get the order number from the database
+        // Try to get the order number and email from the database
         const { data, error } = await supabase
           .from("orders")
-          .select("order_number")
+          .select("order_number, user_id")
           .eq("stripe_payment_id", sessionId)
           .single();
 
         if (error || !data) {
-          // Order not created yet, might be guest checkout
-          // Just show success without order number
+          // Order not created yet, try to get email from abandoned_checkouts
+          const { data: abandonedData } = await supabase
+            .from("abandoned_checkouts")
+            .select("email")
+            .eq("session_id", sessionId)
+            .maybeSingle();
+          
+          if (abandonedData?.email) {
+            setUserEmail(abandonedData.email);
+          }
           setOrderNumber("");
         } else {
           setOrderNumber(data.order_number);
+          
+          // Get email from profiles using user_id
+          if (data.user_id) {
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("email")
+              .eq("id", data.user_id)
+              .maybeSingle();
+            
+            if (profileData?.email) {
+              setUserEmail(profileData.email);
+            }
+          }
         }
       } catch (err) {
         console.error("Error fetching order:", err);
@@ -52,6 +75,38 @@ const Success = () => {
 
     checkOrder();
   }, [searchParams]);
+
+  const handleSetupAccount = async () => {
+    if (!userEmail) {
+      // Fallback to signup if no email found
+      navigate("/auth?type=signup");
+      return;
+    }
+
+    setCheckingAccount(true);
+    try {
+      // Check if user already exists in profiles
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", userEmail)
+        .maybeSingle();
+
+      if (existingProfile) {
+        // User exists, redirect to login
+        navigate("/auth?type=login");
+      } else {
+        // New user, redirect to signup
+        navigate("/auth?type=signup");
+      }
+    } catch (err) {
+      console.error("Error checking account:", err);
+      // Fallback to signup on error
+      navigate("/auth?type=signup");
+    } finally {
+      setCheckingAccount(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -168,10 +223,11 @@ const Success = () => {
                   <Link to="/">Return Home</Link>
                 </Button>
                 <Button 
-                  asChild
+                  onClick={handleSetupAccount}
+                  disabled={checkingAccount}
                   className="flex-1 bg-accent hover:bg-accent/90"
                 >
-                  <Link to="/auth/signup">Set Up Account Now</Link>
+                  {checkingAccount ? "Loading..." : "Set Up Account Now"}
                 </Button>
               </div>
 
