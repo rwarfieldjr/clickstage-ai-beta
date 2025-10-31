@@ -21,6 +21,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { CreditsSummary } from "@/components/CreditsSummary";
 import { handleCheckout } from "@/lib/checkout";
 import { logEvent } from "@/lib/logEvent";
+import { hasEnoughCredits, deductCredits } from "@/lib/credits";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
 import coastal from "@/assets/style-coastal.jpg";
 import scandinavian from "@/assets/style-scandinavian.jpg";
@@ -213,6 +214,25 @@ const Upload = () => {
     if (bundle && files.length > bundle.photos) {
       alert(`You have uploaded ${files.length} photos but selected the ${bundle.name} package. Please remove ${files.length - bundle.photos} photo${files.length - bundle.photos > 1 ? 's' : ''} or select a larger package.`);
       return;
+    }
+
+    // Check credits before processing if using credit payment
+    if (paymentMethod === "credits" && user?.email) {
+      const canProceed = await hasEnoughCredits(user.email, files.length);
+      if (!canProceed) {
+        alert("You do not have enough credits. Please purchase more photo packs.");
+        return;
+      }
+
+      // Deduct credits before processing
+      try {
+        await deductCredits(user.email, files.length);
+        console.log(`Deducted ${files.length} credits for ${user.email}`);
+      } catch (error) {
+        console.error("Error deducting credits:", error);
+        alert("Failed to deduct credits. Please try again.");
+        return;
+      }
     }
 
     await handleCheckout({
