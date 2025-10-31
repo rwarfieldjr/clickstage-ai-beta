@@ -520,7 +520,6 @@ const Upload = () => {
                       accept="image/jpeg,image/png"
                       onChange={handleFileChange}
                       className="hidden"
-                      required
                     />
                     <label htmlFor="file-upload" className="cursor-pointer block">
                       <UploadIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
@@ -701,17 +700,26 @@ const Upload = () => {
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-accent hover:bg-accent/90"
-                  size="lg"
-                  disabled={loading || (() => {
-                    const bundle = bundles.find(b => b.id === selectedBundle);
-                    return bundle && files.length > bundle.photos;
-                  })()}
+                <button
+                  type="button"
+                  onClick={() => {
+                    console.log("Complete Order clicked");
+                    try {
+                      // Create a synthetic form event
+                      const syntheticEvent = {
+                        preventDefault: () => {},
+                      } as React.FormEvent;
+                      handleSubmit(syntheticEvent);
+                    } catch (err) {
+                      console.error("Checkout error:", err);
+                      alert("There was an issue submitting your order. Please try again.");
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? "Processing..." : "Complete Order"}
-                </Button>
+                </button>
               </form>
             </CardContent>
           </Card>
