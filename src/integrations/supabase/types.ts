@@ -404,6 +404,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_abandoned_checkouts: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       deduct_credits_if_available: {
         Args: { amount_param: number; email_param: string }

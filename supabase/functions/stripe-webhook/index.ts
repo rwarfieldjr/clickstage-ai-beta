@@ -67,17 +67,35 @@ serve(async (req) => {
       
       console.log("Processing checkout.session.completed for session:", session.id);
 
+      // Initialize Supabase admin client
+      const supabaseAdmin = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+
+      // SECURITY: Check if session already processed (idempotency)
+      const { data: existingSession } = await supabaseAdmin
+        .from("processed_stripe_sessions")
+        .select("session_id")
+        .eq("session_id", session.id)
+        .maybeSingle();
+
+      if (existingSession) {
+        console.log("Session already processed, skipping:", session.id);
+        return new Response(
+          JSON.stringify({ received: true, message: "Already processed" }),
+          { 
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
+
       // Extract metadata
       const metadata = session.metadata || {};
       const customerEmail = metadata.customer_email || session.customer_details?.email;
       const customerName = metadata.customer_name || session.customer_details?.name || "Customer";
       const sessionId = metadata.session_id;
-      
-      // Initialize Supabase admin client early to retrieve files from database
-      const supabaseAdmin = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-      );
       
       // Retrieve files from database instead of metadata (to avoid 500 char limit)
       let files: string[] = [];
@@ -114,6 +132,56 @@ serve(async (req) => {
         );
       }
 
+      // Check if user exists to get user_id
+      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+      let userId = existingUsers?.users.find(u => u.email === customerEmail)?.id;
+
+      if (!userId) {
+        console.log("Creating new user:", customerEmail);
+        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email: customerEmail,
+          email_confirm: true,
+          user_metadata: { name: customerName },
+        });
+
+        if (createError) {
+          console.error("Error creating user:", createError);
+          throw createError;
+        }
+
+        userId = newUser.user?.id;
+        console.log("User created successfully:", userId);
+      }
+
+      // SECURITY: Mark session as processed immediately to prevent race conditions
+      if (userId) {
+        const { error: sessionInsertError } = await supabaseAdmin
+          .from("processed_stripe_sessions")
+          .insert({
+            session_id: session.id,
+            payment_intent_id: session.payment_intent as string || null,
+            user_id: userId,
+            credits_added: photosCount,
+          });
+
+        if (sessionInsertError) {
+          // If unique constraint violation, session was processed by concurrent request
+          if (sessionInsertError.code === '23505') {
+            console.log("Session processed concurrently, aborting:", session.id);
+            return new Response(
+              JSON.stringify({ received: true, message: "Already processed" }),
+              { 
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+              }
+            );
+          }
+          console.error("Error marking session as processed:", sessionInsertError);
+          throw sessionInsertError;
+        }
+        console.log("Session marked as processed:", session.id);
+      }
+
       // Add credits for the customer
       if (photosCount > 0) {
         console.log(`Adding ${photosCount} credits for ${customerEmail}`);
@@ -142,27 +210,6 @@ serve(async (req) => {
         } else {
           console.log(`Successfully added ${photosCount} credits for ${customerEmail}. New total: ${newTotal}`);
         }
-      }
-
-      // Check if user exists or create one
-      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-      let userId = existingUsers?.users.find(u => u.email === customerEmail)?.id;
-
-      if (!userId) {
-        console.log("Creating new user:", customerEmail);
-        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-          email: customerEmail,
-          email_confirm: true,
-          user_metadata: { name: customerName },
-        });
-
-        if (createError) {
-          console.error("Error creating user:", createError);
-          throw createError;
-        }
-
-        userId = newUser.user?.id;
-        console.log("User created successfully:", userId);
       }
 
       // Create orders from uploaded files and collect order numbers

@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.purge-error-events]
 verify_jwt = false
+
+[functions.purge-abandoned-checkouts]
+verify_jwt = false
