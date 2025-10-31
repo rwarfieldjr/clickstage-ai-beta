@@ -51,7 +51,7 @@ const BeforeAfterSlider = ({
   return (
     <div 
       ref={containerRef}
-      className="relative w-full aspect-video overflow-hidden rounded-xl cursor-col-resize select-none"
+      className="relative w-full aspect-video overflow-hidden rounded-xl cursor-col-resize select-none group"
       onMouseMove={handleMove}
       onTouchMove={handleMove}
       onMouseDown={() => setIsDragging(true)}
@@ -111,14 +111,12 @@ const BeforeAfterSlider = ({
         </div>
       </div>
 
-      {/* Drag Hint - Shows initially */}
-      {showHint && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-          <div className="bg-black/70 text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap animate-fade-in mt-20">
-            ← Drag to compare →
-          </div>
+      {/* Drag Hint - Shows on hover */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="bg-gray-500/90 text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap mt-20">
+          {"<--Drag to Compare-->"}
         </div>
-      )}
+      </div>
     </div>
   );
 };
