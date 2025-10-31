@@ -1,3 +1,5 @@
+// @version: stable-1.0 | Do not auto-modify | Last updated by Rob Warfield
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
