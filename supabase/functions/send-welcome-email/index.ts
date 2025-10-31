@@ -31,9 +31,8 @@ const handler = async (req: Request): Promise<Response> => {
       <h2 style="color:#1D4ED8;">Welcome to ClickStagePro!</h2>
       <p>Hi ${name},</p>
       <p>Thank you for creating your account. You can now log in anytime to view and download your virtually staged photos.</p>
-      <p><a href="https://clickstagepro.com/auth" style="background:#1D4ED8;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;">Log In to Your Account</a></p>
-      <br/>
-      <p>Need help? Reply to this email or visit <a href="https://clickstagepro.com/contact">our support page</a>.</p>
+      <a href="https://clickstagepro.com/auth" style="background:#1D4ED8;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;">Log In to Your Account</a>
+      <p style="margin-top:16px;">Need help? Reply to this email or visit <a href="https://clickstagepro.com/contact">our support page</a>.</p>
       <p>— The ClickStagePro Team</p>
     </div>`,
     });
