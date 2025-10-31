@@ -171,7 +171,7 @@ const Success = () => {
                   asChild
                   className="flex-1 bg-accent hover:bg-accent/90"
                 >
-                  <Link to="/auth?type=signup">Set Up Account Now</Link>
+                  <Link to="/auth/signup">Set Up Account Now</Link>
                 </Button>
               </div>
 
