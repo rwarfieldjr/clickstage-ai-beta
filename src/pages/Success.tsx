@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2 } from "lucide-react";
@@ -161,17 +161,17 @@ const Success = () => {
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button 
-                  onClick={() => navigate("/")} 
+                  asChild
                   variant="outline"
                   className="flex-1"
                 >
-                  Return Home
+                  <Link to="/">Return Home</Link>
                 </Button>
                 <Button 
-                  onClick={() => navigate("/auth?mode=signup")} 
+                  asChild
                   className="flex-1 bg-accent hover:bg-accent/90"
                 >
-                  Set Up Account Now
+                  <Link to="/auth?type=signup">Set Up Account Now</Link>
                 </Button>
               </div>
 
