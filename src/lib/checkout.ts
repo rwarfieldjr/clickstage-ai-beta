@@ -82,28 +82,93 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
 
   setLoading(true);
 
+  // Helper function to retry failed edge function calls with exponential backoff
+  async function retryEdgeFunction<T>(
+    functionName: string,
+    invokeOptions: any,
+    maxRetries = 2
+  ): Promise<{ data: T | null; error: any }> {
+    console.log(`[STABILITY-CHECK] Calling edge function: ${functionName}`);
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      const { data, error } = await supabase.functions.invoke(functionName, invokeOptions);
+      
+      // Log response status
+      const status = error?.status || (data ? 200 : 500);
+      console.log(`[STABILITY-CHECK] ${functionName} response - Status: ${status}, Attempt: ${attempt + 1}/${maxRetries + 1}`);
+      
+      // Success (2xx response)
+      if (!error && data) {
+        console.log(`[STABILITY-CHECK] ✓ ${functionName} succeeded`, { status, data });
+        return { data, error: null };
+      }
+      
+      // Non-retryable errors (4xx client errors)
+      if (error && error.status >= 400 && error.status < 500) {
+        console.error(`[STABILITY-CHECK] ✗ ${functionName} failed with client error (non-retryable)`, { 
+          status: error.status, 
+          message: error.message,
+          attempt: attempt + 1 
+        });
+        return { data: null, error };
+      }
+      
+      // Server errors (5xx) - retry with backoff
+      if (error && error.status >= 500) {
+        const isLastAttempt = attempt === maxRetries;
+        
+        if (isLastAttempt) {
+          console.error(`[STABILITY-CHECK] ✗ ${functionName} failed after ${maxRetries + 1} attempts`, { 
+            status: error.status, 
+            message: error.message 
+          });
+          return { data: null, error };
+        }
+        
+        // Exponential backoff: 1s, 2s
+        const delayMs = Math.pow(2, attempt) * 1000;
+        console.warn(`[STABILITY-CHECK] ⚠ ${functionName} temporary failure (5xx), retrying in ${delayMs}ms...`, { 
+          status: error.status, 
+          attempt: attempt + 1,
+          nextRetryIn: `${delayMs}ms`
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        continue;
+      }
+      
+      // Unknown error
+      console.error(`[STABILITY-CHECK] ✗ ${functionName} failed with unknown error`, { error, attempt: attempt + 1 });
+      return { data: null, error };
+    }
+    
+    return { data: null, error: new Error(`Max retries exceeded for ${functionName}`) };
+  }
+
   try {
     // Validate files before processing
+    console.log("[STABILITY-CHECK] Starting checkout validation");
     toast.loading("Validating files...");
     const formData = new FormData();
     files.forEach(file => formData.append('files', file));
 
-    const { data: validationData, error: validationError } = await supabase.functions.invoke('validate-upload', {
-      body: formData,
-    });
+    const { data: validationData, error: validationError } = await retryEdgeFunction(
+      'validate-upload',
+      { body: formData }
+    );
 
     toast.dismiss();
 
-    if (validationError || !validationData?.valid) {
-      const errorMessage = validationData?.invalidFiles?.[0]?.error || 
-                          validationData?.error || 
+    if (validationError || !(validationData as any)?.valid) {
+      const errorMessage = (validationData as any)?.invalidFiles?.[0]?.error || 
+                          (validationData as any)?.error || 
                           "File validation failed. Please check your files and try again.";
       toast.error(errorMessage);
       setLoading(false);
       return;
     }
 
-    console.log("[checkout] File validation passed:", validationData);
+    console.log("[STABILITY-CHECK] ✓ File validation passed:", validationData);
 
     // Handle credit payment
     if (paymentMethod === "credits" && user) {
@@ -144,7 +209,8 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
       }
 
       // Process order with credits - deduct the bundle's photo count as credits
-      const { data, error } = await supabase.functions.invoke('process-credit-order', {
+      console.log("[STABILITY-CHECK] Processing credit order with Turnstile token");
+      const { data, error } = await retryEdgeFunction('process-credit-order', {
         body: {
           files: uploadedFiles,
           stagingStyle: stagingStyle,
@@ -157,8 +223,13 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
 
       if (error) throw error;
 
-      if (data?.success) {
-        toast.success(`Order placed successfully using ${data.creditsUsed} credits!`);
+      if ((data as any)?.success) {
+        console.log("[STABILITY-CHECK] ✓ Credit order completed successfully", { 
+          creditsUsed: (data as any).creditsUsed,
+          remainingCredits: (data as any).remainingCredits,
+          ordersCreated: (data as any).orders?.length
+        });
+        toast.success(`Order placed successfully using ${(data as any).creditsUsed} credits!`);
         // Refetch credits to update the display
         await refetchCredits();
         // Navigate to dashboard
@@ -234,8 +305,9 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     }
 
     // Create checkout session with all metadata
+    console.log("[STABILITY-CHECK] Creating Stripe checkout with Turnstile token");
     toast.loading("Creating checkout session...");
-    const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
+    const { data: checkoutData, error: checkoutError } = await retryEdgeFunction('create-checkout', {
       body: {
         priceId: bundle.priceId,
         contactInfo: contactInfo,
@@ -251,9 +323,13 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
 
     if (checkoutError) throw checkoutError;
 
-    if (checkoutData?.url) {
+    if ((checkoutData as any)?.url) {
+      console.log("[STABILITY-CHECK] ✓ Checkout session created successfully", { 
+        sessionId: (checkoutData as any).sessionId,
+        hasUrl: !!(checkoutData as any).url
+      });
       toast.success("Opening payment page...");
-      window.open(checkoutData.url, '_blank');
+      window.open((checkoutData as any).url, '_blank');
     } else {
       throw new Error("No checkout URL received");
     }

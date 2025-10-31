@@ -34,6 +34,7 @@ const AdminImages = lazy(() => import("./pages/admin/AdminImages"));
 const Blog = lazy(() => import("./pages/Blog"));
 const VirtualStagingGuide = lazy(() => import("./pages/blog/VirtualStagingGuide"));
 const Success = lazy(() => import("./pages/Success"));
+const StabilityTest = lazy(() => import("./pages/StabilityTest"));
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const App = () => (
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/virtual-staging-complete-guide" element={<VirtualStagingGuide />} />
           <Route path="/success" element={<Success />} />
+          <Route path="/stability-test" element={<StabilityTest />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
           </Routes>

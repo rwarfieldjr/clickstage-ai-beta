@@ -120,25 +120,46 @@ const Upload = () => {
     });
   }, []);
 
-  // Initialize Turnstile widget
+  // Initialize Turnstile widget with stability checks
   useEffect(() => {
+    console.log("[STABILITY-CHECK] Initializing Turnstile widget");
+    
+    // Prevent multiple widget renders
+    let widgetId: string | null = null;
+    
     // Set up global callback for Turnstile
     (window as any).onTurnstileSuccess = (token: string) => {
       setTurnstileToken(token);
-      console.log('Turnstile verification successful');
+      console.log('[STABILITY-CHECK] ✓ Turnstile verification successful');
     };
 
     // Render Turnstile widget once the script is loaded
     const initTurnstile = () => {
       if ((window as any).turnstile && turnstileRef.current) {
-        (window as any).turnstile.render(turnstileRef.current, {
+        // Check if widget already exists
+        const existingWidget = turnstileRef.current.querySelector('.cf-turnstile');
+        if (existingWidget && existingWidget.hasChildNodes()) {
+          console.log('[STABILITY-CHECK] ⚠ Turnstile widget already rendered, skipping');
+          return;
+        }
+
+        // Clear any existing content
+        turnstileRef.current.innerHTML = '';
+        
+        // Render new widget
+        widgetId = (window as any).turnstile.render(turnstileRef.current, {
           sitekey: '0x4AAAAAAB9xdhqE9Qyud_D6',
           theme: theme === 'dark' ? 'dark' : 'light',
           callback: (token: string) => {
             setTurnstileToken(token);
-            console.log('Turnstile verification successful');
+            console.log('[STABILITY-CHECK] ✓ Turnstile verification successful', { tokenLength: token.length });
+          },
+          'error-callback': () => {
+            console.error('[STABILITY-CHECK] ✗ Turnstile verification failed');
           },
         });
+        
+        console.log('[STABILITY-CHECK] ✓ Turnstile widget rendered successfully', { widgetId });
       }
     };
 
@@ -146,15 +167,37 @@ const Upload = () => {
     if ((window as any).turnstile) {
       initTurnstile();
     } else {
+      console.log('[STABILITY-CHECK] Waiting for Turnstile script to load...');
       const checkTurnstile = setInterval(() => {
         if ((window as any).turnstile) {
+          console.log('[STABILITY-CHECK] ✓ Turnstile script loaded');
           clearInterval(checkTurnstile);
           initTurnstile();
         }
       }, 100);
 
+      // Timeout after 10 seconds
+      setTimeout(() => {
+        if (!(window as any).turnstile) {
+          console.error('[STABILITY-CHECK] ✗ Turnstile script failed to load within 10s');
+          clearInterval(checkTurnstile);
+        }
+      }, 10000);
+
       return () => clearInterval(checkTurnstile);
     }
+
+    // Cleanup function
+    return () => {
+      if (widgetId && (window as any).turnstile) {
+        try {
+          (window as any).turnstile.remove(widgetId);
+          console.log('[STABILITY-CHECK] Turnstile widget cleaned up');
+        } catch (e) {
+          // Widget may already be removed
+        }
+      }
+    };
   }, [theme]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -248,6 +291,18 @@ const Upload = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Stability check: Verify Turnstile token exists
+    console.log("[STABILITY-CHECK] Checkout initiated");
+    console.log("[STABILITY-CHECK] Turnstile token present:", !!turnstileToken);
+    
+    if (!turnstileToken) {
+      console.error("[STABILITY-CHECK] ✗ Missing Turnstile token");
+      alert("Please complete the security verification");
+      return;
+    }
+    
+    console.log("[STABILITY-CHECK] ✓ All pre-flight checks passed");
 
     // Log checkout event
     logEvent("checkout_clicked", { 
