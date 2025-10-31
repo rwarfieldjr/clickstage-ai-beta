@@ -112,6 +112,36 @@ serve(async (req) => {
         );
       }
 
+      // Add credits for the customer
+      if (photosCount > 0) {
+        console.log(`Adding ${photosCount} credits for ${customerEmail}`);
+        
+        // Get current credits
+        const { data: existingCredits } = await supabaseAdmin
+          .from("user_credits")
+          .select("credits")
+          .eq("email", customerEmail)
+          .single();
+        
+        const currentCredits = existingCredits?.credits || 0;
+        const newTotal = currentCredits + photosCount;
+        
+        // Upsert credits
+        const { error: creditsError } = await supabaseAdmin
+          .from("user_credits")
+          .upsert({ 
+            email: customerEmail, 
+            credits: newTotal,
+            updated_at: new Date().toISOString()
+          });
+        
+        if (creditsError) {
+          console.error("Error adding credits:", creditsError);
+        } else {
+          console.log(`Successfully added ${photosCount} credits for ${customerEmail}. New total: ${newTotal}`);
+        }
+      }
+
       // Check if user exists or create one
       const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
       let userId = existingUsers?.users.find(u => u.email === customerEmail)?.id;
