@@ -175,6 +175,12 @@ const Upload = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Check SMS consent first
+    if (!smsConsent) {
+      toast.error("Please agree to receive SMS messages to continue");
+      return;
+    }
+
     if (files.length === 0) {
       toast.error("Please select at least one file");
       return;
@@ -477,7 +483,7 @@ const Upload = () => {
                       </DialogContent>
                     </Dialog>
                   </div>
-                  <Select value={stagingStyle} onValueChange={setStagingStyle} required>
+                  <Select value={stagingStyle} onValueChange={setStagingStyle}>
                     <SelectTrigger id="staging-style">
                       <SelectValue placeholder="Select a staging style" />
                     </SelectTrigger>
@@ -672,7 +678,6 @@ const Upload = () => {
                     id="sms-consent"
                     checked={smsConsent}
                     onCheckedChange={(checked) => setSmsConsent(checked as boolean)}
-                    required
                     className="mt-0.5"
                   />
                   <div className="grid gap-1.5 leading-none">
