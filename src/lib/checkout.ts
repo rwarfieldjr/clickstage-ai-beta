@@ -3,6 +3,7 @@
 import { toast } from "sonner";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NavigateFunction } from "react-router-dom";
+import { sanitizeFilename, sanitizeName } from "./sanitizeFilename";
 
 interface Bundle {
   id: string;
@@ -215,12 +216,12 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
       toast.loading("Uploading photos...");
       const sessionId = crypto.randomUUID();
       
-      // Get client name for filename
+      // Get client name for filename with secure sanitization
       const clientName = userProfile?.name || 'client';
-      const sanitizedName = clientName.replace(/[^a-zA-Z0-9]/g, '_');
+      const sanitizedName = sanitizeName(clientName);
       
       const uploadPromises = files.map(async (file, index) => {
-        const fileExt = file.name.split(".").pop();
+        const fileExt = sanitizeFilename(file.name).split(".").pop();
         const fileName = `${user.id}/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
@@ -282,7 +283,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     // Upload files to storage first
     toast.loading("Uploading photos...");
     
-    // Get contact info to use in filename
+    // Get contact info to use in filename with secure sanitization
     const contactData = localStorage.getItem('orderContactInfo');
     let clientName = 'guest';
     if (contactData) {
@@ -292,10 +293,10 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     } else if (userProfile?.name) {
       clientName = userProfile.name;
     }
-    const sanitizedName = clientName.replace(/[^a-zA-Z0-9]/g, '_');
+    const sanitizedName = sanitizeName(clientName);
     
     const uploadPromises = files.map(async (file, index) => {
-      const fileExt = file.name.split(".").pop();
+      const fileExt = sanitizeFilename(file.name).split(".").pop();
       const fileName = user 
         ? `${user.id}/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`
         : `guest/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`;
