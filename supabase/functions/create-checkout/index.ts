@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { verifyTurnstile } from "../_shared/verify-turnstile.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,6 +27,7 @@ const CreateCheckoutSchema = z.object({
   stagingStyle: z.string().max(50).optional(),
   photosCount: z.number().int().positive().max(1000),
   sessionId: z.string().uuid().optional(),
+  turnstileToken: z.string().min(1),
 });
 
 serve(async (req) => {
@@ -119,7 +121,26 @@ serve(async (req) => {
       );
     }
 
-    const { priceId, contactInfo, files, stagingStyle, photosCount, sessionId } = validation.data;
+    const { priceId, contactInfo, files, stagingStyle, photosCount, sessionId, turnstileToken } = validation.data;
+
+    // Verify Turnstile CAPTCHA token
+    logStep("Verifying Turnstile token...");
+    const isTurnstileValid = await verifyTurnstile(turnstileToken);
+    if (!isTurnstileValid) {
+      logStep("Turnstile verification failed");
+      return new Response(
+        JSON.stringify({
+          error: "Security verification failed. Please try again.",
+          code: "CAPTCHA_VERIFICATION_FAILED"
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    logStep("Turnstile verification successful");
     logStep("Request validated", { priceId, hasContactInfo: !!contactInfo, fileCount: files?.length, stagingStyle, photosCount, sessionId });
 
     // Support both authenticated and guest checkout

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
+import { verifyTurnstile } from "../_shared/verify-turnstile.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -16,6 +17,7 @@ interface CreditOrderRequest {
   photosCount: number;
   sessionId: string;
   stagingNotes?: string;
+  turnstileToken: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -52,7 +54,23 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Unauthorized");
     }
 
-    const { files, stagingStyle, photosCount, sessionId, stagingNotes }: CreditOrderRequest = await req.json();
+    const { files, stagingStyle, photosCount, sessionId, stagingNotes, turnstileToken }: CreditOrderRequest = await req.json();
+
+    // Verify Turnstile CAPTCHA token
+    console.log('[process-credit-order] Verifying Turnstile token...');
+    const isTurnstileValid = await verifyTurnstile(turnstileToken);
+    if (!isTurnstileValid) {
+      return new Response(
+        JSON.stringify({
+          error: "Security verification failed. Please try again.",
+          code: "CAPTCHA_VERIFICATION_FAILED"
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
     console.log(`Processing credit order for user ${user.id}: ${photosCount} photos`);
 

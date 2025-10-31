@@ -30,6 +30,7 @@ interface CheckoutParams {
   navigate: NavigateFunction;
   refetchCredits: () => Promise<void>;
   setLoading: (loading: boolean) => void;
+  turnstileToken: string;
 }
 
 export async function handleCheckout(params: CheckoutParams): Promise<void> {
@@ -48,6 +49,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     navigate,
     refetchCredits,
     setLoading,
+    turnstileToken,
   } = params;
 
   // Check SMS consent first
@@ -149,6 +151,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
           photosCount: bundle.photos,
           sessionId: sessionId,
           stagingNotes: stagingNotes,
+          turnstileToken: turnstileToken,
         },
       });
 
@@ -240,6 +243,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
         stagingStyle: stagingStyle,
         photosCount: bundle.photos, // Use bundle.photos for correct credit amount
         sessionId: sessionId,
+        turnstileToken: turnstileToken,
       },
     });
 

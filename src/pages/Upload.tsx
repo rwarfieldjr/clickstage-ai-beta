@@ -51,6 +51,8 @@ const Upload = () => {
   const { credits, creditSummary, loading: creditsLoading, refetchCredits } = useCredits(user);
   const { theme } = useTheme();
   const [userCreditsBalance, setUserCreditsBalance] = useState<number>(0);
+  const [turnstileToken, setTurnstileToken] = useState<string>("");
+  const turnstileRef = useRef<HTMLDivElement>(null);
 
   const styles = [
     { id: "modern-farmhouse", name: "Modern Farmhouse", image: modernFarmhouse, description: "Blend rustic charm with modern comfort" },
@@ -116,6 +118,17 @@ const Upload = () => {
         }
       }
     });
+
+    // Load Turnstile after component mount
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -281,6 +294,7 @@ const Upload = () => {
       navigate,
       refetchCredits,
       setLoading,
+      turnstileToken,
     });
   };
 
@@ -624,6 +638,21 @@ const Upload = () => {
                   </div>
                 </div>
 
+                {/* CAPTCHA Verification */}
+                <div className="mb-4">
+                  <Label className="text-base font-semibold mb-2 block">Security Verification <span className="text-destructive">*</span></Label>
+                  <div 
+                    ref={turnstileRef}
+                    className="cf-turnstile" 
+                    data-sitekey="0x4AAAAAAAzXYcDdPE4G0mS9"
+                    data-theme={theme === 'dark' ? 'dark' : 'light'}
+                    data-callback={(token: string) => setTurnstileToken(token)}
+                  ></div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Complete the verification to proceed with your order.
+                  </p>
+                </div>
+
                 {/* Status feedback */}
                 <div className="min-h-[24px] mb-2">
                   {loading && (
@@ -645,6 +674,13 @@ const Upload = () => {
                     setError("");
                     
                     try {
+                      // Validate Turnstile token
+                      if (!turnstileToken) {
+                        setError("Please complete the security verification.");
+                        setLoading(false);
+                        return;
+                      }
+
                       if (files.length === 0) {
                         setError("Please upload at least one photo before continuing.");
                         return;
@@ -681,6 +717,7 @@ const Upload = () => {
                         navigate,
                         refetchCredits,
                         setLoading,
+                        turnstileToken,
                       });
                       
                     } catch (err: any) {
