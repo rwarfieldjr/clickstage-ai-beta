@@ -214,7 +214,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
         contactInfo: contactInfo,
         files: uploadedFiles,
         stagingStyle: stagingStyle,
-        photosCount: files.length,
+        photosCount: bundle.photos, // Use bundle.photos for correct credit amount
         sessionId: sessionId,
       },
     });
