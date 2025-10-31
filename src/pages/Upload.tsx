@@ -176,6 +176,34 @@ const Upload = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // JavaScript validation with alerts
+    if (!smsConsent) {
+      alert("Please agree to receive SMS messages by checking the consent box.");
+      return;
+    }
+
+    if (files.length === 0) {
+      alert("Please upload at least one photo before continuing.");
+      return;
+    }
+
+    if (!stagingStyle) {
+      alert("Please select a staging style from the dropdown.");
+      return;
+    }
+
+    if (!selectedBundle) {
+      alert("Please select a bundle package.");
+      return;
+    }
+
+    // Check if uploaded photos exceed selected bundle limit
+    const bundle = bundles.find(b => b.id === selectedBundle);
+    if (bundle && files.length > bundle.photos) {
+      alert(`You have uploaded ${files.length} photos but selected the ${bundle.name} package. Please remove ${files.length - bundle.photos} photo${files.length - bundle.photos > 1 ? 's' : ''} or select a larger package.`);
+      return;
+    }
+
     await handleCheckout({
       files,
       stagingStyle,
