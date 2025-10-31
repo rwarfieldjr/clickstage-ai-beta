@@ -14,8 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload as UploadIcon, X, ZoomIn, Coins, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import Layout from "@/components/Layout";
 import { SEO } from "@/components/SEO";
 import { useCredits } from "@/hooks/use-credits";
 import { useTheme } from "@/hooks/use-theme";
@@ -225,14 +224,13 @@ const Upload = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <Layout>
       <SEO 
         title="Upload Photos | Virtual Staging Order"
         description="Upload your property photos to start an AI virtual staging order with ClickStagePro. Fast, affordable, and MLS-compliant results delivered within 24 hours."
         canonical="/upload"
         keywords="upload virtual staging photos, AI virtual staging order, real estate photo upload, MLS compliant virtual staging, ClickStagePro order"
       />
-      <Navbar />
 
       <main className="flex-1 py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
@@ -587,8 +585,6 @@ const Upload = () => {
         </div>
       </main>
 
-      <Footer />
-
       {/* Magnified Image Dialog */}
       <Dialog open={!!magnifiedImage} onOpenChange={() => setMagnifiedImage(null)}>
         <DialogContent className="max-w-5xl w-full">
@@ -604,7 +600,7 @@ const Upload = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </Layout>
   );
 };
 
