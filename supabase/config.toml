@@ -38,3 +38,6 @@ verify_jwt = true
 
 [functions.send-contact-confirmation]
 verify_jwt = false
+
+[functions.sync-credits]
+verify_jwt = false
