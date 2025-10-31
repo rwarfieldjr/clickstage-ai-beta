@@ -80,9 +80,12 @@ serve(async (req) => {
     );
 
     if (error) {
-      console.error("Error updating user email:", error);
+      console.error("[update-admin-email] Error updating email:", error);
       return new Response(
-        JSON.stringify({ error: "Failed to update email", details: error.message }),
+        JSON.stringify({ 
+          error: "Failed to update email. Please try again later.",
+          code: "EMAIL_UPDATE_ERROR"
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
@@ -112,9 +115,12 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error: any) {
-    console.error("Error in update-admin-email function:", error);
+    console.error("[update-admin-email] Server error:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to update email" }),
+      JSON.stringify({ 
+        error: "Failed to update email. Please try again later.",
+        code: "EMAIL_UPDATE_ERROR"
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }

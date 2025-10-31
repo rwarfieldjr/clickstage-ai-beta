@@ -252,9 +252,12 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error: any) {
-    console.error("Error sending notification:", error);
+    console.error("[send-order-notification] Server error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: "Unable to send notification. Please contact support.",
+        code: "NOTIFICATION_ERROR"
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }

@@ -202,11 +202,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in process-credit-order function:", error);
+    console.error("[process-credit-order] Server error:", error);
     return new Response(
       JSON.stringify({
-        error: error.message || "Internal server error",
-        details: error.toString(),
+        error: "Unable to process order. Please try again later.",
+        code: "ORDER_PROCESSING_ERROR"
       }),
       {
         status: error.message === "Unauthorized" ? 401 : 500,

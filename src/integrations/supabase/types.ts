@@ -380,6 +380,7 @@ export type Database = {
         Returns: Json
       }
       generate_order_number: { Args: never; Returns: string }
+      get_auth_user_email: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

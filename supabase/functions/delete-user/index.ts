@@ -76,9 +76,12 @@ serve(async (req) => {
     const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (error) {
-      console.error("Error deleting user:", error);
+      console.error("[delete-user] Error deleting user from auth:", error);
       return new Response(
-        JSON.stringify({ error: "Failed to delete user", details: error.message }),
+        JSON.stringify({ 
+          error: "Failed to delete user. Please try again later.",
+          code: "USER_DELETE_ERROR"
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
@@ -101,9 +104,12 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error: any) {
-    console.error("Error in delete-user function:", error);
+    console.error("[delete-user] Server error:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to delete user" }),
+      JSON.stringify({ 
+        error: "Failed to delete user. Please try again later.",
+        code: "USER_DELETE_ERROR"
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
