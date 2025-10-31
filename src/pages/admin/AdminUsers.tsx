@@ -18,18 +18,21 @@ interface Profile {
   name: string;
   email: string;
   phone: string | null;
-  credits: number;
   status: string;
   created_at: string;
 }
 
+interface ProfileWithCredits extends Profile {
+  credits: number;
+}
+
 export default function AdminUsers() {
   const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
-  const [users, setUsers] = useState<Profile[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<Profile[]>([]);
+  const [users, setUsers] = useState<ProfileWithCredits[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<ProfileWithCredits[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
+  const [selectedUser, setSelectedUser] = useState<ProfileWithCredits | null>(null);
   const [creditAmount, setCreditAmount] = useState("");
   const [creditAction, setCreditAction] = useState<"add" | "subtract">("add");
   const navigate = useNavigate();
@@ -51,13 +54,30 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: profiles, error } = await supabase
         .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      
+      // Fetch credits for each user from user_credits table
+      const usersWithCredits: ProfileWithCredits[] = await Promise.all(
+        (profiles || []).map(async (profile) => {
+          const { data: creditsData } = await supabase
+            .from("user_credits")
+            .select("credits")
+            .eq("email", profile.email)
+            .maybeSingle();
+          
+          return {
+            ...profile,
+            credits: creditsData?.credits || 0,
+          };
+        })
+      );
+      
+      setUsers(usersWithCredits);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast({
@@ -103,10 +123,13 @@ export default function AdminUsers() {
     }
 
     try {
+      // Update credits in user_credits table
       const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ credits: newCredits })
-        .eq("id", selectedUser.id);
+        .from("user_credits")
+        .upsert({ 
+          email: selectedUser.email, 
+          credits: newCredits 
+        });
 
       if (updateError) throw updateError;
 

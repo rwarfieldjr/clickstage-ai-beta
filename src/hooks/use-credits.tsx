@@ -34,16 +34,25 @@ export const useCredits = (user: User | null) => {
     try {
       setError(null);
       
-      // Fetch total credits from profile
+      // Fetch user email from profile
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("credits")
+        .select("email")
         .eq("id", user.id)
         .single();
 
       if (profileError) throw profileError;
       
-      const totalCredits = profileData?.credits || 0;
+      // Fetch total credits from user_credits table
+      const { data: creditsData, error: creditsError } = await supabase
+        .from("user_credits")
+        .select("credits")
+        .eq("email", profileData.email)
+        .maybeSingle();
+
+      if (creditsError) throw creditsError;
+      
+      const totalCredits = creditsData?.credits || 0;
       setCredits(totalCredits);
 
       // Fetch credit transactions with expiration details

@@ -15,9 +15,12 @@ interface UserProfile {
   name: string;
   email: string;
   phone: string | null;
-  credits: number;
   status: string;
   created_at: string;
+}
+
+interface UserCredits {
+  credits: number;
 }
 
 interface Order {
@@ -39,6 +42,7 @@ export default function AdminUserDetail() {
   const { id } = useParams();
   const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [userCredits, setUserCredits] = useState<number>(0);
   const [orders, setOrders] = useState<Order[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const navigate = useNavigate();
@@ -61,7 +65,18 @@ export default function AdminUserDetail() {
         supabase.from("credits_transactions").select("*").eq("user_id", id).order("created_at", { ascending: false }),
       ]);
 
-      if (profileResult.data) setProfile(profileResult.data);
+      if (profileResult.data) {
+        setProfile(profileResult.data);
+        
+        // Fetch credits from user_credits table
+        const { data: creditsData } = await supabase
+          .from("user_credits")
+          .select("credits")
+          .eq("email", profileResult.data.email)
+          .maybeSingle();
+        
+        setUserCredits(creditsData?.credits || 0);
+      }
       if (ordersResult.data) setOrders(ordersResult.data);
       if (transactionsResult.data) setTransactions(transactionsResult.data);
     } catch (error) {
@@ -132,7 +147,7 @@ export default function AdminUserDetail() {
                   <CreditCard className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-sm text-muted-foreground">Credits</p>
-                    <p className="font-medium text-lg">{profile.credits}</p>
+                    <p className="font-medium text-lg">{userCredits}</p>
                   </div>
                 </div>
               </div>

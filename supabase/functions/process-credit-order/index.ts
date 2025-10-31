@@ -61,32 +61,34 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`File count mismatch: expected ${photosCount}, got ${files.length}`);
     }
 
-    // Get user's current credits and profile
+    // Get user profile for email and name
     const { data: profileData, error: profileError } = await supabase
       .from("profiles")
-      .select("credits, email, name")
+      .select("email, name")
       .eq("id", user.id)
       .single();
 
     if (profileError) throw profileError;
 
-    const currentCredits = profileData?.credits || 0;
+    // Get current credits from user_credits table using RPC for atomic deduction
+    const { data: deductResult, error: creditError } = await supabase.rpc(
+      "deduct_credits_if_available",
+      {
+        email_param: profileData.email,
+        amount_param: photosCount,
+      }
+    );
 
-    // Atomically deduct credits with constraint check (prevents race conditions)
-    const { data: updatedProfile, error: creditError } = await supabase
-      .from("profiles")
-      .update({ credits: currentCredits - photosCount })
-      .eq("id", user.id)
-      .gte("credits", photosCount)  // Atomic check: only update if still enough credits
-      .select("credits")
-      .single();
+    if (creditError) {
+      throw new Error("Failed to deduct credits");
+    }
 
-    if (creditError || !updatedProfile) {
+    const result = deductResult as { success: boolean };
+    if (!result?.success) {
       return new Response(
         JSON.stringify({
-          error: "Insufficient credits or concurrent order detected",
+          error: "Insufficient credits",
           required: photosCount,
-          available: currentCredits,
         }),
         {
           status: 400,
@@ -94,6 +96,13 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
+
+    // Get updated credit balance
+    const { data: updatedCredits } = await supabase
+      .from("user_credits")
+      .select("credits")
+      .eq("email", profileData.email)
+      .single();
 
     // Deduct credits from non-expired transactions (FIFO) using admin client for transaction updates
     let creditsToDeduct = photosCount;
@@ -185,7 +194,7 @@ const handler = async (req: Request): Promise<Response> => {
         success: true,
         orders: createdOrders,
         creditsUsed: photosCount,
-        remainingCredits: updatedProfile.credits,
+        remainingCredits: updatedCredits?.credits || 0,
       }),
       {
         status: 200,

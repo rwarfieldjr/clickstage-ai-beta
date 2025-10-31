@@ -1,4 +1,4 @@
-// @version: stable-credits-1.0 | Do not auto-modify | Core token system for ClickStagePro
+// @version: stable-credits-1.1 | Unified credit table applied | Do not auto-modify
 
 import { toast } from "sonner";
 import type { SupabaseClient } from "@supabase/supabase-js";

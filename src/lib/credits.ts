@@ -1,4 +1,4 @@
-// @version: stable-credits-1.0 | Do not auto-modify | Core token system for ClickStagePro
+// @version: stable-credits-1.1 | Unified credit table applied | Do not auto-modify
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -37,4 +37,4 @@ export async function hasEnoughCredits(email: string, required: number) {
   return current >= required;
 }
 
-// @version: stable-credits-1.0 | Do not auto-modify | Last updated by Rob Warfield
+

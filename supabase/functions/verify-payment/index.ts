@@ -119,22 +119,32 @@ serve(async (req) => {
       );
     }
 
-    // Get current credits
+    // Get user email for user_credits lookup
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("credits")
+      .select("email")
       .eq("id", userId)
       .single();
 
     if (profileError) throw profileError;
 
-    const newCredits = (profile.credits || 0) + photosCount;
+    // Get current credits from user_credits table
+    const { data: userCredits, error: creditsError } = await supabaseAdmin
+      .from("user_credits")
+      .select("credits")
+      .eq("email", profile.email)
+      .maybeSingle();
 
-    // Update credits
+    const currentCredits = userCredits?.credits || 0;
+    const newCredits = currentCredits + photosCount;
+
+    // Update or insert credits in user_credits table
     const { error: updateError } = await supabaseAdmin
-      .from("profiles")
-      .update({ credits: newCredits })
-      .eq("id", userId);
+      .from("user_credits")
+      .upsert({ 
+        email: profile.email, 
+        credits: newCredits 
+      });
 
     if (updateError) throw updateError;
 
