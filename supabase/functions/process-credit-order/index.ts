@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { verifyTurnstile } from "../_shared/verify-turnstile.ts";
+import { sendSupportAlert } from "../_shared/support-alert.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -21,6 +22,10 @@ interface CreditOrderRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const startedAt = new Date().toISOString();
+  const hostname = req.headers.get("host") ?? "unknown";
+  const path = new URL(req.url).pathname;
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -219,17 +224,30 @@ const handler = async (req: Request): Promise<Response> => {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
-  } catch (error: any) {
-    console.error("[process-credit-order] Server error:", error);
+  } catch (err: any) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const status = err.message === "Unauthorized" ? 401 : 500;
+    console.error("[process-credit-order] Server error:", errorMessage);
+    
+    // Send support alert for order processing failures
+    await sendSupportAlert("Credit Order Failure – Action Required", {
+      startedAt,
+      hostname,
+      path,
+      method: req.method,
+      code: status,
+      message: errorMessage,
+      stack: err?.stack ?? "",
+    });
     
     // Use sanitized error response
     const { sanitizeError } = await import("../_shared/sanitize-error.ts");
-    const sanitized = sanitizeError(error, "Unable to process order. Please try again later.");
+    const sanitized = sanitizeError(err, "Unable to process order. Please try again later.");
     
     return new Response(
       JSON.stringify(sanitized),
       {
-        status: error.message === "Unauthorized" ? 401 : 500,
+        status,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );

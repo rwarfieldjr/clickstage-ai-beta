@@ -3,6 +3,7 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { verifyTurnstile } from "../_shared/verify-turnstile.ts";
+import { sendSupportAlert } from "../_shared/support-alert.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,7 +31,11 @@ const CreateCheckoutSchema = z.object({
   turnstileToken: z.string().min(1),
 });
 
-serve(async (req) => {
+const handler = async (req: Request): Promise<Response> => {
+  const startedAt = new Date().toISOString();
+  const hostname = req.headers.get("host") ?? "unknown";
+  const path = new URL(req.url).pathname;
+
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -256,12 +261,26 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in create-checkout", { message: errorMessage });
+  } catch (err: any) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const status = err?.statusCode ?? err?.status ?? 500;
+    logStep("ERROR in create-checkout", { message: errorMessage, status });
+    
+    // Send support alert for checkout failures
+    await sendSupportAlert("Checkout Failure – Action Required", {
+      startedAt,
+      hostname,
+      path,
+      method: req.method,
+      code: status,
+      message: errorMessage,
+      stack: err?.stack ?? "",
+    });
     
     // Use sanitized error response
     const { createErrorResponse } = await import("../_shared/sanitize-error.ts");
-    return createErrorResponse(error, 500, corsHeaders);
+    return createErrorResponse(err, status, corsHeaders);
   }
-});
+};
+
+serve(handler);
