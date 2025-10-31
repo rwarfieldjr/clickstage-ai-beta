@@ -120,6 +120,43 @@ const Upload = () => {
     });
   }, []);
 
+  // Initialize Turnstile widget
+  useEffect(() => {
+    // Set up global callback for Turnstile
+    (window as any).onTurnstileSuccess = (token: string) => {
+      setTurnstileToken(token);
+      console.log('Turnstile verification successful');
+    };
+
+    // Render Turnstile widget once the script is loaded
+    const initTurnstile = () => {
+      if ((window as any).turnstile && turnstileRef.current) {
+        (window as any).turnstile.render(turnstileRef.current, {
+          sitekey: '0x4AAAAAAB9xdhqE9Qyud_D6',
+          theme: theme === 'dark' ? 'dark' : 'light',
+          callback: (token: string) => {
+            setTurnstileToken(token);
+            console.log('Turnstile verification successful');
+          },
+        });
+      }
+    };
+
+    // Wait for Turnstile script to load
+    if ((window as any).turnstile) {
+      initTurnstile();
+    } else {
+      const checkTurnstile = setInterval(() => {
+        if ((window as any).turnstile) {
+          clearInterval(checkTurnstile);
+          initTurnstile();
+        }
+      }, 100);
+
+      return () => clearInterval(checkTurnstile);
+    }
+  }, [theme]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     const validFiles = selectedFiles.filter(
@@ -630,13 +667,7 @@ const Upload = () => {
                 {/* CAPTCHA Verification */}
                 <div className="mb-4">
                   <Label className="text-base font-semibold mb-2 block">Security Verification <span className="text-destructive">*</span></Label>
-                  <div 
-                    ref={turnstileRef}
-                    className="cf-turnstile" 
-                    data-sitekey="0x4AAAAAAB9xdhqE9Qyud_D6"
-                    data-theme={theme === 'dark' ? 'dark' : 'light'}
-                    data-callback={(token: string) => setTurnstileToken(token)}
-                  ></div>
+                  <div ref={turnstileRef}></div>
                   <p className="text-xs text-muted-foreground mt-1">
                     Complete the verification to proceed with your order.
                   </p>
