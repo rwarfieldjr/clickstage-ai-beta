@@ -22,6 +22,7 @@ import { CreditsSummary } from "@/components/CreditsSummary";
 import { handleCheckout } from "@/lib/checkout";
 import { logEvent } from "@/lib/logEvent";
 import { hasEnoughCredits, deductCredits, getCredits } from "@/lib/credits";
+import { processCreditOrStripeCheckout } from "@/lib/creditCheckout";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
 import coastal from "@/assets/style-coastal.jpg";
 import scandinavian from "@/assets/style-scandinavian.jpg";
@@ -602,17 +603,20 @@ const Upload = () => {
 
                 <button
                   type="button"
-                  onClick={() => {
-                    console.log("Complete Order clicked");
+                  onClick={async () => {
                     try {
-                      // Create a synthetic form event
-                      const syntheticEvent = {
-                        preventDefault: () => {},
-                      } as React.FormEvent;
-                      handleSubmit(syntheticEvent);
+                      if (files.length === 0) {
+                        alert("Please upload at least one photo before continuing.");
+                        return;
+                      }
+                      const photoCount = files.length;
+                      const result = await processCreditOrStripeCheckout(user?.email, photoCount);
+                      if (result.method === "credits" && result.status === "success") {
+                        alert(`✅ ${photoCount} credits used. Order placed successfully.`);
+                      }
                     } catch (err) {
-                      console.error("Checkout error:", err);
-                      alert("There was an issue submitting your order. Please try again.");
+                      console.error(err);
+                      alert("Something went wrong during checkout. Please try again.");
                     }
                   }}
                   disabled={loading}
