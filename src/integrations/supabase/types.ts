@@ -128,7 +128,37 @@ export type Database = {
         }
         Relationships: []
       }
-      credits_transactions: {
+      credit_ledger: {
+        Row: {
+          balance_after: number
+          created_at: string
+          delta: number
+          id: string
+          order_id: string | null
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          balance_after: number
+          created_at?: string
+          delta: number
+          id?: string
+          order_id?: string | null
+          reason: string
+          user_id: string
+        }
+        Update: {
+          balance_after?: number
+          created_at?: string
+          delta?: number
+          id?: string
+          order_id?: string | null
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credits_transactions_old: {
         Row: {
           amount: number
           created_at: string
@@ -420,6 +450,24 @@ export type Database = {
       user_credits: {
         Row: {
           credits: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          credits?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          credits?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_credits_old: {
+        Row: {
+          credits: number
           email: string
           id: string
           locked_until: string | null
@@ -474,10 +522,6 @@ export type Database = {
       cleanup_abandoned_checkouts: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       cleanup_old_system_logs: { Args: never; Returns: undefined }
-      deduct_credits_if_available: {
-        Args: { amount_param: number; email_param: string }
-        Returns: Json
-      }
       generate_order_number: { Args: never; Returns: string }
       get_auth_user_email: { Args: never; Returns: string }
       has_role: {
@@ -488,16 +532,30 @@ export type Database = {
         Returns: boolean
       }
       release_checkout_lock: { Args: { p_email: string }; Returns: undefined }
-      update_user_credits_atomic: {
-        Args: {
-          p_delta: number
-          p_email: string
-          p_order_id?: string
-          p_reason: string
-          p_stripe_payment_id?: string
-        }
-        Returns: Json
-      }
+      update_user_credits_atomic:
+        | {
+            Args: {
+              p_delta: number
+              p_email: string
+              p_order_id?: string
+              p_reason: string
+              p_stripe_payment_id?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_delta: number
+              p_order_id?: string
+              p_reason: string
+              p_user_id: string
+            }
+            Returns: {
+              balance: number
+              message: string
+              ok: boolean
+            }[]
+          }
     }
     Enums: {
       app_role: "admin" | "user"

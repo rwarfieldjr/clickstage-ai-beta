@@ -3,17 +3,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
 export interface CreditDetail {
-  amount: number;
-  expires_at: string | null;
-  transaction_type: string;
-  description: string | null;
+  delta: number;
+  balance_after: number;
+  reason: string;
+  order_id: string | null;
   created_at: string;
 }
 
 export interface CreditSummary {
   total: number;
-  expiring_soon: number;
-  expired: number;
+  recent_purchases: number;
+  recent_usage: number;
   details: CreditDetail[];
 }
 
@@ -34,20 +34,11 @@ export const useCredits = (user: User | null) => {
     try {
       setError(null);
       
-      // Fetch user email from profile
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("email")
-        .eq("id", user.id)
-        .single();
-
-      if (profileError) throw profileError;
-      
-      // Fetch total credits from user_credits table
+      // Fetch total credits from user_credits table using user_id
       const { data: creditsData, error: creditsError } = await supabase
         .from("user_credits")
         .select("credits")
-        .eq("email", profileData.email)
+        .eq("user_id", user.id)
         .maybeSingle();
 
       if (creditsError) throw creditsError;
@@ -55,41 +46,39 @@ export const useCredits = (user: User | null) => {
       const totalCredits = creditsData?.credits || 0;
       setCredits(totalCredits);
 
-      // Fetch credit transactions with expiration details
-      const { data: transactions, error: transactionsError } = await supabase
-        .from("credits_transactions")
+      // Fetch credit ledger (transaction history)
+      const { data: ledger, error: ledgerError } = await supabase
+        .from("credit_ledger")
         .select("*")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(50);
 
-      if (transactionsError) throw transactionsError;
+      if (ledgerError) throw ledgerError;
 
-      // Calculate expiring and expired credits
-      const now = new Date();
-      const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      // Calculate recent activity (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
-      let expiringSoon = 0;
-      let expired = 0;
+      let recentPurchases = 0;
+      let recentUsage = 0;
 
-      transactions?.forEach((transaction) => {
-        if (transaction.expires_at) {
-          const expiryDate = new Date(transaction.expires_at);
-          
-          if (expiryDate <= now) {
-            // Credits already expired
-            expired += Math.abs(transaction.amount);
-          } else if (expiryDate <= thirtyDaysFromNow && transaction.amount > 0) {
-            // Credits expiring within 30 days
-            expiringSoon += transaction.amount;
+      ledger?.forEach((entry) => {
+        const entryDate = new Date(entry.created_at);
+        if (entryDate >= thirtyDaysAgo) {
+          if (entry.delta > 0) {
+            recentPurchases += entry.delta;
+          } else {
+            recentUsage += Math.abs(entry.delta);
           }
         }
       });
 
       setCreditSummary({
         total: totalCredits,
-        expiring_soon: expiringSoon,
-        expired: expired,
-        details: transactions || [],
+        recent_purchases: recentPurchases,
+        recent_usage: recentUsage,
+        details: ledger || [],
       });
 
     } catch (error) {
