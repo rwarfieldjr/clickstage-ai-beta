@@ -124,7 +124,7 @@ const Portfolio = () => {
         {/* Featured Transformation */}
         <section className="py-10 bg-muted/30">
           <div className="container mx-auto px-4">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-4xl mx-auto">
               <BeforeAfterSlider
                 beforeImage={portfolioLivingBefore}
                 afterImage={portfolioLivingAfter}
@@ -144,7 +144,7 @@ const Portfolio = () => {
         {/* Study/Office Transformation */}
         <section className="py-16">
           <div className="container mx-auto px-4">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-4xl mx-auto">
               <BeforeAfterSlider
                 beforeImage={studyBefore}
                 afterImage={studyAfter}
@@ -170,7 +170,7 @@ const Portfolio = () => {
         {/* Day to Dusk Section */}
         <section className="py-16">
           <div className="container mx-auto px-4">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-4xl mx-auto">
               <div className="text-center mb-12">
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">Beyond Interior Staging</h2>
                 <p className="text-lg text-muted-foreground">
@@ -196,7 +196,7 @@ const Portfolio = () => {
         {/* De-Clutter Section */}
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-4xl mx-auto">
               <div className="text-center mb-12">
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">Digital De-Cluttering</h2>
                 <p className="text-lg text-muted-foreground">
