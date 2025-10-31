@@ -1,244 +1,305 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { logSystemEvent } from "../_shared/log-system-event.ts";
 import { sendSupportAlert } from "../_shared/support-alert.ts";
+import { logSystemEvent } from "../_shared/log-system-event.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-/**
- * Self-healing watchdog that repairs stuck checkout sessions
- * Runs hourly to find orders stuck in 'processing' state
- */
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  console.log('[repair-checkouts] ===== Starting checkout repair watchdog =====');
-  
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing Supabase credentials');
-    }
-
-    if (!stripeKey) {
-      throw new Error('Missing Stripe credentials');
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-
-    // Find orders stuck in processing for >15 minutes
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const STRIPE_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
     
-    const { data: stuckOrders, error: queryError } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('status', 'processing')
-      .lt('processing_started', fifteenMinutesAgo);
+    const stripe = new Stripe(STRIPE_KEY, { apiVersion: "2025-08-27.basil" });
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { 
+      auth: { persistSession: false } 
+    });
 
-    if (queryError) {
-      throw new Error(`Query error: ${queryError.message}`);
-    }
+    const STUCK_MINUTES = parseInt(Deno.env.get("REPAIR_STUCK_MINUTES") ?? "15", 10);
+    const since = new Date(Date.now() - STUCK_MINUTES * 60_000).toISOString();
 
-    if (!stuckOrders || stuckOrders.length === 0) {
-      console.log('[repair-checkouts] ✓ No stuck orders found');
-      await logSystemEvent(
-        'Repair watchdog completed - no issues found',
-        'info',
-        undefined,
-        '/repair-checkouts'
-      );
-      
+    console.log(`[repair-checkouts] Checking for orders stuck in 'processing' since ${since}`);
+
+    // Find stuck orders in 'processing' older than threshold
+    const { data: orders, error } = await supabase
+      .from("orders")
+      .select("id,user_id,status,stripe_payment_id,credits_used,created_at,updated_at")
+      .eq("status", "processing")
+      .lt("updated_at", since)
+      .order("updated_at", { ascending: true })
+      .limit(100);
+
+    if (error) {
+      console.error("[repair-checkouts] Query failed:", error);
+      await sendSupportAlert("RepairCheckouts: query failed", { 
+        code: 500, 
+        message: error.message 
+      });
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'No stuck orders found',
-          checked: 0 
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ ok: false, message: error.message }), 
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`[repair-checkouts] Found ${stuckOrders.length} stuck order(s)`);
-    
-    const repairedOrders: any[] = [];
-    const failedOrders: any[] = [];
+    if (!orders || orders.length === 0) {
+      console.log("[repair-checkouts] No stuck orders found");
+      return new Response(
+        JSON.stringify({ ok: true, checked: 0, repaired: 0 }), 
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    for (const order of stuckOrders) {
-      console.log(`[repair-checkouts] Checking order ${order.order_number} (${order.id})`);
-      
+    console.log(`[repair-checkouts] Found ${orders.length} stuck orders to process`);
+
+    let repaired = 0;
+    let failed = 0;
+    const repairedDetails: any[] = [];
+    const failedDetails: any[] = [];
+
+    for (const order of orders) {
       try {
-        // Check if payment was actually successful in Stripe
+        console.log(`[repair-checkouts] Processing order ${order.id}`);
+
+        // If Stripe payment is involved, check the Payment Intent
         if (order.stripe_payment_id) {
-          const paymentIntent = await stripe.paymentIntents.retrieve(order.stripe_payment_id);
-          
-          if (paymentIntent.status === 'succeeded') {
-            // Payment succeeded - mark order as completed
-            console.log(`[repair-checkouts] ✓ Payment verified for ${order.order_number}, completing order`);
-            
-            const { error: updateError } = await supabase
-              .from('orders')
-              .update({ 
-                status: 'completed',
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', order.id);
+          const pi = await stripe.paymentIntents.retrieve(order.stripe_payment_id);
+          console.log(`[repair-checkouts] Stripe PI ${pi.id} status: ${pi.status}`);
 
-            if (updateError) {
-              throw new Error(`Failed to update order: ${updateError.message}`);
+          if (pi.status === "succeeded") {
+            // Deduplicate using stripe_event_log
+            const { error: insErr } = await supabase
+              .from("stripe_event_log")
+              .insert({
+                id: pi.id,
+                event_type: "payment_intent.succeeded",
+              });
+
+            if (insErr && !insErr.message?.includes("duplicate key")) {
+              throw new Error("stripe_event_log insert failed: " + insErr.message);
             }
 
-            repairedOrders.push({
-              order_id: order.id,
-              order_number: order.order_number,
-              action: 'completed',
-              reason: 'Payment verified as succeeded'
-            });
+            // If this was a credit deduction order, verify it was processed
+            if (order.credits_used && order.credits_used > 0) {
+              const { data: ledger } = await supabase
+                .from("credit_ledger")
+                .select("id")
+                .eq("order_id", order.id)
+                .limit(1);
 
-            await logSystemEvent(
-              `Order ${order.order_number} auto-repaired - marked as completed`,
-              'info',
-              order.user_id,
-              '/repair-checkouts',
-              { order_id: order.id, payment_intent: paymentIntent.id }
-            );
-          } else {
-            // Payment failed or pending - cancel order
-            console.log(`[repair-checkouts] ⚠ Payment ${paymentIntent.status} for ${order.order_number}, canceling order`);
-            
-            const { error: updateError } = await supabase
-              .from('orders')
-              .update({ 
-                status: 'cancelled',
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', order.id);
+              if (!ledger || ledger.length === 0) {
+                // Deduct credits if not already done using RPC
+                const { data, error: rpcError } = await supabase.rpc(
+                  "update_user_credits_atomic",
+                  {
+                    p_user_id: order.user_id,
+                    p_delta: -order.credits_used,
+                    p_reason: "usage_repair",
+                    p_order_id: order.id,
+                  }
+                );
+                
+                if (rpcError) {
+                  await sendSupportAlert("RepairCheckouts: usage deduction failed", {
+                    code: 500,
+                    user_id: order.user_id,
+                    order_id: order.id,
+                    delta: -order.credits_used,
+                    error: rpcError.message,
+                  });
+                  failedDetails.push({ order_id: order.id, reason: "credit_deduction_failed" });
+                  failed++;
+                  continue;
+                }
 
-            if (updateError) {
-              throw new Error(`Failed to update order: ${updateError.message}`);
+                const result = Array.isArray(data) ? data[0] : data;
+                if (!result?.ok) {
+                  await sendSupportAlert("RepairCheckouts: credit deduction returned not ok", {
+                    code: 500,
+                    user_id: order.user_id,
+                    order_id: order.id,
+                    delta: -order.credits_used,
+                    result,
+                  });
+                  failedDetails.push({ order_id: order.id, reason: "credit_deduction_not_ok" });
+                  failed++;
+                  continue;
+                }
+              }
             }
 
-            repairedOrders.push({
-              order_id: order.id,
-              order_number: order.order_number,
-              action: 'cancelled',
-              reason: `Payment status: ${paymentIntent.status}`
-            });
+            // Mark order as completed
+            await supabase
+              .from("orders")
+              .update({ 
+                status: "completed", 
+                updated_at: new Date().toISOString() 
+              })
+              .eq("id", order.id);
 
             await logSystemEvent(
-              `Order ${order.order_number} auto-repaired - marked as cancelled`,
-              'warn',
+              `Order ${order.id} auto-repaired: marked as completed`,
+              "info",
               order.user_id,
-              '/repair-checkouts',
-              { order_id: order.id, payment_status: paymentIntent.status }
+              "/repair-checkouts",
+              { order_id: order.id, stripe_payment_id: pi.id }
             );
+
+            repairedDetails.push({ order_id: order.id, action: "marked_completed" });
+            repaired++;
+            console.log(`[repair-checkouts] ✅ Order ${order.id} marked as completed`);
+            continue;
           }
-        } else {
-          // No Stripe payment ID - likely credit-based order, cancel it
-          console.log(`[repair-checkouts] ⚠ No payment ID for ${order.order_number}, canceling`);
-          
-          const { error: updateError } = await supabase
-            .from('orders')
+
+          // Payment failed or was cancelled
+          if (pi.status === "canceled" || pi.status === "requires_payment_method") {
+            await supabase
+              .from("orders")
+              .update({ 
+                status: "cancelled", 
+                updated_at: new Date().toISOString() 
+              })
+              .eq("id", order.id);
+
+            await logSystemEvent(
+              `Order ${order.id} auto-repaired: marked as cancelled (PI status: ${pi.status})`,
+              "info",
+              order.user_id,
+              "/repair-checkouts",
+              { order_id: order.id, stripe_payment_id: pi.id, pi_status: pi.status }
+            );
+
+            repairedDetails.push({ order_id: order.id, action: "marked_cancelled" });
+            repaired++;
+            console.log(`[repair-checkouts] ✅ Order ${order.id} marked as cancelled`);
+            continue;
+          }
+
+          // For 'requires_action', 'processing', do nothing; it may complete later
+          console.log(`[repair-checkouts] ⏳ Order ${order.id} still processing (PI status: ${pi.status})`);
+          continue;
+        }
+
+        // No Stripe PI: check if credits were already deducted via ledger
+        const { data: ledger, error: ledErr } = await supabase
+          .from("credit_ledger")
+          .select("id")
+          .eq("order_id", order.id)
+          .limit(1);
+
+        if (ledErr) {
+          throw new Error("ledger lookup failed: " + ledErr.message);
+        }
+
+        if (ledger && ledger.length > 0) {
+          // Credits were deducted, mark as completed
+          await supabase
+            .from("orders")
             .update({ 
-              status: 'cancelled',
-              updated_at: new Date().toISOString()
+              status: "completed", 
+              updated_at: new Date().toISOString() 
             })
-            .eq('id', order.id);
+            .eq("id", order.id);
 
-          if (updateError) {
-            throw new Error(`Failed to update order: ${updateError.message}`);
-          }
+          await logSystemEvent(
+            `Order ${order.id} auto-repaired: marked as completed (credits-only)`,
+            "info",
+            order.user_id,
+            "/repair-checkouts",
+            { order_id: order.id }
+          );
 
-          repairedOrders.push({
+          repairedDetails.push({ order_id: order.id, action: "marked_completed_credits_only" });
+          repaired++;
+          console.log(`[repair-checkouts] ✅ Order ${order.id} (credits-only) marked as completed`);
+        } else {
+          // No ledger entry and no payment - cancel for safety
+          await supabase
+            .from("orders")
+            .update({ 
+              status: "cancelled", 
+              updated_at: new Date().toISOString() 
+            })
+            .eq("id", order.id);
+
+          await sendSupportAlert("RepairCheckouts: credits-only order cancelled (no ledger)", {
+            code: 409,
             order_id: order.id,
-            order_number: order.order_number,
-            action: 'cancelled',
-            reason: 'No payment reference found'
+            user_id: order.user_id,
           });
+
+          await logSystemEvent(
+            `Order ${order.id} auto-repaired: marked as cancelled (no ledger entry)`,
+            "warn",
+            order.user_id,
+            "/repair-checkouts",
+            { order_id: order.id }
+          );
+
+          repairedDetails.push({ order_id: order.id, action: "marked_cancelled_no_ledger" });
+          repaired++;
+          console.log(`[repair-checkouts] ⚠️ Order ${order.id} cancelled (no ledger)`);
         }
-      } catch (orderError) {
-        console.error(`[repair-checkouts] ✗ Failed to repair order ${order.order_number}:`, orderError);
-        failedOrders.push({
+      } catch (e: any) {
+        console.error(`[repair-checkouts] Error processing order ${order.id}:`, e);
+        await sendSupportAlert("RepairCheckouts: exception", {
+          code: 500,
           order_id: order.id,
-          order_number: order.order_number,
-          error: orderError instanceof Error ? orderError.message : String(orderError)
+          message: String(e?.message ?? e),
+          stack: e?.stack ?? "",
         });
-
-        await logSystemEvent(
-          `Failed to repair order ${order.order_number}`,
-          'error',
-          order.user_id,
-          '/repair-checkouts',
-          { order_id: order.id, error: String(orderError) }
-        );
+        failedDetails.push({ order_id: order.id, error: e.message });
+        failed++;
       }
     }
 
-    // Send alert if any orders were repaired or failed
-    if (repairedOrders.length > 0 || failedOrders.length > 0) {
-      await sendSupportAlert(
-        `Checkout Repair Watchdog Report - ${repairedOrders.length} repaired, ${failedOrders.length} failed`,
-        {
-          timestamp: new Date().toISOString(),
-          total_stuck: stuckOrders.length,
-          repaired: repairedOrders,
-          failed: failedOrders
-        }
-      );
+    // Send summary if any orders were processed
+    if (repaired > 0 || failed > 0) {
+      await sendSupportAlert("RepairCheckouts: Batch Summary", {
+        code: 200,
+        checked: orders.length,
+        repaired,
+        failed,
+        repaired_details: repairedDetails,
+        failed_details: failedDetails,
+      });
     }
 
-    const summary = {
-      success: true,
-      checked: stuckOrders.length,
-      repaired: repairedOrders.length,
-      failed: failedOrders.length,
-      details: {
-        repaired: repairedOrders,
-        failed: failedOrders
-      }
-    };
-
-    console.log('[repair-checkouts] ===== Watchdog completed =====', summary);
-
-    return new Response(
-      JSON.stringify(summary),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error) {
-    console.error('[repair-checkouts] Critical error:', error);
-    
-    await logSystemEvent(
-      'Repair watchdog failed',
-      'critical',
-      undefined,
-      '/repair-checkouts',
-      { error: error instanceof Error ? error.message : String(error) }
-    );
-
-    await sendSupportAlert(
-      'Checkout Repair Watchdog Failed',
-      {
-        error: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString()
-      }
-    );
+    console.log(`[repair-checkouts] ✅ Batch complete: ${repaired} repaired, ${failed} failed`);
 
     return new Response(
       JSON.stringify({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        ok: true, 
+        checked: orders.length,
+        repaired,
+        failed,
+        repaired_details: repairedDetails,
+        failed_details: failedDetails,
+      }), 
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
+    );
+  } catch (error: any) {
+    console.error("[repair-checkouts] Critical error:", error);
+    await sendSupportAlert("RepairCheckouts: Critical Failure", {
+      code: 500,
+      message: error.message,
+      stack: error.stack,
+    });
+    
+    return new Response(
+      JSON.stringify({ ok: false, error: error.message }), 
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
