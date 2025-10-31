@@ -20,6 +20,7 @@ import { useCredits } from "@/hooks/use-credits";
 import { useTheme } from "@/hooks/use-theme";
 import { CreditsSummary } from "@/components/CreditsSummary";
 import { handleCheckout } from "@/lib/checkout";
+import { logEvent } from "@/lib/logEvent";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
 import coastal from "@/assets/style-coastal.jpg";
 import scandinavian from "@/assets/style-scandinavian.jpg";
@@ -176,6 +177,15 @@ const Upload = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Log checkout event
+    logEvent("checkout_clicked", { 
+      time: Date.now(),
+      fileCount: files.length,
+      bundle: selectedBundle,
+      style: stagingStyle,
+      paymentMethod
+    });
 
     // JavaScript validation with alerts
     if (!smsConsent) {
