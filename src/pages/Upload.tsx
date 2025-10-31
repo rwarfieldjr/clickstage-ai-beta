@@ -705,7 +705,7 @@ const Upload = () => {
                   type="submit"
                   className="w-full bg-accent hover:bg-accent/90"
                   size="lg"
-                  disabled={!smsConsent || loading || (() => {
+                  disabled={loading || (() => {
                     const bundle = bundles.find(b => b.id === selectedBundle);
                     return bundle && files.length > bundle.photos;
                   })()}
