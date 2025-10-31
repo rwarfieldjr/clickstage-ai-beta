@@ -28,7 +28,8 @@ export async function deductCredits(email: string, amount: number) {
     amount_param: amount 
   });
   if (error) throw error;
-  if (data?.success !== true) throw new Error("Insufficient credits");
+  const result = data as { success: boolean };
+  if (result?.success !== true) throw new Error("Insufficient credits");
 }
 
 export async function hasEnoughCredits(email: string, required: number) {

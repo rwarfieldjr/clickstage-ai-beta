@@ -47,6 +47,7 @@ const Upload = () => {
   const [smsConsent, setSmsConsent] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "credits">("stripe");
   const [stagingNotes, setStagingNotes] = useState("");
+  const [error, setError] = useState<string>("");
   const { credits, creditSummary, loading: creditsLoading, refetchCredits } = useCredits(user);
   const { theme } = useTheme();
   const [userCreditsBalance, setUserCreditsBalance] = useState<number>(0);
@@ -601,22 +602,53 @@ const Upload = () => {
                   </div>
                 </div>
 
+                {/* Status feedback */}
+                <div className="min-h-[24px] mb-2">
+                  {loading && (
+                    <div className="text-blue-600 text-sm font-medium animate-pulse">
+                      Processing your order…
+                    </div>
+                  )}
+                  {error && (
+                    <div className="text-red-600 text-sm font-medium">
+                      {error}
+                    </div>
+                  )}
+                </div>
+
                 <button
                   type="button"
                   onClick={async () => {
+                    setLoading(true);
+                    setError("");
+                    
                     try {
                       if (files.length === 0) {
-                        alert("Please upload at least one photo before continuing.");
+                        setError("Please upload at least one photo before continuing.");
                         return;
                       }
+                      
                       const photoCount = files.length;
                       const result = await processCreditOrStripeCheckout(user?.email, photoCount);
+                      
                       if (result.method === "credits" && result.status === "success") {
-                        alert(`✅ ${photoCount} credits used. Order placed successfully.`);
+                        toast.success(`Order placed successfully! ${photoCount} credits used.`);
+                        // Refetch credits to update the display
+                        await refetchCredits();
+                        // Navigate to dashboard
+                        navigate('/dashboard');
+                      } else if (result.method === "stripe" && result.status === "redirect") {
+                        toast.info("Redirecting to payment page...");
                       }
-                    } catch (err) {
+                    } catch (err: any) {
                       console.error(err);
-                      alert("Something went wrong during checkout. Please try again.");
+                      const errorMessage = err.message === "Insufficient credits" 
+                        ? "Insufficient credits. Please purchase more credits to continue."
+                        : "Something went wrong during checkout. Please try again.";
+                      setError(errorMessage);
+                      toast.error(errorMessage);
+                    } finally {
+                      setLoading(false);
                     }
                   }}
                   disabled={loading}
