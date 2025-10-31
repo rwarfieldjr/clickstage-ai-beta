@@ -23,15 +23,12 @@ export async function addCredits(email: string, amount: number) {
 }
 
 export async function deductCredits(email: string, amount: number) {
-  const current = await getCredits(email);
-  if (current < amount) throw new Error("Not enough credits");
-  const newTotal = current - amount;
-  const { error } = await supabase
-    .from("user_credits")
-    .update({ credits: newTotal })
-    .eq("email", email);
+  const { data, error } = await supabase.rpc("deduct_credits_if_available", { 
+    email_param: email, 
+    amount_param: amount 
+  });
   if (error) throw error;
-  return newTotal;
+  if (data?.success !== true) throw new Error("Insufficient credits");
 }
 
 export async function hasEnoughCredits(email: string, required: number) {

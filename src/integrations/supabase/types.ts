@@ -378,6 +378,10 @@ export type Database = {
     }
     Functions: {
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      deduct_credits_if_available: {
+        Args: { amount_param: number; email_param: string }
+        Returns: Json
+      }
       generate_order_number: { Args: never; Returns: string }
       has_role: {
         Args: {
