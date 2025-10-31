@@ -1,3 +1,5 @@
+// @version: stable-credits-1.0 | Do not auto-modify | Core token system for ClickStagePro
+
 import { toast } from "sonner";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NavigateFunction } from "react-router-dom";

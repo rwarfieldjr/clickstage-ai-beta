@@ -1,3 +1,5 @@
+// @version: stable-credits-1.0 | Do not auto-modify | Core token system for ClickStagePro
+
 import { getCredits, deductCredits } from "./credits";
 
 interface CheckoutResult {
