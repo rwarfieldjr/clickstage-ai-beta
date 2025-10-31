@@ -330,6 +330,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_credits: {
+        Row: {
+          credits: number
+          email: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          credits?: number
+          email: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          credits?: number
+          email?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
