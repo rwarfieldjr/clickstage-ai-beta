@@ -1,8 +1,11 @@
-// @version: stable-credits-1.0 | Do not auto-modify | Core token system for ClickStagePro
+// @version: stable-credits-2.0 | STABILITY HARDENED | Atomic credit updates with full audit trail
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
+import { updateUserCreditsAtomic } from "../_shared/atomic-credits.ts";
+import { logSystemEvent } from "../_shared/log-system-event.ts";
+import { sendSupportAlert } from "../_shared/support-alert.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,6 +69,13 @@ serve(async (req) => {
       const session = event.data.object as Stripe.Checkout.Session;
       
       console.log("Processing checkout.session.completed for session:", session.id);
+      await logSystemEvent(
+        'Stripe webhook received - checkout.session.completed',
+        'info',
+        undefined,
+        '/stripe-webhook',
+        { session_id: session.id }
+      );
 
       // Initialize Supabase admin client
       const supabaseAdmin = createClient(
@@ -73,7 +83,47 @@ serve(async (req) => {
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
       );
 
-      // SECURITY: Check if session already processed (idempotency)
+      // SECURITY: Deduplicate using stripe_event_log
+      try {
+        const { error: eventLogError } = await supabaseAdmin
+          .from("stripe_event_log")
+          .insert({
+            id: event.id,
+            event_type: event.type,
+            payload: event as any
+          });
+
+        if (eventLogError) {
+          if (eventLogError.code === '23505') {
+            console.log("Event already processed (duplicate):", event.id);
+            await logSystemEvent(
+              'Duplicate Stripe event ignored',
+              'info',
+              undefined,
+              '/stripe-webhook',
+              { event_id: event.id, session_id: session.id }
+            );
+            return new Response(
+              JSON.stringify({ received: true, message: "Already processed" }),
+              { 
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+              }
+            );
+          }
+          throw eventLogError;
+        }
+        console.log("Event logged successfully:", event.id);
+      } catch (logError) {
+        console.error("Failed to log event:", logError);
+        await sendSupportAlert(
+          'Stripe webhook event log failure',
+          { event_id: event.id, error: String(logError) }
+        );
+        // Continue processing anyway
+      }
+
+      // SECURITY: Check if session already processed (double-check with processed_sessions)
       const { data: existingSession } = await supabaseAdmin
         .from("processed_stripe_sessions")
         .select("session_id")
@@ -81,7 +131,14 @@ serve(async (req) => {
         .maybeSingle();
 
       if (existingSession) {
-        console.log("Session already processed, skipping:", session.id);
+        console.log("Session already processed (double-check), skipping:", session.id);
+        await logSystemEvent(
+          'Duplicate session processing prevented',
+          'warn',
+          undefined,
+          '/stripe-webhook',
+          { session_id: session.id }
+        );
         return new Response(
           JSON.stringify({ received: true, message: "Already processed" }),
           { 
@@ -182,33 +239,58 @@ serve(async (req) => {
         console.log("Session marked as processed:", session.id);
       }
 
-      // Add credits for the customer
-      if (photosCount > 0) {
-        console.log(`Adding ${photosCount} credits for ${customerEmail}`);
+      // Add credits using atomic function with full audit trail
+      if (photosCount > 0 && userId) {
+        console.log(`Adding ${photosCount} credits for ${customerEmail} using atomic update`);
         
-        // Get current credits
-        const { data: existingCredits } = await supabaseAdmin
-          .from("user_credits")
-          .select("credits")
-          .eq("email", customerEmail)
-          .single();
+        const creditResult = await updateUserCreditsAtomic(
+          supabaseAdmin,
+          customerEmail,
+          photosCount,
+          `Stripe payment - Session ${session.id}`,
+          undefined, // No order_id yet
+          session.payment_intent as string || session.id
+        );
         
-        const currentCredits = existingCredits?.credits || 0;
-        const newTotal = currentCredits + photosCount;
-        
-        // Upsert credits
-        const { error: creditsError } = await supabaseAdmin
-          .from("user_credits")
-          .upsert({ 
-            email: customerEmail, 
-            credits: newTotal,
-            updated_at: new Date().toISOString()
-          });
-        
-        if (creditsError) {
-          console.error("Error adding credits:", creditsError);
+        if (!creditResult.success) {
+          console.error("CRITICAL: Failed to add credits:", creditResult.error);
+          await logSystemEvent(
+            'Critical: Credit addition failed after payment',
+            'critical',
+            userId,
+            '/stripe-webhook',
+            { 
+              session_id: session.id, 
+              email: customerEmail, 
+              amount: photosCount,
+              error: creditResult.error 
+            }
+          );
+          await sendSupportAlert(
+            'CRITICAL: Credit Addition Failed After Payment',
+            {
+              session_id: session.id,
+              email: customerEmail,
+              amount: photosCount,
+              payment_intent: session.payment_intent,
+              error: creditResult.error
+            }
+          );
+          // Continue processing to create orders, but alert support
         } else {
-          console.log(`Successfully added ${photosCount} credits for ${customerEmail}. New total: ${newTotal}`);
+          console.log(`✓ Successfully added ${photosCount} credits atomically:`, creditResult);
+          await logSystemEvent(
+            'Credits added successfully after payment',
+            'info',
+            userId,
+            '/stripe-webhook',
+            { 
+              session_id: session.id, 
+              email: customerEmail, 
+              amount: photosCount,
+              new_balance: creditResult.newBalance
+            }
+          );
         }
       }
 
@@ -216,6 +298,13 @@ serve(async (req) => {
       const orderNumbers: string[] = [];
       if (files.length > 0 && userId) {
         console.log(`Creating ${files.length} orders for user ${userId}`);
+        await logSystemEvent(
+          'Creating orders from webhook',
+          'info',
+          userId,
+          '/stripe-webhook',
+          { session_id: session.id, file_count: files.length }
+        );
         
         for (const fileUrl of files) {
           const { data: orderData, error: orderError } = await supabaseAdmin
@@ -227,12 +316,20 @@ serve(async (req) => {
               status: "pending",
               stripe_payment_id: session.id,
               credits_used: 1,
+              processing_started: new Date().toISOString()
             })
             .select("order_number")
             .single();
 
           if (orderError) {
             console.error("Error creating order:", orderError);
+            await logSystemEvent(
+              'Order creation failed',
+              'error',
+              userId,
+              '/stripe-webhook',
+              { session_id: session.id, error: orderError.message }
+            );
           } else if (orderData?.order_number) {
             console.log("Order created:", orderData.order_number);
             orderNumbers.push(orderData.order_number);
@@ -302,6 +399,24 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error("Webhook error:", error);
+    
+    await logSystemEvent(
+      'Webhook processing error',
+      'critical',
+      undefined,
+      '/stripe-webhook',
+      { error: error.message, stack: error.stack }
+    );
+    
+    await sendSupportAlert(
+      'Stripe Webhook Processing Error',
+      {
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      }
+    );
+    
     // Return 200 even on error to prevent Stripe from retrying
     return new Response(
       JSON.stringify({ 

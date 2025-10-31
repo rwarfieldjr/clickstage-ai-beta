@@ -217,6 +217,7 @@ export type Database = {
           id: string
           order_number: string
           original_image_url: string
+          processing_started: string | null
           staged_image_url: string | null
           staging_style: string
           status: string
@@ -231,6 +232,7 @@ export type Database = {
           id?: string
           order_number?: string
           original_image_url: string
+          processing_started?: string | null
           staged_image_url?: string | null
           staging_style: string
           status?: string
@@ -245,6 +247,7 @@ export type Database = {
           id?: string
           order_number?: string
           original_image_url?: string
+          processing_started?: string | null
           staged_image_url?: string | null
           staging_style?: string
           status?: string
@@ -357,23 +360,83 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_event_log: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json | null
+          processed_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id: string
+          payload?: Json | null
+          processed_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          processed_at?: string
+        }
+        Relationships: []
+      }
+      system_logs: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          path: string | null
+          payload: Json | null
+          severity: string
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          path?: string | null
+          payload?: Json | null
+          severity: string
+          timestamp?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          path?: string | null
+          payload?: Json | null
+          severity?: string
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_credits: {
         Row: {
           credits: number
           email: string
           id: string
+          locked_until: string | null
           updated_at: string
         }
         Insert: {
           credits?: number
           email: string
           id?: string
+          locked_until?: string | null
           updated_at?: string
         }
         Update: {
           credits?: number
           email?: string
           id?: string
+          locked_until?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -404,8 +467,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      acquire_checkout_lock: {
+        Args: { p_email: string; p_lock_duration_seconds?: number }
+        Returns: boolean
+      }
       cleanup_abandoned_checkouts: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      cleanup_old_system_logs: { Args: never; Returns: undefined }
       deduct_credits_if_available: {
         Args: { amount_param: number; email_param: string }
         Returns: Json
@@ -418,6 +486,17 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      release_checkout_lock: { Args: { p_email: string }; Returns: undefined }
+      update_user_credits_atomic: {
+        Args: {
+          p_delta: number
+          p_email: string
+          p_order_id?: string
+          p_reason: string
+          p_stripe_payment_id?: string
+        }
+        Returns: Json
       }
     }
     Enums: {

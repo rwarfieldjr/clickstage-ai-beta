@@ -59,3 +59,9 @@ verify_jwt = false
 
 [functions.purge-abandoned-checkouts]
 verify_jwt = false
+
+[functions.repair-checkouts]
+verify_jwt = false
+
+[functions.checkout-selftest]
+verify_jwt = false

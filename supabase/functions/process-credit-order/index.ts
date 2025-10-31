@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
 import { verifyTurnstile } from "../_shared/verify-turnstile.ts";
 import { sendSupportAlert } from "../_shared/support-alert.ts";
+import { updateUserCreditsAtomic, acquireCheckoutLock, releaseCheckoutLock } from "../_shared/atomic-credits.ts";
+import { logSystemEvent } from "../_shared/log-system-event.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -84,6 +86,13 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log(`Processing credit order for user ${user.id}: ${photosCount} photos`);
+    await logSystemEvent(
+      'Credit order processing started',
+      'info',
+      user.id,
+      path,
+      { photos_count: photosCount, session_id: sessionId }
+    );
 
     // Validate files count
     if (files.length !== photosCount) {
@@ -99,149 +108,174 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (profileError) throw profileError;
 
-    // Get current credits from user_credits table using RPC for atomic deduction
-    const { data: deductResult, error: creditError } = await supabase.rpc(
-      "deduct_credits_if_available",
-      {
-        email_param: profileData.email,
-        amount_param: photosCount,
-      }
-    );
-
-    if (creditError) {
-      throw new Error("Failed to deduct credits");
-    }
-
-    const result = deductResult as { success: boolean };
-    if (!result?.success) {
-      await sendSupportAlert("Credit Order Blocked – Insufficient Credits", {
-        hostname,
+    // STABILITY: Acquire checkout lock to prevent race conditions
+    console.log('[process-credit-order] Acquiring checkout lock...');
+    const lockAcquired = await acquireCheckoutLock(supabaseAdmin, profileData.email, 300);
+    
+    if (!lockAcquired) {
+      console.warn('[process-credit-order] Checkout already in progress for user');
+      await logSystemEvent(
+        'Concurrent checkout blocked by lock',
+        'warn',
+        user.id,
         path,
-        code: 400,
-        reason: "insufficient_credits",
-        required: photosCount,
-        user_id: user.id,
-      });
+        { email: profileData.email }
+      );
       return new Response(
         JSON.stringify({
-          error: "Insufficient credits",
-          required: photosCount,
+          error: "A checkout is already in progress. Please wait and try again.",
+          code: "CHECKOUT_IN_PROGRESS"
         }),
         {
-          status: 400,
+          status: 429,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
     }
 
-    // Get updated credit balance
-    const { data: updatedCredits } = await supabase
-      .from("user_credits")
-      .select("credits")
-      .eq("email", profileData.email)
-      .single();
-
-    // Deduct credits from non-expired transactions (FIFO) using admin client for transaction updates
-    let creditsToDeduct = photosCount;
-    const { data: transactions, error: transError } = await supabaseAdmin
-      .from("credits_transactions")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("transaction_type", "purchase")
-      .gt("amount", 0)
-      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-      .order("created_at", { ascending: true });
-
-    if (transError) throw transError;
-
-    // Deduct from oldest transactions first
-    for (const transaction of transactions || []) {
-      if (creditsToDeduct <= 0) break;
-
-      const deductAmount = Math.min(transaction.amount, creditsToDeduct);
-      
-      // Update the transaction using admin client
-      const { error: updateError } = await supabaseAdmin
-        .from("credits_transactions")
-        .update({ amount: transaction.amount - deductAmount })
-        .eq("id", transaction.id);
-
-      if (updateError) throw updateError;
-
-      creditsToDeduct -= deductAmount;
-    }
-
-    // Create orders for each file
-    const orderPromises = files.map(async (filePath) => {
-      const { data: orderData, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user.id,
-          original_image_url: filePath,
-          staging_style: stagingStyle,
-          status: "pending",
-          credits_used: 1,
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-      return orderData;
-    });
-
-    const createdOrders = await Promise.all(orderPromises);
-
-    // Record the credit usage transaction (user-level client respects RLS)
-    const { error: transactionError } = await supabase
-      .from("credits_transactions")
-      .insert({
-        user_id: user.id,
-        amount: -photosCount,
-        transaction_type: "usage",
-        description: `Used ${photosCount} credits for virtual staging`,
-      });
-
-    if (transactionError) throw transactionError;
-
-    console.log(`Successfully created ${createdOrders.length} orders using ${photosCount} credits`);
-
-    // Send order notification email
     try {
-      await supabase.functions.invoke("send-order-notification", {
-        body: {
-          sessionId: sessionId,
-          orderNumber: createdOrders[0]?.order_number,
-          customerName: profileData.name || "Customer",
-          customerEmail: profileData.email,
-          photosCount: photosCount,
-          amountPaid: 0, // Credit order, no payment
-          files: files,
-          stagingStyle: stagingStyle,
-          stagingNotes: stagingNotes,
-          paymentMethod: "credits",
-        },
-      });
-    } catch (emailError) {
-      console.error("Failed to send notification email:", emailError);
-      // Don't fail the order if email fails
-    }
+      // STABILITY: Use atomic credit deduction with full audit trail
+      console.log(`[process-credit-order] Deducting ${photosCount} credits atomically...`);
+      const deductResult = await updateUserCreditsAtomic(
+        supabaseAdmin,
+        profileData.email,
+        -photosCount,
+        `Credit order - ${photosCount} photos`,
+        undefined, // order_id will be added later
+        undefined // No Stripe payment for credit orders
+      );
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        orders: createdOrders,
-        creditsUsed: photosCount,
-        remainingCredits: updatedCredits?.credits || 0,
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+      if (!deductResult.success) {
+        console.warn('[process-credit-order] Insufficient credits:', deductResult);
+        await logSystemEvent(
+          'Credit order blocked - insufficient credits',
+          'warn',
+          user.id,
+          path,
+          { required: photosCount, error: deductResult.error }
+        );
+        await sendSupportAlert("Credit Order Blocked – Insufficient Credits", {
+          hostname,
+          path,
+          code: 400,
+          reason: "insufficient_credits",
+          required: photosCount,
+          current: deductResult.previousBalance,
+          user_id: user.id,
+          email: profileData.email
+        });
+        return new Response(
+          JSON.stringify({
+            error: "Insufficient credits",
+            required: photosCount,
+            available: deductResult.previousBalance
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
       }
-    );
+
+      console.log(`[process-credit-order] ✓ Credits deducted successfully:`, deductResult);
+      await logSystemEvent(
+        'Credits deducted for order',
+        'info',
+        user.id,
+        path,
+        { 
+          amount: photosCount, 
+          previous: deductResult.previousBalance,
+          new: deductResult.newBalance 
+        }
+      );
+
+      // Create orders for each file
+      const orderPromises = files.map(async (filePath) => {
+        const { data: orderData, error: orderError } = await supabase
+          .from("orders")
+          .insert({
+            user_id: user.id,
+            original_image_url: filePath,
+            staging_style: stagingStyle,
+            status: "pending",
+            credits_used: 1,
+            processing_started: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (orderError) throw orderError;
+        return orderData;
+      });
+
+      const createdOrders = await Promise.all(orderPromises);
+      console.log(`✓ Successfully created ${createdOrders.length} orders using ${photosCount} credits`);
+      await logSystemEvent(
+        'Orders created successfully',
+        'info',
+        user.id,
+        path,
+        { order_count: createdOrders.length, session_id: sessionId }
+      );
+
+      // Send order notification email
+      try {
+        await supabase.functions.invoke("send-order-notification", {
+          body: {
+            sessionId: sessionId,
+            orderNumber: createdOrders[0]?.order_number,
+            customerName: profileData.name || "Customer",
+            customerEmail: profileData.email,
+            photosCount: photosCount,
+            amountPaid: 0, // Credit order, no payment
+            files: files,
+            stagingStyle: stagingStyle,
+            stagingNotes: stagingNotes,
+            paymentMethod: "credits",
+          },
+        });
+      } catch (emailError) {
+        console.error("Failed to send notification email:", emailError);
+        await logSystemEvent(
+          'Order notification email failed',
+          'warn',
+          user.id,
+          path,
+          { error: String(emailError) }
+        );
+        // Don't fail the order if email fails
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          orders: createdOrders,
+          creditsUsed: photosCount,
+          remainingCredits: deductResult.newBalance,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    } finally {
+      // STABILITY: Always release the checkout lock
+      await releaseCheckoutLock(supabaseAdmin, profileData.email);
+      console.log('[process-credit-order] Checkout lock released');
+    }
   } catch (err: any) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     const status = err.message === "Unauthorized" ? 401 : 500;
     console.error("[process-credit-order] Server error:", errorMessage);
+    
+    await logSystemEvent(
+      'Credit order processing failed',
+      'error',
+      undefined,
+      path,
+      { error: errorMessage, stack: err?.stack }
+    );
     
     // Send support alert for order processing failures
     await sendSupportAlert("Credit Order Failure – Action Required", {
