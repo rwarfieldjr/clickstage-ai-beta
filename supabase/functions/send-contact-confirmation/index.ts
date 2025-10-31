@@ -11,9 +11,9 @@ const corsHeaders = {
 };
 
 const ContactSchema = z.object({
-  name: z.string().trim().min(1).max(100),
-  email: z.string().trim().email().max(255),
-  message: z.string().trim().min(1).max(1000),
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  message: z.string().trim().min(1, "Message is required").max(5000, "Message must be less than 5000 characters"),
 });
 
 const handler = async (req: Request): Promise<Response> => {
@@ -24,8 +24,27 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const body = await req.json();
-    const { name, email, message } = ContactSchema.parse(body);
+    
+    // Validate input with Zod
+    const parseResult = ContactSchema.safeParse(body);
+    if (!parseResult.success) {
+      console.error("Validation failed:", parseResult.error.errors);
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid form input",
+          details: parseResult.error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message
+          }))
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
+    const { name, email, message } = parseResult.data;
     console.log("Processing contact form submission for:", email);
 
     // Send confirmation email to customer
@@ -164,18 +183,11 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-contact-confirmation function:", error);
     
-    if (error.name === "ZodError") {
-      return new Response(
-        JSON.stringify({ error: "Invalid input data", details: error.errors }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-    
     return new Response(
-      JSON.stringify({ error: error.message || "Failed to send emails" }),
+      JSON.stringify({ 
+        error: "Failed to send emails",
+        code: "EMAIL_SEND_ERROR"
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
