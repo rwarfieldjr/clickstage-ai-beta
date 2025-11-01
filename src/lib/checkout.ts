@@ -5,6 +5,17 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NavigateFunction } from "react-router-dom";
 import { sanitizeFilename, sanitizeName } from "./sanitizeFilename";
 
+// Load test utilities in development
+if (import.meta.env.DEV) {
+  import("./testCheckout").then((module) => {
+    if (typeof window !== "undefined") {
+      (window as any).testAllCheckouts = module.testAllCheckouts;
+      (window as any).testSingleTier = module.testSingleTier;
+      (window as any).testConnectivity = module.testConnectivity;
+    }
+  });
+}
+
 interface Bundle {
   id: string;
   name: string;
