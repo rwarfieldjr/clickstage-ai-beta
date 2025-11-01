@@ -95,7 +95,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       // If within the same hour window
       if (now.getTime() - windowStart.getTime() < 60 * 60 * 1000) {
-        if (rateLimitData.attempt_count >= 5) {
+        if (rateLimitData.attempt_count >= 50) {
           logStep("Rate limit exceeded", { ip: clientIp, attempts: rateLimitData.attempt_count });
           await sendSupportAlert("Checkout Blocked – Rate Limit", {
             hostname,
