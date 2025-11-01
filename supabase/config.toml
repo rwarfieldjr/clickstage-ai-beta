@@ -40,10 +40,10 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.sync-credits]
-verify_jwt = false
+verify_jwt = true
 
 [functions.notify-alert]
-verify_jwt = false
+verify_jwt = true
 
 [functions.process-credit-order]
 verify_jwt = true
@@ -52,19 +52,16 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.daily-digest]
-verify_jwt = false
+verify_jwt = true
 
 [functions.purge-error-events]
-verify_jwt = false
+verify_jwt = true
 
 [functions.purge-abandoned-checkouts]
-verify_jwt = false
+verify_jwt = true
 
 [functions.repair-checkouts]
-verify_jwt = false
+verify_jwt = true
 
 [functions.checkout-selftest]
-verify_jwt = false
-
-[functions.repair-checkouts]
-verify_jwt = false
+verify_jwt = true

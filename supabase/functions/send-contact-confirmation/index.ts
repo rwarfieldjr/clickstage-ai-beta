@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { sanitizeText } from "../_shared/sanitize-html.ts";
+import { isRateLimited } from "../_shared/rate-limit.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -13,7 +15,7 @@ const corsHeaders = {
 const ContactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
   email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
-  message: z.string().trim().min(1, "Message is required").max(5000, "Message must be less than 5000 characters"),
+  message: z.string().trim().min(1, "Message is required").max(2000, "Message must be less than 2000 characters"),
 });
 
 const handler = async (req: Request): Promise<Response> => {
@@ -45,12 +47,33 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const { name, email, message } = parseResult.data;
-    console.log("Processing contact form submission for:", email);
+    
+    // Check rate limit (3 submissions per hour per email)
+    if (isRateLimited(email, 3, 60)) {
+      console.warn("Rate limit exceeded for:", email);
+      return new Response(
+        JSON.stringify({ 
+          error: "Too many requests. Please wait before submitting again.",
+          code: "RATE_LIMIT_EXCEEDED"
+        }),
+        {
+          status: 429,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+    
+    // Sanitize inputs to prevent XSS in email contexts
+    const safeName = sanitizeText(name);
+    const safeEmail = email.toLowerCase().trim();
+    const safeMessage = sanitizeText(message);
+    
+    console.log("Processing contact form submission for:", safeEmail);
 
     // Send confirmation email to customer
     const customerEmail = await resend.emails.send({
       from: "ClickStage Pro <noreply@clickstagepro.com>",
-      to: [email],
+      to: [safeEmail],
       subject: "We Received Your Message - ClickStagePro",
       html: `
         <!DOCTYPE html>
@@ -73,12 +96,12 @@ const handler = async (req: Request): Promise<Response> => {
                 <h1 style="margin: 0;">Thank You for Contacting Us!</h1>
               </div>
               <div class="content">
-                <p>Hi ${name},</p>
+                <p>Hi ${safeName},</p>
                 <p>We've received your message and will get back to you as soon as possible, typically within 1 business day.</p>
                 
                 <div class="message-box">
                   <strong>Your Message:</strong>
-                  <p style="margin-top: 10px;">${message.replace(/\n/g, '<br>')}</p>
+                  <p style="margin-top: 10px;">${safeMessage.replace(/\n/g, '<br>')}</p>
                 </div>
                 
                 <p>In the meantime, feel free to explore:</p>
@@ -113,7 +136,7 @@ const handler = async (req: Request): Promise<Response> => {
     const adminEmail = await resend.emails.send({
       from: "ClickStage Pro <noreply@clickstagepro.com>",
       to: ["support@clickstagepro.com"],
-      subject: `New Contact Form Submission from ${name}`,
+      subject: `New Contact Form Submission from ${safeName}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -136,10 +159,10 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
               <div class="content">
                 <div class="info-row">
-                  <span class="label">Name:</span> ${name}
+                  <span class="label">Name:</span> ${safeName}
                 </div>
                 <div class="info-row">
-                  <span class="label">Email:</span> <a href="mailto:${email}">${email}</a>
+                  <span class="label">Email:</span> <a href="mailto:${safeEmail}">${safeEmail}</a>
                 </div>
                 <div class="info-row">
                   <span class="label">Submitted:</span> ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} EST
@@ -147,7 +170,7 @@ const handler = async (req: Request): Promise<Response> => {
                 
                 <div class="message-box">
                   <strong>Message:</strong>
-                  <p style="margin-top: 10px; white-space: pre-wrap;">${message}</p>
+                  <p style="margin-top: 10px; white-space: pre-wrap;">${safeMessage}</p>
                 </div>
                 
                 <p style="margin-top: 20px; color: #666; font-size: 14px;">
