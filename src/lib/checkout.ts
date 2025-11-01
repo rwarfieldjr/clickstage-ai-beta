@@ -358,6 +358,12 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
 
     if (checkoutError) throw checkoutError;
 
+    // Handle new 2xx response format from edge function
+    if (!(checkoutData as any)?.success) {
+      const errorMsg = (checkoutData as any)?.error || "Checkout failed";
+      throw new Error(errorMsg);
+    }
+
     if ((checkoutData as any)?.url) {
       console.log("[STABILITY-CHECK] ✓ Checkout session created successfully", { 
         sessionId: (checkoutData as any).sessionId,
