@@ -342,37 +342,60 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     // Create checkout session with all metadata
     console.log("[STABILITY-CHECK] Creating Stripe checkout with Turnstile token");
     toast.loading("Creating checkout session...");
-    const { data: checkoutData, error: checkoutError } = await retryEdgeFunction('create-checkout', {
-      body: {
-        priceId: bundle.priceId,
-        contactInfo: contactInfo,
-        files: uploadedFiles,
-        stagingStyle: stagingStyle,
-        photosCount: bundle.photos, // Use bundle.photos for correct credit amount
-        sessionId: sessionId,
-        turnstileToken: turnstileToken,
-      },
-    });
-
-    toast.dismiss();
-
-    if (checkoutError) throw checkoutError;
-
-    // Handle new 2xx response format from edge function
-    if (!(checkoutData as any)?.success) {
-      const errorMsg = (checkoutData as any)?.error || "Checkout failed";
-      throw new Error(errorMsg);
-    }
-
-    if ((checkoutData as any)?.url) {
-      console.log("[STABILITY-CHECK] ✓ Checkout session created successfully", { 
-        sessionId: (checkoutData as any).sessionId,
-        hasUrl: !!(checkoutData as any).url
+    
+    try {
+      const { data: checkoutData, error: checkoutError } = await retryEdgeFunction('create-checkout', {
+        body: {
+          priceId: bundle.priceId,
+          contactInfo: contactInfo,
+          files: uploadedFiles,
+          stagingStyle: stagingStyle,
+          photosCount: bundle.photos, // Use bundle.photos for correct credit amount
+          sessionId: sessionId,
+          turnstileToken: turnstileToken,
+        },
       });
+
+      toast.dismiss();
+
+      if (checkoutError) throw checkoutError;
+
+      // Handle new 2xx response format from edge function
+      if (!(checkoutData as any)?.success) {
+        const errorMsg = (checkoutData as any)?.error || "Checkout failed";
+        throw new Error(errorMsg);
+      }
+
+      if ((checkoutData as any)?.url) {
+        console.log("[STABILITY-CHECK] ✓ Checkout session created successfully", { 
+          sessionId: (checkoutData as any).sessionId,
+          hasUrl: !!(checkoutData as any).url
+        });
+        toast.success("Opening payment page...");
+        window.open((checkoutData as any).url, '_blank');
+      } else {
+        throw new Error("No checkout URL received");
+      }
+    } catch (primaryError: any) {
+      // Automatic fallback to simple checkout
+      console.warn("[STABILITY-CHECK] Primary checkout failed, falling back to simple checkout:", primaryError);
+      toast.dismiss();
+      toast.loading("Retrying checkout...");
+      
+      const { data: fallbackData, error: fallbackError } = await retryEdgeFunction('create-simple-checkout', {
+        body: { priceId: bundle.priceId },
+      });
+      
+      toast.dismiss();
+      
+      if (fallbackError || !(fallbackData as any)?.url) {
+        console.error("[STABILITY-CHECK] ✗ Fallback checkout also failed:", fallbackError || fallbackData);
+        throw new Error("Checkout failed. Please try again or contact support.");
+      }
+      
+      console.log("[STABILITY-CHECK] ✓ Fallback checkout succeeded");
       toast.success("Opening payment page...");
-      window.open((checkoutData as any).url, '_blank');
-    } else {
-      throw new Error("No checkout URL received");
+      window.open((fallbackData as any).url, '_blank');
     }
   } catch (error: any) {
     console.error("Checkout error:", error);
