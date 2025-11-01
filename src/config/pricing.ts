@@ -64,7 +64,7 @@ export const PRICING_TIERS: readonly PricingTier[] = [
     displayName: "10 Photos",
     price: "$85",
     priceAmount: 85,
-    priceId: "price_1SD8nNIG3TLqP9yazPngAIN0",
+    priceId: "price_1SD8nNIG3TLqP9yazPngAINO",
     credits: 10,
     perPhoto: "$8.5 per photo",
     perPhotoAmount: 8.5,
