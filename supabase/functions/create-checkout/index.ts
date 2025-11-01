@@ -4,16 +4,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { verifyTurnstile } from "../_shared/verify-turnstile.ts";
 import { sendSupportAlert } from "../_shared/support-alert.ts";
+import { getLogger } from "../_shared/production-logger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
-};
+const logger = getLogger("create-checkout");
 
 // Always return 2xx with success/error structure
 function okJSON(data: unknown) {
@@ -73,14 +71,14 @@ const handler = async (req: Request): Promise<Response> => {
   );
 
   try {
-    logStep("Function started");
+    logger.info("Checkout function started");
 
     // Rate limiting: Get client IP
     const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0] || 
                      req.headers.get("x-real-ip") || 
                      "unknown";
     
-    logStep("Client IP detected", { ip: clientIp });
+    logger.debug("Client IP detected", { ip: clientIp });
 
     // Check rate limit (5 requests per hour per IP)
     const { data: rateLimitData } = await supabaseAdmin
@@ -95,8 +93,8 @@ const handler = async (req: Request): Promise<Response> => {
       
       // If within the same hour window
       if (now.getTime() - windowStart.getTime() < 60 * 60 * 1000) {
-        if (rateLimitData.attempt_count >= 50) {
-          logStep("Rate limit exceeded", { ip: clientIp, attempts: rateLimitData.attempt_count });
+        if (rateLimitData.attempt_count >= 100) {
+          logger.warn("Rate limit exceeded", { ip: clientIp, attempts: rateLimitData.attempt_count });
           await sendSupportAlert("Checkout Blocked – Rate Limit", {
             hostname,
             path,
@@ -138,14 +136,14 @@ const handler = async (req: Request): Promise<Response> => {
         });
     }
 
-    logStep("Rate limit check passed");
+    logger.info("Rate limit check passed");
 
     // Get and validate request body
     const body = await req.json();
     const validation = CreateCheckoutSchema.safeParse(body);
     
     if (!validation.success) {
-      logStep("Validation failed", { errors: validation.error.format() });
+      logger.warn("Validation failed", { errors: validation.error.format() });
       await sendSupportAlert("Checkout Blocked – Validation Failed", {
         hostname,
         path,
@@ -163,10 +161,10 @@ const handler = async (req: Request): Promise<Response> => {
     const { priceId, contactInfo, files, stagingStyle, photosCount, sessionId, turnstileToken } = validation.data;
 
     // Verify Turnstile CAPTCHA token
-    logStep("Verifying Turnstile token...");
+    logger.info("Verifying Turnstile token");
     const isTurnstileValid = await verifyTurnstile(turnstileToken);
     if (!isTurnstileValid) {
-      logStep("Turnstile verification failed");
+      logger.warn("Turnstile verification failed");
       await sendSupportAlert("Checkout Blocked – Turnstile Failed", {
         hostname,
         path,
@@ -180,8 +178,8 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    logStep("Turnstile verification successful");
-    logStep("Request validated", { priceId, hasContactInfo: !!contactInfo, fileCount: files?.length, stagingStyle, photosCount, sessionId });
+    logger.info("Turnstile verification successful");
+    logger.info("Request validated", { priceId, fileCount: files?.length, photosCount });
 
     // Support both authenticated and guest checkout
     const authHeader = req.headers.get("Authorization");
@@ -196,14 +194,14 @@ const handler = async (req: Request): Promise<Response> => {
       if (data?.user) {
         user = data.user;
         customerEmail = user.email;
-        logStep("Authenticated user found", { userId: user.id, email: user.email });
+        logger.info("Authenticated user found", { userId: user.id });
       }
     }
 
     // For guest checkout, use email from contactInfo
     if (!customerEmail) {
       if (!contactInfo?.email) {
-        logStep("Guest checkout requires email in contactInfo");
+        logger.warn("Guest checkout requires email in contactInfo");
         await sendSupportAlert("Checkout Blocked – Missing Email", {
           hostname,
           path,
@@ -216,22 +214,22 @@ const handler = async (req: Request): Promise<Response> => {
         });
       }
       customerEmail = contactInfo.email;
-      logStep("Guest checkout", { email: customerEmail });
+      logger.info("Guest checkout initiated");
     }
 
     // Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
-    logStep("Stripe initialized");
+    logger.info("Stripe initialized");
 
     // Validate Stripe price before creating session
     let price: Stripe.Price;
     try {
       price = await stripe.prices.retrieve(priceId, { expand: ['product'] });
-      logStep("Price retrieved", { priceId, active: price.active });
+      logger.info("Price retrieved", { priceId, active: price.active });
     } catch (err: any) {
-      logStep("Invalid price ID", { priceId, error: err.message });
+      logger.error("Invalid price ID", { priceId, error: err.message });
       await sendSupportAlert("Checkout Error – Invalid Price ID", {
         hostname,
         path,
@@ -245,7 +243,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!price?.active) {
-      logStep("Inactive price", { priceId });
+      logger.error("Inactive price", { priceId });
       await sendSupportAlert("Checkout Error – Inactive Price", {
         hostname,
         path,
@@ -259,16 +257,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Parse credits from price metadata
     const credits = parseCreditsFromPrice(price);
-    logStep("Credits parsed from price", { credits, priceId });
+    logger.info("Credits parsed from price", { credits, priceId });
 
     // Check if a Stripe customer record exists
     const customers = await stripe.customers.list({ email: customerEmail, limit: 1 });
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
-      logStep("Existing customer found", { customerId });
+      logger.debug("Existing customer found");
     } else {
-      logStep("No existing customer found");
+      logger.debug("No existing customer found");
     }
 
     // Store order metadata (avoid long strings due to Stripe's 500 char limit)
@@ -316,7 +314,7 @@ const handler = async (req: Request): Promise<Response> => {
         }, {
           onConflict: 'session_id'
         });
-      logStep("Checkout data stored in database", { sessionId, fileCount: files?.length || 0 });
+      logger.info("Checkout data stored in database", { sessionId, fileCount: files?.length || 0 });
     }
 
     // Create a one-time payment session
@@ -338,7 +336,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (!session?.url) {
-      logStep("Session missing URL", { sessionId: session?.id });
+      logger.error("Session missing URL", { sessionId: session?.id });
       await sendSupportAlert("Checkout Error – Session Missing URL", {
         hostname,
         path,
@@ -351,7 +349,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
+    logger.info("Checkout session created successfully", { sessionId: session.id });
 
     return okJSON({ 
       success: true,
@@ -361,7 +359,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (err: any) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     const status = err?.statusCode ?? err?.status ?? 500;
-    logStep("ERROR in create-checkout", { message: errorMessage, status });
+    logger.error("Checkout error", { message: errorMessage, status });
     
     // Send support alert for checkout failures
     await sendSupportAlert("Checkout Failure – Action Required", {

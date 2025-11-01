@@ -15,6 +15,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PRICING_TIERS } from "@/config/pricing";
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -54,69 +55,7 @@ const Pricing = () => {
     navigate('/place-order');
   };
 
-  const pricingTiers = [
-    {
-      name: "1 Photo",
-      price: "$10",
-      priceId: "price_1SD8lsIG3TLqP9yabBsx4jyZ",
-      credits: 1,
-      perPhoto: "$10 per photo",
-      competitive: "Save 70% vs. our competition ($30 to $40 per photo)",
-      description: "Test Drive our service - see the difference",
-      checkoutUrl: "https://buy.stripe.com/7sY9AU3eU0tn4DkcHCdZ601",
-    },
-    {
-      name: "5 Photos",
-      price: "$45",
-      priceId: "price_1SD8nJIG3TLqP9yaGAjd2WdP",
-      credits: 5,
-      perPhoto: "$9 per photo",
-      savings: "Bundle and Save $5",
-      description: "Perfect for a single listing",
-      checkoutUrl: "https://buy.stripe.com/fZu4gA6r68ZT6Ls7nidZ602",
-    },
-    {
-      name: "10 Photos",
-      price: "$85",
-      priceId: "price_1SD8nNIG3TLqP9yazPngAIN0",
-      credits: 10,
-      perPhoto: "$8.5 per photo",
-      savings: "Bundle and Save $15",
-      description: "Great for 2-3 listings",
-      checkoutUrl: "https://buy.stripe.com/eVqaEYeXC4JDd9Q6jedZ603",
-    },
-    {
-      name: "20 Photos",
-      price: "$160",
-      priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG",
-      credits: 20,
-      perPhoto: "$8 per photo",
-      savings: "Bundle and Save $40",
-      description: "Ideal for multiple projects",
-      popular: true,
-      checkoutUrl: "https://buy.stripe.com/3cI9AUdTyekd8TA8rmdZ604",
-    },
-    {
-      name: "50 Photos",
-      price: "$375",
-      priceId: "price_1SD8nTIG3TLqP9yaT0hRMNFq",
-      credits: 50,
-      perPhoto: "$7.5 per photo",
-      savings: "Bundle and Save $125",
-      description: "Perfect for agencies",
-      checkoutUrl: "https://buy.stripe.com/aFa14o3eUgsl8TAfTOdZ605",
-    },
-    {
-      name: "100 Photos",
-      price: "$700",
-      priceId: "price_1SD8nWIG3TLqP9yaH0D0oIpW",
-      credits: 100,
-      perPhoto: "$7 per photo",
-      savings: "Bundle and Save $300",
-      description: "Maximum value for teams",
-      checkoutUrl: "https://buy.stripe.com/7sYeVe6r64JD4Dk22YdZ606",
-    },
-  ];
+  const pricingTiers = PRICING_TIERS;
 
   return (
     <div className="min-h-screen flex flex-col">

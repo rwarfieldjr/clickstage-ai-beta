@@ -23,6 +23,7 @@ import { handleCheckout } from "@/lib/checkout";
 import { logEvent } from "@/lib/logEvent";
 import { hasEnoughCredits, deductCredits, getCredits } from "@/lib/credits";
 import { processCreditOrStripeCheckout } from "@/lib/creditCheckout";
+import { PRICING_TIERS } from "@/config/pricing";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
 import coastal from "@/assets/style-coastal.jpg";
 import scandinavian from "@/assets/style-scandinavian.jpg";
@@ -65,14 +66,16 @@ const Upload = () => {
     { id: "japandi", name: "Japandi", image: japandi, description: "Japanese and Scandinavian fusion" },
   ];
 
-  const bundles = [
-    { id: "single", name: "Single Photo", price: "$10", priceId: "price_1SD8lsIG3TLqP9yabBsx4jyZ", description: "Perfect for testing", photos: 1, expiration: "Credits expire 6 months after purchase.", checkoutUrl: "https://buy.stripe.com/7sY9AU3eU0tn4DkcHCdZ601" },
-    { id: "5-photos", name: "5 Photos", price: "$45", priceId: "price_1SD8nJIG3TLqP9yaGAjd2WdP", description: "$9 per photo", photos: 5, expiration: "Credits expire 6 months after purchase.", checkoutUrl: "https://buy.stripe.com/fZu4gA6r68ZT6Ls7nidZ602" },
-    { id: "10-photos", name: "10 Photos", price: "$85", priceId: "price_1SD8nNIG3TLqP9yazPngAIN0", description: "$8.50 per photo", photos: 10, expiration: "Credits expire 6 months after purchase.", checkoutUrl: "https://buy.stripe.com/eVqaEYeXC4JDd9Q6jedZ603" },
-    { id: "20-photos", name: "20 Photos", price: "$160", priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG", description: "$8 per photo", photos: 20, expiration: "Credits expire 12 months after purchase.", checkoutUrl: "https://buy.stripe.com/3cI9AUdTyekd8TA8rmdZ604" },
-    { id: "50-photos", name: "50 Photos", price: "$375", priceId: "price_1SD8nTIG3TLqP9yaTOhRMNFq", description: "$7.50 per photo", photos: 50, expiration: "Credits expire 12 months after purchase.", checkoutUrl: "https://buy.stripe.com/aFa14o3eUgsl8TAfTOdZ605" },
-    { id: "100-photos", name: "100 Photos", price: "$700", priceId: "price_1SD8nWIG3TLqP9yaH0D0oIpW", description: "$7 per photo", photos: 100, expiration: "Credits expire 12 months after purchase.", checkoutUrl: "https://buy.stripe.com/7sYeVe6r64JD4Dk22YdZ606" },
-  ];
+  const bundles = PRICING_TIERS.map(tier => ({
+    id: tier.id,
+    name: tier.displayName,
+    price: tier.price,
+    priceId: tier.priceId,
+    description: tier.perPhoto,
+    photos: tier.credits,
+    expiration: tier.expiration,
+    checkoutUrl: tier.checkoutUrl
+  }));
 
   useEffect(() => {
     // Check for selected bundle from localStorage (from place-order page OR account settings)

@@ -11,6 +11,9 @@ import Footer from "@/components/Footer";
 import { format } from "date-fns";
 import { useCredits } from "@/hooks/use-credits";
 import { Coins, CreditCard } from "lucide-react";
+import { getDashboardTiers } from "@/config/pricing";
+import { hasEnoughCredits } from "@/lib/credits";
+import { handleCheckout } from "@/lib/checkout";
 
 interface Order {
   id: string;
@@ -158,12 +161,7 @@ const Dashboard = () => {
     navigate('/upload');
   };
 
-  const creditBundles = [
-    { name: "5 Photos", price: "$45", priceId: "price_1SD8nJIG3TLqP9yaGAjd2WdP", credits: 5 },
-    { name: "10 Photos", price: "$85", priceId: "price_1SD8nNIG3TLqP9yazPngAIN0", credits: 10 },
-    { name: "20 Photos", price: "$160", priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG", credits: 20 },
-    { name: "50 Photos", price: "$375", priceId: "price_1SD8nTIG3TLqP9yaT0hRMNFq", credits: 50 },
-  ];
+  const creditBundles = getDashboardTiers();
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {

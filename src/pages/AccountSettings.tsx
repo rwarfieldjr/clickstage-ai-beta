@@ -13,6 +13,9 @@ import { toast } from "sonner";
 import { LogOut, User, Mail, Lock, Clock, CreditCard, Coins } from "lucide-react";
 import { useCredits } from "@/hooks/use-credits";
 import { CreditsSummary } from "@/components/CreditsSummary";
+import { getDashboardTiers } from "@/config/pricing";
+import { hasEnoughCredits } from "@/lib/credits";
+import { handleCheckout } from "@/lib/checkout";
 
 const AccountSettings = () => {
   const navigate = useNavigate();
@@ -151,12 +154,7 @@ const AccountSettings = () => {
     "Australia/Sydney",
   ];
 
-  const creditBundles = [
-    { name: "5 Photos", price: "$45", priceId: "price_1SD8nJIG3TLqP9yaGAjd2WdP", credits: 5 },
-    { name: "10 Photos", price: "$85", priceId: "price_1SD8nNIG3TLqP9yazPngAIN0", credits: 10 },
-    { name: "20 Photos", price: "$160", priceId: "price_1SD8nQIG3TLqP9yaBVVV1coG", credits: 20 },
-    { name: "50 Photos", price: "$375", priceId: "price_1SD8nTIG3TLqP9yaT0hRMNFq", credits: 50 },
-  ];
+  const creditBundles = getDashboardTiers();
 
   return (
     <div className="min-h-screen flex flex-col">
