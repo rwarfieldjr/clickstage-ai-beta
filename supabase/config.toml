@@ -68,3 +68,6 @@ verify_jwt = true
 
 [functions.create-simple-checkout]
 verify_jwt = false
+
+[functions.verify-checkouts]
+verify_jwt = false

@@ -104,6 +104,39 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_health_log: {
+        Row: {
+          created_at: string
+          endpoint: string
+          error_message: string | null
+          id: string
+          response_time_ms: number
+          status: string
+          success: boolean
+          timestamp: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          response_time_ms: number
+          status: string
+          success: boolean
+          timestamp?: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          response_time_ms?: number
+          status?: string
+          success?: boolean
+          timestamp?: string
+        }
+        Relationships: []
+      }
       checkout_rate_limits: {
         Row: {
           attempt_count: number
