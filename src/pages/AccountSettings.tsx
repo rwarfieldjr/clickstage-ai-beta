@@ -126,10 +126,21 @@ const AccountSettings = () => {
     try {
       toast.loading("Opening checkout...");
       await openSimpleCheckout(priceId);
-    } catch (error) {
+    } catch (error: any) {
       toast.dismiss();
-      toast.error("Checkout failed. Please try again or contact support.");
-      console.error("Checkout error:", error);
+      
+      // Log detailed error to console
+      console.error("[AccountSettings] Checkout error:", {
+        error: error.message,
+        priceId,
+        bundleName,
+        credits,
+        stack: error.stack,
+      });
+      
+      // Show user-friendly error with more details
+      const errorMessage = error.message || "Unknown error occurred";
+      toast.error(`Checkout failed: ${errorMessage}. Please contact support if this persists.`);
     }
   };
 

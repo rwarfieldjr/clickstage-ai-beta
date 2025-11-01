@@ -48,10 +48,21 @@ const Pricing = () => {
       toast.loading("Opening checkout...");
       await openSimpleCheckout(priceId);
       // Toast will be dismissed automatically when user is redirected
-    } catch (error) {
+    } catch (error: any) {
       toast.dismiss();
-      toast.error("Checkout failed. Please try again or contact support.");
-      console.error("Checkout error:", error);
+      
+      // Log detailed error to console for debugging
+      console.error("[Pricing] Checkout error:", {
+        error: error.message,
+        priceId,
+        planName,
+        credits,
+        stack: error.stack,
+      });
+      
+      // Show user-friendly error with more details
+      const errorMessage = error.message || "Unknown error occurred";
+      toast.error(`Checkout failed: ${errorMessage}. Please contact support if this persists.`);
     }
   };
 
