@@ -36,32 +36,87 @@ export interface SimpleCheckoutResult {
  * @returns Promise with checkout URL or error
  */
 export async function createSimpleCheckout(priceId: string): Promise<SimpleCheckoutResult> {
-  try {
-    logger.info("Creating simple checkout", { priceId });
+  // PRODUCTION-SAFE LOGGING - Always logs for debugging
+  const checkoutLog = {
+    step: 'START',
+    priceId,
+    timestamp: new Date().toISOString(),
+    environment: import.meta.env.PROD ? 'production' : 'development',
+    supabaseUrl: import.meta.env.VITE_SUPABASE_URL?.substring(0, 30) + '...',
+  };
+  console.log('[CHECKOUT] Starting checkout flow', checkoutLog);
 
-    // Validate price ID format
+  try {
+    // Step 1: Validate price ID format
+    console.log('[CHECKOUT] Step 1: Validating priceId', { priceId });
+    
     if (!priceId || !priceId.startsWith('price_')) {
+      console.error('[CHECKOUT] ❌ Invalid price ID format', { priceId });
       return {
         success: false,
         error: "Invalid price ID format",
       };
     }
+    console.log('[CHECKOUT] ✅ Price ID format valid');
 
-    // Call the edge function
+    // Step 2: Check Supabase client configuration
+    console.log('[CHECKOUT] Step 2: Checking Supabase configuration');
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('[CHECKOUT] ❌ Missing Supabase configuration', {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseKey,
+      });
+      return {
+        success: false,
+        error: "Checkout service not configured. Please contact support.",
+      };
+    }
+    console.log('[CHECKOUT] ✅ Supabase configuration present');
+
+    // Step 3: Call the edge function
+    console.log('[CHECKOUT] Step 3: Invoking create-simple-checkout edge function', {
+      priceId,
+      timestamp: new Date().toISOString(),
+    });
+
+    const invokeStart = performance.now();
     const { data, error } = await supabase.functions.invoke('create-simple-checkout', {
       body: { priceId },
     });
+    const invokeEnd = performance.now();
+    const invokeDuration = Math.round(invokeEnd - invokeStart);
+
+    console.log('[CHECKOUT] Edge function response received', {
+      duration: `${invokeDuration}ms`,
+      hasError: !!error,
+      hasData: !!data,
+      dataKeys: data ? Object.keys(data) : null,
+    });
 
     if (error) {
-      logger.error("Edge function error", { error: error.message });
+      console.error('[CHECKOUT] ❌ Edge function error', {
+        message: error.message,
+        status: error.status,
+        error: error,
+      });
       return {
         success: false,
         error: error.message || "Failed to create checkout session",
       };
     }
 
+    // Step 4: Validate response data
+    console.log('[CHECKOUT] Step 4: Validating response data', {
+      hasData: !!data,
+      dataType: typeof data,
+      data: data,
+    });
+
     if (!data) {
-      logger.error("No data returned from edge function");
+      console.error('[CHECKOUT] ❌ No data returned from edge function');
       return {
         success: false,
         error: "No response from checkout service",
@@ -70,22 +125,46 @@ export async function createSimpleCheckout(priceId: string): Promise<SimpleCheck
 
     // Handle the new response format
     if (data.success === false) {
-      logger.warn("Checkout failed", { error: data.error });
+      console.error('[CHECKOUT] ❌ Checkout failed (success=false)', {
+        error: data.error,
+        data: data,
+      });
       return {
         success: false,
         error: data.error || "Checkout creation failed",
       };
     }
 
+    // Step 5: Validate checkout URL
+    console.log('[CHECKOUT] Step 5: Validating checkout URL', {
+      hasUrl: !!data.url,
+      urlPrefix: data.url?.substring(0, 30),
+    });
+
     if (!data.url) {
-      logger.error("No checkout URL in response", { data });
+      console.error('[CHECKOUT] ❌ No checkout URL in response', { data });
       return {
         success: false,
         error: "No checkout URL received",
       };
     }
 
-    logger.info("Checkout session created successfully");
+    // Validate URL format
+    if (!data.url.startsWith('https://')) {
+      console.error('[CHECKOUT] ❌ Invalid checkout URL format', {
+        url: data.url,
+      });
+      return {
+        success: false,
+        error: "Invalid checkout URL format",
+      };
+    }
+
+    console.log('[CHECKOUT] ✅ Checkout session created successfully', {
+      sessionId: data.sessionId,
+      url: data.url.substring(0, 50) + '...',
+      totalDuration: `${invokeDuration}ms`,
+    });
 
     return {
       success: true,
@@ -95,7 +174,14 @@ export async function createSimpleCheckout(priceId: string): Promise<SimpleCheck
 
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
-    logger.error("Simple checkout exception", { error: errorMessage });
+    const errorStack = err instanceof Error ? err.stack : undefined;
+    
+    console.error('[CHECKOUT] ❌ Unexpected exception', {
+      error: errorMessage,
+      stack: errorStack,
+      type: typeof err,
+      err: err,
+    });
     
     return {
       success: false,
@@ -109,12 +195,37 @@ export async function createSimpleCheckout(priceId: string): Promise<SimpleCheck
  * Convenience function that handles the redirect automatically
  */
 export async function openSimpleCheckout(priceId: string): Promise<void> {
+  console.log('[CHECKOUT] openSimpleCheckout called', {
+    priceId,
+    timestamp: new Date().toISOString(),
+    location: window.location.href,
+  });
+
   const result = await createSimpleCheckout(priceId);
   
+  console.log('[CHECKOUT] createSimpleCheckout result', {
+    success: result.success,
+    hasUrl: !!result.url,
+    error: result.error,
+  });
+
   if (result.success && result.url) {
+    console.log('[CHECKOUT] ✅ Redirecting to Stripe checkout', {
+      url: result.url.substring(0, 50) + '...',
+      currentLocation: window.location.href,
+    });
+    
+    // Add a small delay to ensure logs are captured
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     window.location.href = result.url;
   } else {
-    throw new Error(result.error || "Failed to create checkout");
+    const errorMsg = result.error || "Failed to create checkout";
+    console.error('[CHECKOUT] ❌ Cannot redirect - checkout failed', {
+      error: errorMsg,
+      result: result,
+    });
+    throw new Error(errorMsg);
   }
 }
 
