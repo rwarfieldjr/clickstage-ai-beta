@@ -14,9 +14,7 @@ import { productSchema, breadcrumbSchema } from "@/data/schema";
 import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { PRICING_TIERS } from "@/config/pricing";
-import { openSimpleCheckout } from "@/lib/simpleCheckout";
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -43,27 +41,18 @@ const Pricing = () => {
     });
   }, []);
 
-  const handleSelectPlan = async (planName: string, priceId: string, credits: number) => {
-    try {
-      toast.loading("Opening checkout...");
-      await openSimpleCheckout(priceId);
-      // Toast will be dismissed automatically when user is redirected
-    } catch (error: any) {
-      toast.dismiss();
-      
-      // Log detailed error to console for debugging
-      console.error("[Pricing] Checkout error:", {
-        error: error.message,
-        priceId,
-        planName,
-        credits,
-        stack: error.stack,
-      });
-      
-      // Show user-friendly error with more details
-      const errorMessage = error.message || "Unknown error occurred";
-      toast.error(`Checkout failed: ${errorMessage}. Please contact support if this persists.`);
-    }
+  const handleSelectPlan = (planName: string, priceId: string, credits: number) => {
+    // Store selected bundle in localStorage
+    const selectedBundle = {
+      name: planName,
+      priceId,
+      credits,
+      price: PRICING_TIERS.find(t => t.priceId === priceId)?.price || ""
+    };
+    localStorage.setItem("selectedBundle", JSON.stringify(selectedBundle));
+    
+    // Navigate to place order page
+    navigate("/place-order");
   };
 
   const pricingTiers = PRICING_TIERS;
