@@ -16,6 +16,7 @@ import { CreditsSummary } from "@/components/CreditsSummary";
 import { getDashboardTiers } from "@/config/pricing";
 import { hasEnoughCredits } from "@/lib/credits";
 import { handleCheckout } from "@/lib/checkout";
+import { openSimpleCheckout } from "@/lib/simpleCheckout";
 
 const AccountSettings = () => {
   const navigate = useNavigate();
@@ -119,22 +120,17 @@ const AccountSettings = () => {
     }
   };
 
-  const handlePurchaseCredits = (priceId: string, credits: number, bundleName: string, bundlePrice: string) => {
+  const handlePurchaseCredits = async (priceId: string, credits: number, bundleName: string, bundlePrice: string) => {
     if (!user) return;
 
-    // Store bundle info for upload page
-    const bundle = {
-      id: `${credits}-photos`,
-      name: bundleName,
-      price: bundlePrice,
-      priceId: priceId,
-      photos: credits,
-    };
-
-    localStorage.setItem('selectedBundle', JSON.stringify(bundle));
-    
-    // Navigate to upload page
-    navigate('/upload');
+    try {
+      toast.loading("Opening checkout...");
+      await openSimpleCheckout(priceId);
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Checkout failed. Please try again or contact support.");
+      console.error("Checkout error:", error);
+    }
   };
 
   const handleLogout = async () => {

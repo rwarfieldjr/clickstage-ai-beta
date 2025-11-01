@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PRICING_TIERS } from "@/config/pricing";
+import { openSimpleCheckout } from "@/lib/simpleCheckout";
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -42,17 +43,16 @@ const Pricing = () => {
     });
   }, []);
 
-  const handleSelectPlan = async (planName: string, priceId: string, credits: number, checkoutUrl: string) => {
-    // Store selected bundle info in localStorage including checkout URL
-    localStorage.setItem('selectedBundle', JSON.stringify({
-      name: planName,
-      priceId: priceId,
-      credits: credits,
-      checkoutUrl: checkoutUrl,
-    }));
-    
-    // Navigate to place order page
-    navigate('/place-order');
+  const handleSelectPlan = async (planName: string, priceId: string, credits: number) => {
+    try {
+      toast.loading("Opening checkout...");
+      await openSimpleCheckout(priceId);
+      // Toast will be dismissed automatically when user is redirected
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Checkout failed. Please try again or contact support.");
+      console.error("Checkout error:", error);
+    }
   };
 
   const pricingTiers = PRICING_TIERS;
@@ -129,9 +129,9 @@ const Pricing = () => {
                     <Button
                       className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
-                      onClick={() => handleSelectPlan(tier.name, tier.priceId, tier.credits, tier.checkoutUrl)}
+                      onClick={() => handleSelectPlan(tier.name, tier.priceId, tier.credits)}
                     >
-                      Select {tier.name}
+                      Buy {tier.name}
                     </Button>
                   </CardContent>
                 </Card>
