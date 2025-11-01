@@ -15,6 +15,26 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
+// Always return 2xx with success/error structure
+function okJSON(data: unknown) {
+  return new Response(JSON.stringify(data), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+// Parse credits safely from Stripe price metadata
+function parseCreditsFromPrice(price: Stripe.Price): number {
+  const fromPrice = Number((price.metadata?.bundle_size as string) ?? "");
+  if (!Number.isNaN(fromPrice) && fromPrice > 0) return fromPrice;
+
+  const product = price.product as Stripe.Product;
+  const fromProduct = Number((product?.metadata?.bundle_size as string) ?? "");
+  if (!Number.isNaN(fromProduct) && fromProduct > 0) return fromProduct;
+
+  return 1; // safe default
+}
+
 // Input validation schema
 const CreateCheckoutSchema = z.object({
   priceId: z.string().startsWith('price_').max(100),
@@ -85,13 +105,11 @@ const handler = async (req: Request): Promise<Response> => {
             ip: clientIp,
             attempts: rateLimitData.attempt_count,
           });
-          return new Response(
-            JSON.stringify({ 
-              error: "Too many checkout attempts. Please try again in an hour.",
-              retryAfter: Math.ceil((60 * 60 * 1000 - (now.getTime() - windowStart.getTime())) / 1000)
-            }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
-          );
+          return okJSON({ 
+            success: false,
+            error: "Too many checkout attempts. Please try again in an hour.",
+            retryAfter: Math.ceil((60 * 60 * 1000 - (now.getTime() - windowStart.getTime())) / 1000)
+          });
         }
         
         // Increment attempt count
@@ -135,10 +153,11 @@ const handler = async (req: Request): Promise<Response> => {
         reason: "validation_failed",
         errors: validation.error.format(),
       });
-      return new Response(
-        JSON.stringify({ error: "Invalid input parameters", details: validation.error.format() }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
+      return okJSON({ 
+        success: false,
+        error: "Invalid input parameters", 
+        details: validation.error.format() 
+      });
     }
 
     const { priceId, contactInfo, files, stagingStyle, photosCount, sessionId, turnstileToken } = validation.data;
@@ -154,16 +173,11 @@ const handler = async (req: Request): Promise<Response> => {
         code: 400,
         reason: "turnstile_failed",
       });
-      return new Response(
-        JSON.stringify({
-          error: "Security verification failed. Please try again.",
-          code: "CAPTCHA_VERIFICATION_FAILED"
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
+      return okJSON({
+        success: false,
+        error: "Security verification failed. Please try again.",
+        code: "CAPTCHA_VERIFICATION_FAILED"
+      });
     }
 
     logStep("Turnstile verification successful");
@@ -196,10 +210,10 @@ const handler = async (req: Request): Promise<Response> => {
           code: 400,
           reason: "missing_email",
         });
-        return new Response(
-          JSON.stringify({ error: "Email is required for checkout" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-        );
+        return okJSON({ 
+          success: false,
+          error: "Email is required for checkout" 
+        });
       }
       customerEmail = contactInfo.email;
       logStep("Guest checkout", { email: customerEmail });
@@ -210,6 +224,42 @@ const handler = async (req: Request): Promise<Response> => {
       apiVersion: "2025-08-27.basil",
     });
     logStep("Stripe initialized");
+
+    // Validate Stripe price before creating session
+    let price: Stripe.Price;
+    try {
+      price = await stripe.prices.retrieve(priceId, { expand: ['product'] });
+      logStep("Price retrieved", { priceId, active: price.active });
+    } catch (err: any) {
+      logStep("Invalid price ID", { priceId, error: err.message });
+      await sendSupportAlert("Checkout Error – Invalid Price ID", {
+        hostname,
+        path,
+        priceId,
+        error: err.message,
+      });
+      return okJSON({ 
+        success: false,
+        error: "Invalid or unknown pricing option. Please try again or contact support." 
+      });
+    }
+
+    if (!price?.active) {
+      logStep("Inactive price", { priceId });
+      await sendSupportAlert("Checkout Error – Inactive Price", {
+        hostname,
+        path,
+        priceId,
+      });
+      return okJSON({ 
+        success: false,
+        error: "This pricing option is currently unavailable. Please contact support." 
+      });
+    }
+
+    // Parse credits from price metadata
+    const credits = parseCreditsFromPrice(price);
+    logStep("Credits parsed from price", { credits, priceId });
 
     // Check if a Stripe customer record exists
     const customers = await stripe.customers.list({ email: customerEmail, limit: 1 });
@@ -241,6 +291,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (photosCount) {
       metadata.photos_count = photosCount.toString();
+    }
+
+    if (credits) {
+      metadata.credits = credits.toString();
     }
 
     if (sessionId) {
@@ -276,17 +330,33 @@ const handler = async (req: Request): Promise<Response> => {
         },
       ],
       mode: "payment",
+      payment_method_types: ["card"],
       allow_promotion_codes: true,
       success_url: `${req.headers.get("origin")}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/upload`,
       metadata: metadata,
     });
 
+    if (!session?.url) {
+      logStep("Session missing URL", { sessionId: session?.id });
+      await sendSupportAlert("Checkout Error – Session Missing URL", {
+        hostname,
+        path,
+        priceId,
+        sessionData: JSON.stringify(session, null, 2),
+      });
+      return okJSON({
+        success: false,
+        error: "We couldn't start the Stripe checkout. Please try again or contact support."
+      });
+    }
+
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
-    return new Response(JSON.stringify({ url: session.url, sessionId: session.id }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
+    return okJSON({ 
+      success: true,
+      url: session.url, 
+      sessionId: session.id 
     });
   } catch (err: any) {
     const errorMessage = err instanceof Error ? err.message : String(err);
@@ -304,9 +374,11 @@ const handler = async (req: Request): Promise<Response> => {
       stack: err?.stack ?? "",
     });
     
-    // Use sanitized error response
-    const { createErrorResponse } = await import("../_shared/sanitize-error.ts");
-    return createErrorResponse(err, status, corsHeaders);
+    // Always return 2xx with error details
+    return okJSON({
+      success: false,
+      error: "We couldn't start your checkout just now. Please try again or contact support@clickstagepro.com."
+    });
   }
 };
 
