@@ -8,13 +8,13 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <div className="mb-4">
+            <div className="mb-4 flex justify-start">
               <img 
                 src={logoMain} 
                 alt="ClickStage Pro - Virtual Staging Powered by AI" 
-                className="h-16 w-auto dark:brightness-0 dark:invert transition-all duration-300"
-                width="190"
-                height="64"
+                className="h-20 w-auto dark:brightness-0 dark:invert transition-all duration-300"
+                width="238"
+                height="80"
                 loading="lazy"
                 decoding="async"
               />
