@@ -275,11 +275,13 @@ const Auth = () => {
                     >
                       {loading ? "Loading..." : "Log In"}
                     </Button>
-                    <div className="flex justify-center bg-white rounded-md p-2">
-                      <Turnstile
-                        siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
-                        onSuccess={setTurnstileToken}
-                      />
+                    <div className="flex justify-center">
+                      <div className="bg-white p-4 rounded-lg">
+                        <Turnstile
+                          siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
+                          onSuccess={setTurnstileToken}
+                        />
+                      </div>
                     </div>
                   </form>
                   <div className="text-center mt-4">
@@ -356,11 +358,13 @@ const Auth = () => {
                     >
                       {loading ? "Loading..." : "Sign Up"}
                     </Button>
-                    <div className="flex justify-center bg-white rounded-md p-2">
-                      <Turnstile
-                        siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
-                        onSuccess={setTurnstileToken}
-                      />
+                    <div className="flex justify-center">
+                      <div className="bg-white p-4 rounded-lg">
+                        <Turnstile
+                          siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
+                          onSuccess={setTurnstileToken}
+                        />
+                      </div>
                     </div>
                   </form>
                 </TabsContent>
