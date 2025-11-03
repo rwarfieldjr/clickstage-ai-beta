@@ -184,15 +184,6 @@ const Auth = () => {
                         required
                         minLength={10}
                       />
-                      <div className="text-right">
-                        <button
-                          type="button"
-                          onClick={() => setIsForgotPassword(true)}
-                          className="text-xs text-accent hover:underline"
-                        >
-                          Forgot Password?
-                        </button>
-                      </div>
                     </div>
                     <Button
                       type="submit"
@@ -202,6 +193,15 @@ const Auth = () => {
                       {loading ? "Loading..." : "Log In"}
                     </Button>
                   </form>
+                  <div className="text-center mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotPassword(true)}
+                      className="text-sm text-accent hover:underline"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="signup" className="px-6 pb-6">
