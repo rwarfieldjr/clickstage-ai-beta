@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState(searchParams.get("type") === "signup" || searchParams.get("mode") === "signup" ? "signup" : "login");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string>("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -269,10 +271,16 @@ const Auth = () => {
                     <Button
                       type="submit"
                       className="w-full bg-accent hover:bg-accent/90"
-                      disabled={loading}
+                      disabled={loading || !turnstileToken}
                     >
                       {loading ? "Loading..." : "Log In"}
                     </Button>
+                    <div className="flex justify-center">
+                      <Turnstile
+                        siteKey="0x4AAAAAAAzoQ9CEbxwYD0Fp"
+                        onSuccess={setTurnstileToken}
+                      />
+                    </div>
                   </form>
                   <div className="text-center mt-4">
                     <button
