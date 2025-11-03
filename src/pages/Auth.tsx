@@ -10,10 +10,12 @@ import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Turnstile } from "@marsidev/react-turnstile";
+import { useTheme } from "@/hooks/use-theme";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(searchParams.get("type") === "signup" || searchParams.get("mode") === "signup" ? "signup" : "login");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -276,12 +278,13 @@ const Auth = () => {
                       {loading ? "Loading..." : "Log In"}
                     </Button>
                     <div className="flex justify-center">
-                      <div className="bg-white p-4 rounded-lg">
-                        <Turnstile
-                          siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
-                          onSuccess={setTurnstileToken}
-                        />
-                      </div>
+                      <Turnstile
+                        siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
+                        onSuccess={setTurnstileToken}
+                        options={{
+                          theme: theme === 'dark' ? 'dark' : 'light'
+                        }}
+                      />
                     </div>
                   </form>
                   <div className="text-center mt-4">
@@ -359,12 +362,13 @@ const Auth = () => {
                       {loading ? "Loading..." : "Sign Up"}
                     </Button>
                     <div className="flex justify-center">
-                      <div className="bg-white p-4 rounded-lg">
-                        <Turnstile
-                          siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
-                          onSuccess={setTurnstileToken}
-                        />
-                      </div>
+                      <Turnstile
+                        siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
+                        onSuccess={setTurnstileToken}
+                        options={{
+                          theme: theme === 'dark' ? 'dark' : 'light'
+                        }}
+                      />
                     </div>
                   </form>
                 </TabsContent>
