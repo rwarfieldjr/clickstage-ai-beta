@@ -352,10 +352,16 @@ const Auth = () => {
                     <Button
                       type="submit"
                       className="w-full bg-accent hover:bg-accent/90"
-                      disabled={loading || password !== confirmPassword}
+                      disabled={loading || password !== confirmPassword || !turnstileToken}
                     >
                       {loading ? "Loading..." : "Sign Up"}
                     </Button>
+                    <div className="flex justify-center">
+                      <Turnstile
+                        siteKey="0x4AAAAAAAzoQ9CEbxwYD0Fp"
+                        onSuccess={setTurnstileToken}
+                      />
+                    </div>
                   </form>
                 </TabsContent>
               </Tabs>
