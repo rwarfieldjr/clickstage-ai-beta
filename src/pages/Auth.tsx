@@ -275,7 +275,7 @@ const Auth = () => {
                     >
                       {loading ? "Loading..." : "Log In"}
                     </Button>
-                    <div className="flex justify-center">
+                    <div className="flex justify-center bg-white rounded-md p-2">
                       <Turnstile
                         siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
                         onSuccess={setTurnstileToken}
@@ -356,7 +356,7 @@ const Auth = () => {
                     >
                       {loading ? "Loading..." : "Sign Up"}
                     </Button>
-                    <div className="flex justify-center">
+                    <div className="flex justify-center bg-white rounded-md p-2">
                       <Turnstile
                         siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
                         onSuccess={setTurnstileToken}
