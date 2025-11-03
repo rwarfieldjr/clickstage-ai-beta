@@ -154,8 +154,8 @@ const Auth = () => {
                 <h1 className="text-3xl font-bold mb-3">Welcome to ClickStage Pro</h1>
                 <p className="text-muted-foreground text-base">Sign in to your account or create a new one</p>
               </div>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 h-12 mb-6 mx-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full px-6">
+                <TabsList className="grid w-full grid-cols-2 h-12 mb-6">
                   <TabsTrigger value="login" className="text-base font-semibold">
                     Login
                   </TabsTrigger>
