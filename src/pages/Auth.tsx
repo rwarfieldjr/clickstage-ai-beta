@@ -155,7 +155,7 @@ const Auth = () => {
                 <p className="text-muted-foreground text-base">Sign in to your account or create a new one</p>
               </div>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 h-12 mb-6">
+                <TabsList className="grid w-full grid-cols-2 h-12 mb-6 mx-6">
                   <TabsTrigger value="login" className="text-base font-semibold">
                     Login
                   </TabsTrigger>
