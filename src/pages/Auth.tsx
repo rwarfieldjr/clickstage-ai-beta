@@ -16,13 +16,22 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(searchParams.get("type") === "signup" || searchParams.get("mode") === "signup" ? "signup" : "login");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Check if user is already logged in or if this is a password recovery
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const isRecovery = hashParams.get('type') === 'recovery';
+    
+    if (isRecovery) {
+      setIsPasswordReset(true);
+      return;
+    }
+    
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate("/dashboard");
@@ -42,9 +51,23 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      if (isForgotPassword) {
+      if (isPasswordReset) {
+        if (password !== confirmPassword) {
+          toast.error("Passwords do not match. Please try again.");
+          return;
+        }
+
+        const { error } = await supabase.auth.updateUser({
+          password: password
+        });
+
+        if (error) throw error;
+
+        toast.success("✅ Password updated successfully!");
+        navigate("/dashboard");
+      } else if (isForgotPassword) {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/account`,
+          redirectTo: `${window.location.origin}/auth`,
         });
 
         if (error) throw error;
@@ -105,7 +128,61 @@ const Auth = () => {
 
       <main className="flex-1 flex items-center justify-center py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
-          {isForgotPassword ? (
+          {isPasswordReset ? (
+            <Card className="max-w-md mx-auto shadow-custom-lg">
+              <div className="text-center pt-6 pb-6 px-6">
+                <h1 className="text-3xl font-bold mb-3">Welcome to ClickStage Pro</h1>
+                <p className="text-muted-foreground text-base">Sign in to your account or create a new one</p>
+              </div>
+              <CardContent className="px-6 pb-6">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold mb-2">Set New Password</h2>
+                  <p className="text-muted-foreground">Enter your new password below.</p>
+                </div>
+                <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={10}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                    <Input
+                      id="confirm-new-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={10}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Password must be at least 10 characters long
+                    </p>
+                    {confirmPassword && password !== confirmPassword && (
+                      <p className="text-sm text-destructive">
+                        Passwords do not match. Please try again.
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-accent hover:bg-accent/90"
+                    disabled={loading || password !== confirmPassword}
+                  >
+                    {loading ? "Loading..." : "Update Password"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          ) : isForgotPassword ? (
             <Card className="max-w-md mx-auto shadow-custom-lg">
               <CardContent className="pt-6">
                 <div className="mb-6">
