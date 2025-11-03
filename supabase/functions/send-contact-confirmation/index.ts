@@ -3,6 +3,7 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { sanitizeText } from "../_shared/sanitize-html.ts";
 import { isRateLimited } from "../_shared/rate-limit.ts";
+import { verifyTurnstile } from "../_shared/verify-turnstile.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -16,6 +17,7 @@ const ContactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
   email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
   message: z.string().trim().min(1, "Message is required").max(2000, "Message must be less than 2000 characters"),
+  turnstileToken: z.string().min(1, "Security verification required"),
 });
 
 const handler = async (req: Request): Promise<Response> => {
@@ -46,7 +48,25 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { name, email, message } = parseResult.data;
+    const { name, email, message, turnstileToken } = parseResult.data;
+    
+    // Verify Turnstile CAPTCHA token
+    console.log('[send-contact-confirmation] Verifying Turnstile token...');
+    const isTurnstileValid = await verifyTurnstile(turnstileToken);
+    if (!isTurnstileValid) {
+      console.warn('[send-contact-confirmation] Turnstile verification failed');
+      return new Response(
+        JSON.stringify({ 
+          error: "Security verification failed. Please try again.",
+          code: "CAPTCHA_VERIFICATION_FAILED"
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+    console.log('[send-contact-confirmation] Turnstile verification successful');
     
     // Check rate limit (3 submissions per hour per email)
     if (isRateLimited(email, 3, 60)) {

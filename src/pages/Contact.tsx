@@ -11,6 +11,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { localBusinessSchema, breadcrumbSchema } from "@/data/schema";
+import { Turnstile } from "@marsidev/react-turnstile";
+import { useTheme } from "@/hooks/use-theme";
 
 const Contact = () => {
   const contactPointSchema = {
@@ -40,7 +42,9 @@ const Contact = () => {
     ]
   };
 
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string>("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -49,6 +53,13 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate Turnstile token
+    if (!turnstileToken) {
+      toast.error("Please complete the security verification");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -59,6 +70,7 @@ const Contact = () => {
           name: formData.name.trim(),
           email: formData.email.trim(),
           message: formData.message.trim(),
+          turnstileToken: turnstileToken,
         },
       });
 
@@ -68,6 +80,7 @@ const Contact = () => {
 
       toast.success("Message sent successfully! Check your email for confirmation.");
       setFormData({ name: "", email: "", message: "" });
+      setTurnstileToken(""); // Reset token
     } catch (error) {
       console.error("Contact form error:", error);
       toast.error("Failed to send message. Please try again.");
@@ -159,6 +172,19 @@ const Contact = () => {
                     >
                       {loading ? "Sending..." : "Send Message"}
                     </Button>
+                    
+                    {/* Security Verification */}
+                    <div className="pt-4">
+                      <div className="flex justify-center">
+                        <Turnstile
+                          siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
+                          onSuccess={setTurnstileToken}
+                          options={{
+                            theme: theme === 'dark' ? 'dark' : 'light'
+                          }}
+                        />
+                      </div>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
