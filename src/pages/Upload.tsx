@@ -352,15 +352,8 @@ const Upload = () => {
         return;
       }
 
-      // Deduct credits before processing
-      try {
-        await deductCredits(user.email, files.length);
-        console.log(`Deducted ${files.length} credits for ${user.email}`);
-      } catch (error) {
-        console.error("Error deducting credits:", error);
-        alert("Failed to deduct credits. Please try again.");
-        return;
-      }
+      // REMOVED: Client-side credit deduction - now handled atomically on server
+      // The process-credit-order edge function handles atomic credit deduction with proper locking
     }
 
     await handleCheckout({

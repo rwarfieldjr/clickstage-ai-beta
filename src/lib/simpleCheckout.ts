@@ -33,9 +33,13 @@ export interface SimpleCheckoutResult {
  * Create a simplified Stripe checkout session
  * 
  * @param priceId - Stripe Price ID (e.g., "price_1SD8nJIG3TLqP9yaGAjd2WdP")
+ * @param turnstileToken - Optional Turnstile CAPTCHA token for security verification
  * @returns Promise with checkout URL or error
  */
-export async function createSimpleCheckout(priceId: string): Promise<SimpleCheckoutResult> {
+export async function createSimpleCheckout(
+  priceId: string, 
+  turnstileToken?: string
+): Promise<SimpleCheckoutResult> {
   // PRODUCTION-SAFE LOGGING - Always logs for debugging
   const checkoutLog = {
     step: 'START',
@@ -79,12 +83,13 @@ export async function createSimpleCheckout(priceId: string): Promise<SimpleCheck
     // Step 3: Call the edge function
     console.log('[CHECKOUT] Step 3: Invoking create-simple-checkout edge function', {
       priceId,
+      hasTurnstileToken: !!turnstileToken,
       timestamp: new Date().toISOString(),
     });
 
     const invokeStart = performance.now();
     const { data, error } = await supabase.functions.invoke('create-simple-checkout', {
-      body: { priceId },
+      body: { priceId, turnstileToken: turnstileToken || '' },
     });
     const invokeEnd = performance.now();
     const invokeDuration = Math.round(invokeEnd - invokeStart);
@@ -193,15 +198,18 @@ export async function createSimpleCheckout(priceId: string): Promise<SimpleCheck
 /**
  * Open simple checkout in current window
  * Convenience function that handles the redirect automatically
+ * @param priceId - Stripe Price ID
+ * @param turnstileToken - Optional Turnstile CAPTCHA token
  */
-export async function openSimpleCheckout(priceId: string): Promise<void> {
+export async function openSimpleCheckout(priceId: string, turnstileToken?: string): Promise<void> {
   console.log('[CHECKOUT] openSimpleCheckout called', {
     priceId,
+    hasTurnstileToken: !!turnstileToken,
     timestamp: new Date().toISOString(),
     location: window.location.href,
   });
 
-  const result = await createSimpleCheckout(priceId);
+  const result = await createSimpleCheckout(priceId, turnstileToken);
   
   console.log('[CHECKOUT] createSimpleCheckout result', {
     success: result.success,
@@ -232,9 +240,11 @@ export async function openSimpleCheckout(priceId: string): Promise<void> {
 /**
  * Open simple checkout in new tab/window
  * Allows user to complete payment without losing current page state
+ * @param priceId - Stripe Price ID
+ * @param turnstileToken - Optional Turnstile CAPTCHA token
  */
-export async function openSimpleCheckoutNewTab(priceId: string): Promise<Window | null> {
-  const result = await createSimpleCheckout(priceId);
+export async function openSimpleCheckoutNewTab(priceId: string, turnstileToken?: string): Promise<Window | null> {
+  const result = await createSimpleCheckout(priceId, turnstileToken);
   
   if (result.success && result.url) {
     return window.open(result.url, '_blank');

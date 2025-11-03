@@ -17,6 +17,9 @@ const FILE_SIGNATURES = {
   'image/webp': [0x52, 0x49, 0x46, 0x46], // RIFF header
 };
 
+// Maximum dimensions to prevent image bombs (decompression attacks)
+const MAX_DIMENSION = 10000; // 10k pixels per side
+
 /**
  * Validates file by reading magic bytes from the beginning of the file
  * to ensure the MIME type matches actual file content
@@ -107,6 +110,60 @@ serve(async (req) => {
             error: `File content does not match declared type ${file.type}. File may be corrupted or have incorrect extension.`
           });
           continue;
+        }
+
+        // Additional security checks for images
+        try {
+          // For JPEG files, validate dimensions and check for suspicious patterns
+          if (file.type === 'image/jpeg') {
+            // Look for Start of Frame (SOF) marker to extract dimensions
+            let offset = 2; // Skip initial FF D8
+            while (offset < Math.min(bytes.length, 65536)) { // Check first 64KB
+              if (bytes[offset] === 0xFF) {
+                const marker = bytes[offset + 1];
+                // SOF markers: 0xC0-0xCF (except 0xC4, 0xC8, 0xCC)
+                if ((marker >= 0xC0 && marker <= 0xC3) || (marker >= 0xC5 && marker <= 0xC7) || 
+                    (marker >= 0xC9 && marker <= 0xCB) || (marker >= 0xCD && marker <= 0xCF)) {
+                  const height = (bytes[offset + 5] << 8) | bytes[offset + 6];
+                  const width = (bytes[offset + 7] << 8) | bytes[offset + 8];
+                  
+                  if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+                    validationResults.push({
+                      fileName: file.name,
+                      valid: false,
+                      error: `Image dimensions too large (${width}x${height}). Maximum ${MAX_DIMENSION}x${MAX_DIMENSION} pixels.`
+                    });
+                    continue;
+                  }
+                  break;
+                }
+                // Skip marker segment
+                const segmentLength = (bytes[offset + 2] << 8) | bytes[offset + 3];
+                offset += segmentLength + 2;
+              } else {
+                offset++;
+              }
+            }
+          }
+          
+          // For PNG files, validate dimensions from IHDR chunk
+          if (file.type === 'image/png') {
+            // IHDR chunk starts at byte 16 (after PNG signature and chunk length/type)
+            const width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
+            const height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
+            
+            if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+              validationResults.push({
+                fileName: file.name,
+                valid: false,
+                error: `Image dimensions too large (${width}x${height}). Maximum ${MAX_DIMENSION}x${MAX_DIMENSION} pixels.`
+              });
+              continue;
+            }
+          }
+        } catch (dimensionError) {
+          console.warn(`[validate-upload] Could not validate dimensions for ${file.name}:`, dimensionError);
+          // Don't fail validation if we can't read dimensions - file might still be valid
         }
 
         // File passed all validations

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { getLogger } from "../_shared/production-logger.ts";
+import { verifyTurnstile } from "../_shared/verify-turnstile.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,17 +10,56 @@ const corsHeaders = {
 
 const logger = getLogger("create-simple-checkout");
 
+// Simple in-memory rate limiter for IP addresses
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const MAX_REQUESTS_PER_WINDOW = 10; // 10 checkout attempts per hour per IP
+
+function isRateLimited(ipAddress: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ipAddress);
+  
+  // Clean up expired entries periodically
+  if (Math.random() < 0.1) {
+    for (const [ip, data] of rateLimitMap.entries()) {
+      if (data.resetAt < now) {
+        rateLimitMap.delete(ip);
+      }
+    }
+  }
+  
+  if (!record || record.resetAt < now) {
+    // New or expired record
+    rateLimitMap.set(ipAddress, {
+      count: 1,
+      resetAt: now + RATE_LIMIT_WINDOW_MS
+    });
+    return false;
+  }
+  
+  // Existing record within window
+  record.count++;
+  
+  if (record.count > MAX_REQUESTS_PER_WINDOW) {
+    logger.warn("Rate limit exceeded", { ipAddress, count: record.count });
+    return true;
+  }
+  
+  return false;
+}
+
 /**
  * SIMPLIFIED STRIPE CHECKOUT
  * 
  * Purpose: Create Stripe checkout sessions with minimal input
  * Use case: Quick purchases from pricing page or buy buttons
  * 
- * Required input: { priceId: string }
+ * Required input: { priceId: string, turnstileToken: string }
  * Returns: { url: string } - Stripe checkout URL
  * 
  * Security: Public endpoint (no JWT required)
- * Rate limiting: Client-side only (consider adding server-side if needed)
+ * Rate limiting: 10 requests per hour per IP
+ * CAPTCHA: Cloudflare Turnstile verification required
  */
 
 serve(async (req: Request): Promise<Response> => {
@@ -31,9 +71,63 @@ serve(async (req: Request): Promise<Response> => {
   try {
     logger.info("Simple checkout request started");
 
+    // Extract IP address for rate limiting
+    const ipAddress = req.headers.get("x-forwarded-for")?.split(",")[0] || 
+                      req.headers.get("x-real-ip") || 
+                      "unknown";
+    
+    // Check rate limit
+    if (isRateLimited(ipAddress)) {
+      logger.warn("Rate limit exceeded", { ipAddress });
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Too many checkout requests. Please try again later." 
+        }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Parse request body
     const body = await req.json();
-    const { priceId } = body;
+    const { priceId, turnstileToken } = body;
+
+    // Validate Turnstile token
+    if (!turnstileToken || typeof turnstileToken !== 'string') {
+      logger.warn("Missing or invalid turnstileToken");
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Security verification required" 
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Verify Turnstile CAPTCHA
+    logger.info("Verifying Turnstile token");
+    const isTurnstileValid = await verifyTurnstile(turnstileToken);
+    if (!isTurnstileValid) {
+      logger.warn("Turnstile verification failed");
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Security verification failed. Please try again." 
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    logger.info("Turnstile verification successful");
 
     // Validate required input
     if (!priceId || typeof priceId !== 'string') {
