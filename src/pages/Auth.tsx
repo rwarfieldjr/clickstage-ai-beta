@@ -150,6 +150,10 @@ const Auth = () => {
             </Card>
           ) : (
             <Card className="max-w-md mx-auto shadow-custom-lg">
+              <div className="text-center pt-8 pb-4 px-6">
+                <h1 className="text-3xl font-bold mb-2">Welcome to ClickStage Pro</h1>
+                <p className="text-muted-foreground">Sign in to your account or create a new one</p>
+              </div>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 h-14">
                   <TabsTrigger value="login" className="text-lg">
