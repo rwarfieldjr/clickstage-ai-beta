@@ -277,7 +277,7 @@ const Auth = () => {
                     </Button>
                     <div className="flex justify-center">
                       <Turnstile
-                        siteKey="0x4AAAAAAAzoQ9CEbxwYD0Fp"
+                        siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
                         onSuccess={setTurnstileToken}
                       />
                     </div>
@@ -358,7 +358,7 @@ const Auth = () => {
                     </Button>
                     <div className="flex justify-center">
                       <Turnstile
-                        siteKey="0x4AAAAAAAzoQ9CEbxwYD0Fp"
+                        siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
                         onSuccess={setTurnstileToken}
                       />
                     </div>
