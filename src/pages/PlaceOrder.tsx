@@ -16,6 +16,7 @@ const formSchema = z.object({
   lastName: z.string().trim().min(1, "Last name is required").max(100, "Last name must be less than 100 characters"),
   email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
   phoneNumber: z.string().trim().min(1, "Phone number is required").max(20, "Phone number must be less than 20 characters"),
+  propertyAddress: z.string().trim().min(1, "Property address is required").max(255, "Property address must be less than 255 characters"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -155,6 +156,23 @@ const PlaceOrder = () => {
                   />
                   {errors.phoneNumber && (
                     <p className="text-sm text-destructive">{errors.phoneNumber.message}</p>
+                  )}
+                </div>
+
+                {/* Property Address */}
+                <div className="space-y-2">
+                  <Label htmlFor="propertyAddress">
+                    Address of Property to Be Staged <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="propertyAddress"
+                    type="text"
+                    placeholder="123 Main St, City, State ZIP"
+                    {...register("propertyAddress")}
+                    className={errors.propertyAddress ? "border-destructive" : ""}
+                  />
+                  {errors.propertyAddress && (
+                    <p className="text-sm text-destructive">{errors.propertyAddress.message}</p>
                   )}
                 </div>
 
