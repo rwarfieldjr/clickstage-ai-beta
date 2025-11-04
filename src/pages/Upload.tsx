@@ -123,6 +123,20 @@ const Upload = () => {
     });
   }, []);
 
+  /**
+   * ⚠️ PRODUCTION STABLE - DO NOT MODIFY WITHOUT REVIEW
+   * @version 1.0.0-stable
+   * @last-updated 2025-11-04
+   * 
+   * Turnstile widget initialization with full lifecycle management:
+   * - Auto-refresh on token expiration (5-minute lifetime)
+   * - Error handling with automatic retry
+   * - Timeout detection
+   * - Theme-aware rendering
+   * - Proper cleanup on unmount
+   * 
+   * DO NOT REMOVE: expired-callback, error-callback, timeout-callback
+   */
   // Initialize Turnstile widget with stability checks
   useEffect(() => {
     console.log("[STABILITY-CHECK] Initializing Turnstile widget");

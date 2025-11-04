@@ -1,3 +1,16 @@
+/**
+ * ⚠️ PRODUCTION STABLE - DO NOT MODIFY WITHOUT REVIEW
+ * @version 1.0.0-stable
+ * @last-updated 2025-11-04
+ * 
+ * Primary checkout edge function with full Turnstile validation
+ * - Validates Turnstile token before processing
+ * - Handles file uploads up to 20MB per file
+ * - Rate limited: 100 requests per hour per IP
+ * - Returns 200 with {success: true/false} structure
+ * - Never returns non-2xx status codes
+ */
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";

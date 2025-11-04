@@ -1,5 +1,15 @@
 /**
+ * ⚠️ PRODUCTION STABLE - DO NOT MODIFY
+ * @version 1.0.0-stable
+ * @last-updated 2025-11-04
+ * 
  * Verify Cloudflare Turnstile token
+ * This function is stable and handles all edge cases including:
+ * - Token expiration (5-minute lifetime)
+ * - Duplicate token usage
+ * - Invalid/missing tokens
+ * - Network errors
+ * 
  * @param token - The turnstile token from the client
  * @returns true if verification succeeds, false otherwise
  */

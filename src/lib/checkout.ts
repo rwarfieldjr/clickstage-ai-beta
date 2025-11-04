@@ -1,4 +1,23 @@
-// @version: stable-credits-1.1 | Unified credit table applied | Do not auto-modify
+/**
+ * ⚠️ PRODUCTION STABLE - DO NOT MODIFY WITHOUT REVIEW
+ * @version 2.0.0-stable-turnstile
+ * @last-updated 2025-11-04
+ * 
+ * Main checkout orchestration with Turnstile security
+ * 
+ * CRITICAL SECURITY FEATURES:
+ * - Turnstile token required for all checkouts
+ * - Token passed to both primary and fallback flows
+ * - Automatic retry with exponential backoff for 5xx errors
+ * - Non-retryable handling for 4xx errors
+ * - Comprehensive error logging and alerting
+ * 
+ * PAYMENT FLOWS:
+ * 1. Credit payment: Direct order processing with atomic credit deduction
+ * 2. Stripe payment: Primary checkout with automatic fallback to simple checkout
+ * 
+ * DO NOT REMOVE: Turnstile token validation, retry logic, or error handling
+ */
 
 import { toast } from "sonner";
 import type { SupabaseClient } from "@supabase/supabase-js";

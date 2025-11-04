@@ -1,3 +1,16 @@
+/**
+ * ⚠️ PRODUCTION STABLE - DO NOT MODIFY WITHOUT REVIEW
+ * @version 1.0.0-stable
+ * @last-updated 2025-11-04
+ * 
+ * Fallback/simple checkout edge function with Turnstile validation
+ * - Validates Turnstile token before processing
+ * - Rate limited: 10 requests per hour per IP
+ * - Returns 200 with {success: true/false} structure
+ * - Never returns non-2xx status codes
+ * - Used as fallback when primary checkout fails
+ */
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { getLogger } from "../_shared/production-logger.ts";
