@@ -138,9 +138,9 @@ const AccountSettings = () => {
         stack: error.stack,
       });
       
-      // Show user-friendly error with more details
-      const errorMessage = error.message || "Unknown error occurred";
-      toast.error(`Checkout failed: ${errorMessage}. Please contact support if this persists.`);
+      // Show user-friendly error message
+      const errorMessage = error.message || "Unable to start checkout. Please try again.";
+      toast.error(errorMessage);
     }
   };
 

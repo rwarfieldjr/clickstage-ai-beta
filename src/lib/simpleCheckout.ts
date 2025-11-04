@@ -107,9 +107,20 @@ export async function createSimpleCheckout(
         status: error.status,
         error: error,
       });
+      
+      // Provide user-friendly error message based on status code
+      let userMessage = "Unable to start checkout. Please try again.";
+      if (error.status === 429) {
+        userMessage = "Too many checkout attempts. Please wait a few minutes and try again.";
+      } else if (error.status >= 500) {
+        userMessage = "Checkout service temporarily unavailable. Please try again in a moment.";
+      } else if (error.status === 400) {
+        userMessage = "Invalid checkout request. Please refresh the page and try again.";
+      }
+      
       return {
         success: false,
-        error: error.message || "Failed to create checkout session",
+        error: userMessage,
       };
     }
 
@@ -228,7 +239,7 @@ export async function openSimpleCheckout(priceId: string, turnstileToken?: strin
     
     window.location.href = result.url;
   } else {
-    const errorMsg = result.error || "Failed to create checkout";
+    const errorMsg = result.error || "Unable to start checkout. Please try again.";
     console.error('[CHECKOUT] ❌ Cannot redirect - checkout failed', {
       error: errorMsg,
       result: result,
@@ -249,6 +260,6 @@ export async function openSimpleCheckoutNewTab(priceId: string, turnstileToken?:
   if (result.success && result.url) {
     return window.open(result.url, '_blank');
   } else {
-    throw new Error(result.error || "Failed to create checkout");
+    throw new Error(result.error || "Unable to start checkout. Please try again.");
   }
 }
