@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -54,6 +55,7 @@ const Upload = () => {
   const [userCreditsBalance, setUserCreditsBalance] = useState<number>(0);
   const [turnstileToken, setTurnstileToken] = useState<string>("");
   const turnstileRef = useRef<HTMLDivElement>(null);
+  const [propertyAddress, setPropertyAddress] = useState<string>("");
 
   const styles = [
     { id: "modern-farmhouse", name: "Modern Farmhouse", image: modernFarmhouse, description: "Blend rustic charm with modern comfort" },
@@ -95,6 +97,14 @@ const Upload = () => {
         if (matchingBundle) {
           setSelectedBundle(matchingBundle.id);
         }
+      }
+    }
+
+    // Load property address from contact info
+    if (orderData) {
+      const parsedData = JSON.parse(orderData);
+      if (parsedData.propertyAddress) {
+        setPropertyAddress(parsedData.propertyAddress);
       }
     }
 
@@ -412,6 +422,11 @@ const Upload = () => {
       return;
     }
 
+    if (!propertyAddress.trim()) {
+      alert("Please enter the property address.");
+      return;
+    }
+
     // Check if uploaded photos exceed selected bundle limit
     const bundle = bundles.find(b => b.id === selectedBundle);
     if (bundle && files.length > bundle.photos) {
@@ -516,6 +531,25 @@ const Upload = () => {
                 </div>
               )}
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Property Address */}
+                <div className="space-y-2 p-4 bg-muted/50 rounded-lg border border-border">
+                  <Label htmlFor="property-address" className="text-base font-semibold">
+                    Address of Property to Be Staged <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="property-address"
+                    type="text"
+                    placeholder="123 Main St, City, State ZIP"
+                    value={propertyAddress}
+                    onChange={(e) => setPropertyAddress(e.target.value)}
+                    className="bg-background"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This helps us organize and deliver your staged photos correctly.
+                  </p>
+                </div>
+
                 {/* Step 1: Staging Style */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
