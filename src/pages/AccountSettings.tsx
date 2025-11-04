@@ -1,6 +1,8 @@
 // ✅ Checkout logic locked on 2025-11-04 — stable production version
-import { useState, useEffect } from "react";
+// ✅ Added Turnstile verification — stable patch (2025-11-04)
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LogOut, User, Mail, Lock, Clock, CreditCard, Coins } from "lucide-react";
 import { useCredits } from "@/hooks/use-credits";
+import { useTheme } from "@/hooks/use-theme";
 import { CreditsSummary } from "@/components/CreditsSummary";
 import { getDashboardTiers } from "@/config/pricing";
 import { hasEnoughCredits } from "@/lib/credits";
@@ -24,6 +27,9 @@ const AccountSettings = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const { credits, creditSummary, loading: creditsLoading, refetchCredits } = useCredits(user);
+  const { theme } = useTheme();
+  const [turnstileToken, setTurnstileToken] = useState<string>("");
+  const turnstileRef = useRef<HTMLDivElement>(null);
   const [profile, setProfile] = useState({
     name: "",
     email: "",
@@ -121,12 +127,120 @@ const AccountSettings = () => {
     }
   };
 
+  // Initialize Turnstile widget with auto-expiration handling
+  useEffect(() => {
+    console.log("[TURNSTILE] Initializing Turnstile widget on AccountSettings");
+    
+    let widgetId: string | null = null;
+    
+    const initTurnstile = () => {
+      if ((window as any).turnstile && turnstileRef.current) {
+        const existingWidget = turnstileRef.current.querySelector('.cf-turnstile');
+        if (existingWidget && existingWidget.hasChildNodes()) {
+          console.log('[TURNSTILE] Widget already rendered, skipping');
+          return;
+        }
+
+        turnstileRef.current.innerHTML = '';
+        
+        widgetId = (window as any).turnstile.render(turnstileRef.current, {
+          sitekey: '0x4AAAAAAB9xdhqE9Qyud_D6',
+          theme: theme === 'dark' ? 'dark' : 'light',
+          callback: (token: string) => {
+            setTurnstileToken(token);
+            console.log('[TURNSTILE] ✓ Token received');
+          },
+          'error-callback': (error: string) => {
+            console.error('[TURNSTILE] ✗ Error:', error);
+            setTurnstileToken('');
+            toast.error("Security verification failed. Please try again or refresh the page.", {
+              duration: 5000,
+            });
+          },
+          'expired-callback': () => {
+            console.warn('[TURNSTILE] ⚠ Token expired, refreshing...');
+            setTurnstileToken('');
+            toast.warning("Verification expired — please complete the security check again before checkout.", {
+              duration: 5000,
+            });
+            if (widgetId && (window as any).turnstile) {
+              (window as any).turnstile.reset(widgetId);
+            }
+          },
+          'timeout-callback': () => {
+            console.error('[TURNSTILE] ✗ Timeout');
+            setTurnstileToken('');
+            toast.error("Verification timed out. Please refresh the page and try again.", {
+              duration: 5000,
+            });
+          },
+        });
+        
+        console.log('[TURNSTILE] ✓ Widget rendered');
+      }
+    };
+
+    if ((window as any).turnstile) {
+      initTurnstile();
+    } else {
+      console.log('[TURNSTILE] Waiting for script to load...');
+      const checkTurnstile = setInterval(() => {
+        if ((window as any).turnstile) {
+          console.log('[TURNSTILE] ✓ Script loaded');
+          clearInterval(checkTurnstile);
+          initTurnstile();
+        }
+      }, 100);
+
+      setTimeout(() => {
+        if (!(window as any).turnstile) {
+          console.error('[TURNSTILE] ✗ Script failed to load within 10s');
+          clearInterval(checkTurnstile);
+        }
+      }, 10000);
+
+      return () => clearInterval(checkTurnstile);
+    }
+
+    return () => {
+      if (widgetId && (window as any).turnstile) {
+        try {
+          (window as any).turnstile.remove(widgetId);
+          console.log('[TURNSTILE] Widget cleaned up');
+        } catch (e) {
+          console.warn('[TURNSTILE] Cleanup error:', e);
+        }
+      }
+    };
+  }, [theme]);
+
   const handlePurchaseCredits = async (priceId: string, credits: number, bundleName: string, bundlePrice: string) => {
     if (!user) return;
 
+    // Validate Turnstile token
+    if (!turnstileToken) {
+      console.error("[TURNSTILE] ✗ Missing token");
+      toast.error("Please complete security verification before checkout.", {
+        style: {
+          background: '#B71C1C',
+          color: '#FFFFFF',
+        },
+      });
+      
+      // Try to reset the widget
+      if ((window as any).turnstile && turnstileRef.current) {
+        const widget = turnstileRef.current.querySelector('.cf-turnstile');
+        if (widget) {
+          console.log("[TURNSTILE] Attempting to reset widget");
+          (window as any).turnstile.reset();
+        }
+      }
+      return;
+    }
+
     try {
       toast.loading("Opening checkout...");
-      await openSimpleCheckout(priceId);
+      await openSimpleCheckout(priceId, turnstileToken);
     } catch (error: any) {
       toast.dismiss();
       
@@ -288,6 +402,14 @@ const AccountSettings = () => {
                 <CardDescription>Add more credits to your account</CardDescription>
               </CardHeader>
               <CardContent>
+                {/* Turnstile Security Verification */}
+                <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Complete security verification to purchase credits:
+                  </p>
+                  <div ref={turnstileRef} className="flex justify-center" />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {creditBundles.map((bundle) => (
                     <Card key={bundle.name} className="border-2 hover:border-primary transition-smooth">
