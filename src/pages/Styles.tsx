@@ -46,11 +46,6 @@ const styles = [
     description: "Characterized by iconic furniture pieces, organic shapes, and a mix of materials like wood and metal. Features clean lines and functionality.",
   },
   {
-    name: "Mountain Rustic",
-    image: mountainRustic,
-    description: "Embracing natural materials like wood and stone, this style creates a cozy lodge-like atmosphere with warm earth tones and rustic textures.",
-  },
-  {
     name: "Transitional",
     image: transitional,
     description: "Perfectly balanced between traditional and contemporary, transitional style combines classic furniture silhouettes with modern finishes.",
