@@ -1,3 +1,4 @@
+// ✅ ClickStagePro Checkout System — Final Production Version (Locked 2025-11-04)
 /**
  * ⚠️ PRODUCTION STABLE - DO NOT MODIFY WITHOUT REVIEW
  * @version 1.0.0-stable
