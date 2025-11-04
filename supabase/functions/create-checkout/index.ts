@@ -42,7 +42,7 @@ const CreateCheckoutSchema = z.object({
     lastName: z.string().max(100),
     phoneNumber: z.string().max(50).optional(),
   }),
-  files: z.array(z.string().max(500)).max(100).optional(),
+  files: z.array(z.string().max(10000000)).max(100).optional(), // 10MB per file as base64
   stagingStyle: z.string().max(50).optional(),
   photosCount: z.number().int().positive().max(1000),
   sessionId: z.string().uuid().optional(),
