@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NavigateFunction } from "react-router-dom";
 import { sanitizeFilename, sanitizeName } from "./sanitizeFilename";
+import { openStripeCheckout } from "./popupBlocker";
 
 // Load test utilities in development
 if (import.meta.env.DEV) {
@@ -402,32 +403,9 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
           hasUrl: !!(checkoutData as any).url
         });
         
-        // Attempt to open Stripe checkout in new tab
-        const checkoutUrl = (checkoutData as any).url;
-        const stripeWindow = window.open(checkoutUrl, '_blank');
-        
-        // Detect popup blocker
-        if (!stripeWindow || stripeWindow.closed || typeof stripeWindow.closed === 'undefined') {
-          console.warn("[STABILITY-CHECK] ⚠ Popup blocked - showing retry option");
-          toast.error("Pop-up blocked — please allow pop-ups to complete your order.", {
-            duration: 10000,
-            action: {
-              label: "Try Again",
-              onClick: () => {
-                const retryWindow = window.open(checkoutUrl, '_blank');
-                if (retryWindow && !retryWindow.closed) {
-                  retryWindow.focus();
-                  toast.success("Opening checkout...");
-                } else {
-                  toast.error("Please enable pop-ups in your browser settings to continue.");
-                }
-              }
-            }
-          });
-        } else {
-          stripeWindow.focus();
-          toast.success("Opening payment page...");
-        }
+        // Open Stripe checkout with branded popup blocker detection
+        await openStripeCheckout((checkoutData as any).url);
+        toast.success("Opening payment page...");
       } else {
         throw new Error("No checkout URL received");
       }
@@ -453,32 +431,9 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
       
       console.log("[STABILITY-CHECK] ✓ Fallback checkout succeeded");
       
-      // Attempt to open checkout with popup blocker detection
-      const checkoutUrl = (fallbackData as any).url;
-      const stripeWindow = window.open(checkoutUrl, '_blank');
-      
-      // Detect popup blocker
-      if (!stripeWindow || stripeWindow.closed || typeof stripeWindow.closed === 'undefined') {
-        console.warn("[STABILITY-CHECK] ⚠ Popup blocked on fallback - showing retry option");
-        toast.error("Pop-up blocked — please allow pop-ups to complete your order.", {
-          duration: 10000,
-          action: {
-            label: "Try Again",
-            onClick: () => {
-              const retryWindow = window.open(checkoutUrl, '_blank');
-              if (retryWindow && !retryWindow.closed) {
-                retryWindow.focus();
-                toast.success("Opening checkout...");
-              } else {
-                toast.error("Please enable pop-ups in your browser settings to continue.");
-              }
-            }
-          }
-        });
-      } else {
-        stripeWindow.focus();
-        toast.success("Opening payment page...");
-      }
+      // Open checkout with branded popup blocker detection
+      await openStripeCheckout((fallbackData as any).url);
+      toast.success("Opening payment page...");
     }
   } catch (error: any) {
     console.error("Checkout error:", error);
