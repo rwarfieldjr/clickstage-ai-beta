@@ -394,7 +394,10 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
       toast.loading("Retrying checkout...");
       
       const { data: fallbackData, error: fallbackError } = await retryEdgeFunction('create-simple-checkout', {
-        body: { priceId: bundle.priceId },
+        body: { 
+          priceId: bundle.priceId,
+          turnstileToken: turnstileToken 
+        },
       });
       
       toast.dismiss();
