@@ -557,6 +557,18 @@ export type Database = {
       cleanup_old_system_logs: { Args: never; Returns: undefined }
       generate_order_number: { Args: never; Returns: string }
       get_auth_user_email: { Args: never; Returns: string }
+      get_user_credit_balance: { Args: { p_user_id: string }; Returns: number }
+      get_user_credit_history: {
+        Args: { p_limit?: number; p_user_id: string }
+        Returns: {
+          balance_after: number
+          created_at: string
+          delta: number
+          order_id: string
+          reason: string
+          transaction_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

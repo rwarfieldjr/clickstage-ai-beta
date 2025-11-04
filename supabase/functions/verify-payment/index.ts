@@ -119,54 +119,29 @@ serve(async (req) => {
       );
     }
 
-    // Get user email for user_credits lookup
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("email")
-      .eq("id", userId)
-      .single();
+    // ✅ Use unified atomic credit update system (user_id-based)
+    console.log(`[verify-payment] Adding ${photosCount} credits for user ${userId} via atomic update`);
+    
+    const { data: rpcResult, error: rpcError } = await supabaseAdmin.rpc('update_user_credits_atomic', {
+      p_user_id: userId,
+      p_delta: photosCount,
+      p_reason: `Payment verified - Session ${sessionId}`,
+      p_order_id: null
+    });
 
-    if (profileError) throw profileError;
+    if (rpcError) {
+      console.error('[verify-payment] Atomic credit update failed:', rpcError);
+      throw new Error(`Failed to add credits: ${rpcError.message}`);
+    }
 
-    // Get current credits from user_credits table
-    const { data: userCredits, error: creditsError } = await supabaseAdmin
-      .from("user_credits")
-      .select("credits")
-      .eq("email", profile.email)
-      .maybeSingle();
+    const row = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
+    if (!row?.ok) {
+      console.error('[verify-payment] Credit update returned error:', row?.message);
+      throw new Error(row?.message || 'Failed to add credits');
+    }
 
-    const currentCredits = userCredits?.credits || 0;
-    const newCredits = currentCredits + photosCount;
-
-    // Update or insert credits in user_credits table
-    const { error: updateError } = await supabaseAdmin
-      .from("user_credits")
-      .upsert({ 
-        email: profile.email, 
-        credits: newCredits 
-      });
-
-    if (updateError) throw updateError;
-
-    // Calculate expiration date based on bundle size
-    // 1-10 photos: 6 months, 20+ photos: 12 months
-    const expirationMonths = photosCount <= 10 ? 6 : 12;
-    const expiresAt = new Date();
-    expiresAt.setMonth(expiresAt.getMonth() + expirationMonths);
-
-    // Record transaction with expiration date
-    const { error: transactionError } = await supabaseAdmin
-      .from("credits_transactions")
-      .insert({
-        user_id: userId,
-        amount: photosCount,
-        transaction_type: "purchase",
-        stripe_payment_id: session.payment_intent as string,
-        description: `Purchased ${photosCount} photo credits (expires in ${expirationMonths} months)`,
-        expires_at: expiresAt.toISOString(),
-      });
-
-    if (transactionError) throw transactionError;
+    const newCredits = row.balance;
+    console.log(`[verify-payment] ✓ Credits added successfully. User ${userId} new balance: ${newCredits}`);
 
     // Record this session as processed
     const { error: trackingError } = await supabaseAdmin
@@ -215,7 +190,7 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Added ${photosCount} credits to user ${userId}. New balance: ${newCredits}`);
+    console.log(`[verify-payment] Payment verified successfully for user ${userId}. Credits: ${newCredits}`);
 
     // Send notification emails
     try {
