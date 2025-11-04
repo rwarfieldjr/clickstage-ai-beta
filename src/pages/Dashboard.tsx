@@ -151,6 +151,31 @@ const Dashboard = () => {
     }
   };
 
+  // ✅ Added Turnstile expiration + toast — stable patch (2025-11-04)
+  // Manual expiration timer (4.5 min preemptive warning before Cloudflare's 5-min expiration)
+  useEffect(() => {
+    if (!turnstileToken) return;
+
+    console.log("[TURNSTILE] Starting 4.5-minute expiration timer");
+    const expirationTimer = setTimeout(() => {
+      console.warn('[TURNSTILE] ⚠ Token expired (4.5-min timer), clearing...');
+      setTurnstileToken('');
+      toast.error("Verification expired — please click the box again.", {
+        duration: 5000,
+        style: {
+          background: '#B71C1C',
+          color: '#FFFFFF',
+          border: '1px solid #FFCDD2',
+        },
+      });
+    }, 270000); // 4.5 minutes
+
+    return () => {
+      clearTimeout(expirationTimer);
+      console.log("[TURNSTILE] Expiration timer cleared");
+    };
+  }, [turnstileToken]);
+
   // Initialize Turnstile widget with auto-expiration handling
   useEffect(() => {
     console.log("[TURNSTILE] Initializing Turnstile widget on Dashboard");
@@ -182,10 +207,15 @@ const Dashboard = () => {
             });
           },
           'expired-callback': () => {
-            console.warn('[TURNSTILE] ⚠ Token expired, refreshing...');
+            console.warn('[TURNSTILE] ⚠ Token expired (Cloudflare callback)');
             setTurnstileToken('');
-            toast.warning("Verification expired — please complete the security check again before checkout.", {
+            toast.error("Verification expired — please click the box again.", {
               duration: 5000,
+              style: {
+                background: '#B71C1C',
+                color: '#FFFFFF',
+                border: '1px solid #FFCDD2',
+              },
             });
             if (widgetId && (window as any).turnstile) {
               (window as any).turnstile.reset(widgetId);
