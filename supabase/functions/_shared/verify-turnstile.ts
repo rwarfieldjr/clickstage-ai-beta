@@ -16,6 +16,7 @@ export async function verifyTurnstile(token: string): Promise<boolean> {
   }
 
   try {
+    console.log('[verify-turnstile] Verifying token with Cloudflare...');
     const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST',
       headers: {
@@ -30,7 +31,25 @@ export async function verifyTurnstile(token: string): Promise<boolean> {
     const data = await response.json();
     
     if (!data.success) {
-      console.error('[verify-turnstile] Verification failed:', data['error-codes']);
+      const errorCodes = data['error-codes'] || [];
+      console.error('[verify-turnstile] Verification failed:', {
+        errorCodes,
+        // Common error codes:
+        // 'missing-input-secret' - secret key not provided
+        // 'invalid-input-secret' - secret key is invalid
+        // 'missing-input-response' - token not provided
+        // 'invalid-input-response' - token is invalid or expired
+        // 'timeout-or-duplicate' - token expired or was already used
+      });
+      
+      // Log specific error messages for common issues
+      if (errorCodes.includes('timeout-or-duplicate')) {
+        console.error('[verify-turnstile] Token expired or already used');
+      }
+      if (errorCodes.includes('invalid-input-response')) {
+        console.error('[verify-turnstile] Invalid or expired token');
+      }
+      
       return false;
     }
 

@@ -149,20 +149,33 @@ const Upload = () => {
         // Clear any existing content
         turnstileRef.current.innerHTML = '';
         
-        // Render new widget
+        // Render new widget with expiration handling
         widgetId = (window as any).turnstile.render(turnstileRef.current, {
           sitekey: '0x4AAAAAAB9xdhqE9Qyud_D6',
           theme: theme === 'dark' ? 'dark' : 'light',
           callback: (token: string) => {
             setTurnstileToken(token);
-            console.log('[STABILITY-CHECK] ✓ Turnstile verification successful', { tokenLength: token.length });
+            console.log('[STABILITY-CHECK] ✓ Turnstile token received', { tokenLength: token.length });
           },
-          'error-callback': () => {
-            console.error('[STABILITY-CHECK] ✗ Turnstile verification failed');
+          'error-callback': (error: string) => {
+            console.error('[STABILITY-CHECK] ✗ Turnstile error:', error);
+            setTurnstileToken(''); // Clear expired/invalid token
+          },
+          'expired-callback': () => {
+            console.warn('[STABILITY-CHECK] ⚠ Turnstile token expired, refreshing...');
+            setTurnstileToken(''); // Clear expired token
+            // Auto-refresh the widget
+            if (widgetId && (window as any).turnstile) {
+              (window as any).turnstile.reset(widgetId);
+            }
+          },
+          'timeout-callback': () => {
+            console.error('[STABILITY-CHECK] ✗ Turnstile timeout');
+            setTurnstileToken('');
           },
         });
         
-        console.log('[STABILITY-CHECK] ✓ Turnstile widget rendered successfully', { widgetId });
+        console.log('[STABILITY-CHECK] ✓ Turnstile widget rendered with auto-refresh', { widgetId });
       }
     };
 
@@ -301,7 +314,16 @@ const Upload = () => {
     
     if (!turnstileToken) {
       console.error("[STABILITY-CHECK] ✗ Missing Turnstile token");
-      alert("Please complete the security verification");
+      toast.error("Security verification required. Please wait for the verification to complete or refresh the page.");
+      
+      // Try to reset the widget if it exists
+      if ((window as any).turnstile && turnstileRef.current) {
+        const widget = turnstileRef.current.querySelector('.cf-turnstile');
+        if (widget) {
+          console.log("[STABILITY-CHECK] Attempting to reset Turnstile widget");
+          (window as any).turnstile.reset();
+        }
+      }
       return;
     }
     
