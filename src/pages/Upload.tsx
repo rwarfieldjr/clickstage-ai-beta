@@ -30,7 +30,6 @@ import coastal from "@/assets/style-coastal.jpg";
 import scandinavian from "@/assets/style-scandinavian.jpg";
 import contemporary from "@/assets/style-contemporary.jpg";
 import midCentury from "@/assets/style-mid-century.jpg";
-import mountainRustic from "@/assets/style-mountain-rustic.jpg";
 import transitional from "@/assets/style-transitional.jpg";
 import japandi from "@/assets/style-japandi.jpg";
 
@@ -63,7 +62,6 @@ const Upload = () => {
     { id: "scandinavian", name: "Scandinavian", image: scandinavian, description: "Minimalist Nordic design with clean lines" },
     { id: "contemporary", name: "Contemporary", image: contemporary, description: "Current trends with sleek sophistication" },
     { id: "mid-century-modern", name: "Mid-Century Modern", image: midCentury, description: "Retro 1950s-60s aesthetic" },
-    { id: "mountain-rustic", name: "Mountain Rustic", image: mountainRustic, description: "Cozy cabin retreat atmosphere" },
     { id: "transitional", name: "Transitional", image: transitional, description: "Perfect balance of traditional and modern" },
     { id: "japandi", name: "Japandi", image: japandi, description: "Japanese and Scandinavian fusion" },
   ];
