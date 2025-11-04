@@ -174,10 +174,16 @@ const Upload = () => {
           'error-callback': (error: string) => {
             console.error('[STABILITY-CHECK] ✗ Turnstile error:', error);
             setTurnstileToken(''); // Clear expired/invalid token
+            toast.error("Security verification failed. Please try again or refresh the page.", {
+              duration: 5000,
+            });
           },
           'expired-callback': () => {
             console.warn('[STABILITY-CHECK] ⚠ Turnstile token expired, refreshing...');
             setTurnstileToken(''); // Clear expired token
+            toast.warning("Verification expired — please complete the security check again before checkout.", {
+              duration: 5000,
+            });
             // Auto-refresh the widget
             if (widgetId && (window as any).turnstile) {
               (window as any).turnstile.reset(widgetId);
@@ -186,6 +192,9 @@ const Upload = () => {
           'timeout-callback': () => {
             console.error('[STABILITY-CHECK] ✗ Turnstile timeout');
             setTurnstileToken('');
+            toast.error("Verification timed out. Please refresh the page and try again.", {
+              duration: 5000,
+            });
           },
         });
         
