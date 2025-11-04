@@ -153,6 +153,7 @@ serve(async (req) => {
       const customerEmail = metadata.customer_email || session.customer_details?.email;
       const customerName = metadata.customer_name || session.customer_details?.name || "Customer";
       const sessionId = metadata.session_id;
+      const propertyAddress = metadata.property_address || "";
       
       // Retrieve files from database instead of metadata (to avoid 500 char limit)
       let files: string[] = [];
@@ -359,6 +360,7 @@ serve(async (req) => {
             files: filePaths,
             stagingStyle: stagingStyle,
             paymentMethod: "stripe",
+            propertyAddress: propertyAddress,
           },
         });
 

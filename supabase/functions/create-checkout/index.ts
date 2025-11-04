@@ -54,6 +54,7 @@ const CreateCheckoutSchema = z.object({
     firstName: z.string().max(100),
     lastName: z.string().max(100),
     phoneNumber: z.string().max(50).optional(),
+    propertyAddress: z.string().max(500).optional(),
   }),
   files: z.array(z.string().max(30000000)).max(100).optional(), // 20MB per file as base64 (~27MB encoded)
   stagingStyle: z.string().max(50).optional(),
@@ -294,6 +295,9 @@ const handler = async (req: Request): Promise<Response> => {
     metadata.last_name = contactInfo.lastName;
     if (contactInfo.phoneNumber) {
       metadata.phone = contactInfo.phoneNumber;
+    }
+    if (contactInfo.propertyAddress) {
+      metadata.property_address = contactInfo.propertyAddress;
     }
 
     if (user?.id) {

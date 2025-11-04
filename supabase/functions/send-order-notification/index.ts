@@ -19,6 +19,7 @@ const NotificationSchema = z.object({
   stagingStyle: z.string().optional(),
   stagingNotes: z.string().optional(),
   paymentMethod: z.string().optional(),
+  propertyAddress: z.string().optional(),
 });
 
 const sendResendEmail = async (to: string[], subject: string, html: string, from: string) => {
@@ -62,7 +63,7 @@ serve(async (req) => {
       );
     }
 
-    const { sessionId, orderNumber, customerName, customerEmail, photosCount, amountPaid, files, stagingStyle, stagingNotes, paymentMethod } = validation.data;
+    const { sessionId, orderNumber, customerName, customerEmail, photosCount, amountPaid, files, stagingStyle, stagingNotes, paymentMethod, propertyAddress } = validation.data;
     
     // Use orderNumber if provided, otherwise fallback to sessionId slice
     const displayOrderNumber = orderNumber || sessionId.slice(-20);
@@ -192,6 +193,7 @@ serve(async (req) => {
           <div style="background: #374151; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <p style="margin: 5px 0;"><strong>Customer:</strong> ${customerName}</p>
             <p style="margin: 5px 0;"><strong>Email:</strong> ${customerEmail}</p>
+            ${propertyAddress ? `<p style="margin: 5px 0;"><strong>Property Address:</strong> ${propertyAddress}</p>` : ''}
             <p style="margin: 5px 0;"><strong>Photos to Stage:</strong> ${photosCount}</p>
             ${paymentMethod === 'credits' 
               ? `<p style="margin: 5px 0;"><strong>Payment Method:</strong> Credits (${photosCount} credits used)</p>`

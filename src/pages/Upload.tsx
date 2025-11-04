@@ -462,6 +462,7 @@ const Upload = () => {
       refetchCredits,
       setLoading,
       turnstileToken,
+      propertyAddress,
     });
   };
 
@@ -898,6 +899,7 @@ const Upload = () => {
                         refetchCredits,
                         setLoading,
                         turnstileToken,
+                        propertyAddress,
                       });
                       
                     } catch (err: any) {

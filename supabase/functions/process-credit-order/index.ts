@@ -21,6 +21,7 @@ interface CreditOrderRequest {
   sessionId: string;
   stagingNotes?: string;
   turnstileToken: string;
+  propertyAddress?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -61,7 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Unauthorized");
     }
 
-    const { files, stagingStyle, photosCount, sessionId, stagingNotes, turnstileToken }: CreditOrderRequest = await req.json();
+    const { files, stagingStyle, photosCount, sessionId, stagingNotes, turnstileToken, propertyAddress }: CreditOrderRequest = await req.json();
 
     // Verify Turnstile CAPTCHA token
     console.log('[process-credit-order] Verifying Turnstile token...');
@@ -208,6 +209,7 @@ const handler = async (req: Request): Promise<Response> => {
             stagingStyle: stagingStyle,
             stagingNotes: stagingNotes,
             paymentMethod: "credits",
+            propertyAddress: propertyAddress,
           },
         });
       } catch (emailError) {

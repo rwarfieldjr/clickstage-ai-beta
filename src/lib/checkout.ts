@@ -63,6 +63,7 @@ interface CheckoutParams {
   refetchCredits: () => Promise<void>;
   setLoading: (loading: boolean) => void;
   turnstileToken: string;
+  propertyAddress: string;
 }
 
 export async function handleCheckout(params: CheckoutParams): Promise<void> {
@@ -82,6 +83,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     refetchCredits,
     setLoading,
     turnstileToken,
+    propertyAddress,
   } = params;
 
   // Check SMS consent first
@@ -282,6 +284,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
           sessionId: sessionId,
           stagingNotes: stagingNotes,
           turnstileToken: turnstileToken,
+          propertyAddress: propertyAddress,
         },
       });
 
@@ -358,6 +361,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
       firstName: '',
       lastName: '',
       phoneNumber: '',
+      propertyAddress: propertyAddress,
     };
 
     if (orderData) {
@@ -367,6 +371,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
         firstName: parsedData.firstName || '',
         lastName: parsedData.lastName || '',
         phoneNumber: parsedData.phoneNumber || '',
+        propertyAddress: parsedData.propertyAddress || propertyAddress,
       };
     }
 
