@@ -108,41 +108,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (profileError) throw profileError;
 
-    // STABILITY: Acquire checkout lock to prevent race conditions
-    console.log('[process-credit-order] Acquiring checkout lock...');
-    const lockAcquired = await acquireCheckoutLock(supabaseAdmin, profileData.email, 300);
-    
-    if (!lockAcquired) {
-      console.warn('[process-credit-order] Checkout already in progress for user');
-      await logSystemEvent(
-        'Concurrent checkout blocked by lock',
-        'warn',
-        user.id,
-        path,
-        { email: profileData.email }
-      );
-      return new Response(
-        JSON.stringify({
-          error: "A checkout is already in progress. Please wait and try again.",
-          code: "CHECKOUT_IN_PROGRESS"
-        }),
-        {
-          status: 429,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-
+    // ✅ UPDATED: Atomic deduction now uses user_id (2025-11-04)
     try {
       // STABILITY: Use atomic credit deduction with full audit trail
       console.log(`[process-credit-order] Deducting ${photosCount} credits atomically...`);
       const deductResult = await updateUserCreditsAtomic(
         supabaseAdmin,
-        profileData.email,
+        user.id, // Now using user_id instead of email
         -photosCount,
         `Credit order - ${photosCount} photos`,
-        undefined, // order_id will be added later
-        undefined // No Stripe payment for credit orders
+        undefined // order_id will be added later
       );
 
       if (!deductResult.success) {
@@ -260,9 +235,8 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     } finally {
-      // STABILITY: Always release the checkout lock
-      await releaseCheckoutLock(supabaseAdmin, profileData.email);
-      console.log('[process-credit-order] Checkout lock released');
+      // ✅ Locks deprecated - atomicity handled by database (2025-11-04)
+      console.log('[process-credit-order] Transaction complete (no lock release needed)');
     }
   } catch (err: any) {
     const errorMessage = err instanceof Error ? err.message : String(err);

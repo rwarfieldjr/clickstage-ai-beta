@@ -498,7 +498,7 @@ export type Database = {
         }
         Relationships: []
       }
-      user_credits_old: {
+      user_credits_archived_20251104: {
         Row: {
           credits: number
           email: string

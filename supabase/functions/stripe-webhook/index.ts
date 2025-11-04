@@ -239,17 +239,16 @@ serve(async (req) => {
         console.log("Session marked as processed:", session.id);
       }
 
-      // Add credits using atomic function with full audit trail
+      // ✅ UPDATED: Add credits using user_id (2025-11-04)
       if (photosCount > 0 && userId) {
-        console.log(`Adding ${photosCount} credits for ${customerEmail} using atomic update`);
+        console.log(`Adding ${photosCount} credits for user ${userId} using atomic update`);
         
         const creditResult = await updateUserCreditsAtomic(
           supabaseAdmin,
-          customerEmail,
+          userId, // Now using user_id instead of email
           photosCount,
           `Stripe payment - Session ${session.id}`,
-          undefined, // No order_id yet
-          session.payment_intent as string || session.id
+          undefined // No order_id yet
         );
         
         if (!creditResult.success) {

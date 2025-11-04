@@ -1,4 +1,4 @@
-// @version: stable-credits-1.0 | Do not auto-modify | Core token system for ClickStagePro
+// @version: stable-credits-2.0 | ✅ UPDATED: Now uses user_id system (2025-11-04)
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
@@ -40,7 +40,7 @@ serve(async (req) => {
 
     let syncedCount = 0;
     let skippedCount = 0;
-    const syncedEmails: string[] = [];
+    const syncedUsers: string[] = [];
 
     for (const session of sessions.data) {
       // Only process completed sessions
@@ -59,16 +59,29 @@ serve(async (req) => {
 
       console.log(`Processing session ${session.id} for ${email} with ${photoCount} photos`);
 
-      // Get current credits from user_credits table
+      // Get user_id from profiles
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .single();
+
+      if (!profile) {
+        console.warn(`No profile found for ${email}, skipping`);
+        skippedCount++;
+        continue;
+      }
+
+      // Get current credits from NEW user_credits table (user_id-based)
       const { data: creditsData } = await supabaseAdmin
         .from("user_credits")
         .select("credits")
-        .eq("email", email)
+        .eq("user_id", profile.id)
         .single();
 
       const currentBalance = creditsData?.credits || 0;
 
-      // Check if this session has already been processed by looking at processed_stripe_sessions
+      // Check if this session has already been processed
       const { data: processedSession } = await supabaseAdmin
         .from("processed_stripe_sessions")
         .select("id")
@@ -81,27 +94,30 @@ serve(async (req) => {
         continue;
       }
 
-      // Add credits if needed (this handles cases where webhook was missed)
-      console.log(`Current balance for ${email}: ${currentBalance}, expected at least: ${photoCount}`);
+      // Add credits using the NEW atomic RPC (user_id-based)
+      console.log(`Current balance for ${email} (user ${profile.id}): ${currentBalance}`);
       
-      const newTotal = currentBalance + photoCount;
-      
-      const { error: upsertError } = await supabaseAdmin
-        .from("user_credits")
-        .upsert({ 
-          email, 
-          credits: newTotal,
-          updated_at: new Date().toISOString()
-        });
+      const { data: rpcResult, error: rpcError } = await supabaseAdmin.rpc('update_user_credits_atomic', {
+        p_user_id: profile.id,
+        p_delta: photoCount,
+        p_reason: `Sync from Stripe session ${session.id}`,
+        p_order_id: null
+      });
 
-      if (upsertError) {
-        console.error(`Error upserting credits for ${email}:`, upsertError);
+      if (rpcError) {
+        console.error(`Error syncing credits for ${email}:`, rpcError);
         continue;
       }
 
-      console.log(`Synced ${photoCount} credits for ${email}. New balance: ${newTotal}`);
+      const row = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
+      if (!row?.ok) {
+        console.error(`Failed to sync credits for ${email}:`, row?.message);
+        continue;
+      }
+
+      console.log(`✓ Synced ${photoCount} credits for ${email}. New balance: ${row.balance}`);
       syncedCount++;
-      syncedEmails.push(email);
+      syncedUsers.push(email);
     }
 
     const result = {
@@ -109,7 +125,7 @@ serve(async (req) => {
       sessionsProcessed: sessions.data.length,
       creditsSynced: syncedCount,
       skipped: skippedCount,
-      syncedEmails,
+      syncedUsers,
       timestamp: new Date().toISOString(),
     };
 
