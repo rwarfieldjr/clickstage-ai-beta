@@ -388,6 +388,20 @@ const Upload = () => {
       return;
     }
     
+    // Store the current token and clear it immediately to prevent reuse
+    const currentToken = turnstileToken;
+    setTurnstileToken('');
+    
+    // Reset the widget for next use
+    if ((window as any).turnstile && turnstileRef.current) {
+      try {
+        (window as any).turnstile.reset();
+        console.log("[STABILITY-CHECK] Turnstile widget reset for next use");
+      } catch (e) {
+        console.warn("[STABILITY-CHECK] Could not reset Turnstile widget:", e);
+      }
+    }
+    
     console.log("[STABILITY-CHECK] ✓ All pre-flight checks passed");
 
     // Log checkout event
@@ -444,24 +458,37 @@ const Upload = () => {
       // The process-credit-order edge function handles atomic credit deduction with proper locking
     }
 
-    await handleCheckout({
-      files,
-      stagingStyle,
-      selectedBundle,
-      bundles,
-      smsConsent,
-      paymentMethod,
-      stagingNotes,
-      credits,
-      user,
-      userProfile,
-      supabase,
-      navigate,
-      refetchCredits,
-      setLoading,
-      turnstileToken,
-      propertyAddress,
-    });
+    try {
+      await handleCheckout({
+        files,
+        stagingStyle,
+        selectedBundle,
+        bundles,
+        smsConsent,
+        paymentMethod,
+        stagingNotes,
+        credits,
+        user,
+        userProfile,
+        supabase,
+        navigate,
+        refetchCredits,
+        setLoading,
+        turnstileToken: currentToken, // Use the stored token
+        propertyAddress,
+      });
+    } catch (error) {
+      // If checkout fails, generate a new token
+      console.error("[STABILITY-CHECK] Checkout failed, resetting Turnstile");
+      if ((window as any).turnstile && turnstileRef.current) {
+        try {
+          (window as any).turnstile.reset();
+        } catch (e) {
+          console.warn("[STABILITY-CHECK] Could not reset Turnstile after error:", e);
+        }
+      }
+      throw error; // Re-throw to let handleCheckout's error handling work
+    }
   };
 
   return (
@@ -867,6 +894,20 @@ const Upload = () => {
                       
                       const photoCount = files.length;
                       
+                      // Store the current token and clear it to prevent reuse
+                      const currentToken = turnstileToken;
+                      setTurnstileToken('');
+                      
+                      // Reset the widget for next use
+                      if ((window as any).turnstile && turnstileRef.current) {
+                        try {
+                          (window as any).turnstile.reset();
+                          console.log("[STABILITY-CHECK] Turnstile widget reset for next use");
+                        } catch (e) {
+                          console.warn("[STABILITY-CHECK] Could not reset Turnstile widget:", e);
+                        }
+                      }
+                      
                       // Check if user wants to use credits
                       if (user?.email) {
                         const result = await processCreditOrStripeCheckout(user.email, photoCount);
@@ -896,7 +937,7 @@ const Upload = () => {
                         navigate,
                         refetchCredits,
                         setLoading,
-                        turnstileToken,
+                        turnstileToken: currentToken, // Use the stored token
                         propertyAddress,
                       });
                       
@@ -907,6 +948,16 @@ const Upload = () => {
                         : err.message || "Something went wrong during checkout. Please try again.";
                       setError(errorMessage);
                       toast.error(errorMessage);
+                      
+                      // Reset Turnstile widget after error
+                      console.error("[STABILITY-CHECK] Checkout failed, resetting Turnstile");
+                      if ((window as any).turnstile && turnstileRef.current) {
+                        try {
+                          (window as any).turnstile.reset();
+                        } catch (e) {
+                          console.warn("[STABILITY-CHECK] Could not reset Turnstile after error:", e);
+                        }
+                      }
                     } finally {
                       setLoading(false);
                     }
