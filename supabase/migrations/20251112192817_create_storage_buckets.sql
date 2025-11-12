@@ -25,8 +25,13 @@
 */
 
 -- Helper function to check if user_roles table exists
+-- Security: SET search_path prevents search path manipulation attacks
 CREATE OR REPLACE FUNCTION public.table_exists(table_name text)
-RETURNS boolean AS $$
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   RETURN EXISTS (
     SELECT FROM information_schema.tables
@@ -34,7 +39,7 @@ BEGIN
     AND tables.table_name = table_exists.table_name
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Create storage buckets (if they don't already exist)
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
