@@ -5,7 +5,8 @@ import { useAdmin } from "@/hooks/use-admin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Upload, Download } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
@@ -120,6 +121,101 @@ export default function AdminOrderDetail() {
     }
   };
 
+  const handleUploadOriginal = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!order || !e.target.files || !e.target.files[0]) return;
+    
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${order.user_id}/${order.id}/original.${fileExt}`;
+
+    try {
+      toast.loading("Uploading original image...");
+      
+      const { error: uploadError } = await supabase.storage
+        .from('original-images')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('original-images')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from("orders")
+        .update({ original_image_url: publicUrl })
+        .eq("id", order.id);
+
+      if (updateError) throw updateError;
+
+      toast.dismiss();
+      toast.success("Original image uploaded successfully");
+      await fetchOrder();
+    } catch (error: any) {
+      toast.dismiss();
+      console.error("Error uploading original image:", error);
+      toast.error("Failed to upload original image");
+    }
+  };
+
+  const handleUploadStaged = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!order || !e.target.files || !e.target.files[0]) return;
+    
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${order.user_id}/${order.id}/staged.${fileExt}`;
+
+    try {
+      toast.loading("Uploading staged image...");
+      
+      const { error: uploadError } = await supabase.storage
+        .from('staged')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('staged')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from("orders")
+        .update({ staged_image_url: publicUrl })
+        .eq("id", order.id);
+
+      if (updateError) throw updateError;
+
+      toast.dismiss();
+      toast.success("Staged image uploaded successfully");
+      await fetchOrder();
+    } catch (error: any) {
+      toast.dismiss();
+      console.error("Error uploading staged image:", error);
+      toast.error("Failed to upload staged image");
+    }
+  };
+
+  const handleDownloadImage = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      window.URL.revokeObjectURL(blobUrl);
+      toast.success("Image downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading image:", error);
+      toast.error("Failed to download image");
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -220,18 +316,46 @@ export default function AdminOrderDetail() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <Button variant="outline" className="w-full" asChild>
-                    <a href={signedOriginalUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      View Full Size
-                    </a>
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleDownloadImage(signedOriginalUrl, `original-${order.id}.jpg`)}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download
+                    </Button>
+                    <Button variant="outline" asChild>
+                      <a href={signedOriginalUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        View Full
+                      </a>
+                    </Button>
+                  </div>
                 </>
               ) : (
-                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-4">
                   <p className="text-muted-foreground">Loading image...</p>
                 </div>
               )}
+              <div className="mt-4">
+                <label htmlFor="upload-original" className="block mb-2 text-sm font-medium">
+                  Upload Original Image
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    id="upload-original"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleUploadOriginal}
+                    className="flex-1"
+                  />
+                  <Button variant="secondary" asChild>
+                    <label htmlFor="upload-original" className="cursor-pointer">
+                      <Upload className="h-4 w-4" />
+                    </label>
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -249,22 +373,50 @@ export default function AdminOrderDetail() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <Button variant="outline" className="w-full" asChild>
-                    <a href={signedStagedUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      View Full Size
-                    </a>
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleDownloadImage(signedStagedUrl, `staged-${order.id}.jpg`)}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download
+                    </Button>
+                    <Button variant="outline" asChild>
+                      <a href={signedStagedUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        View Full
+                      </a>
+                    </Button>
+                  </div>
                 </>
               ) : order.staged_image_url ? (
-                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-4">
                   <p className="text-muted-foreground">Loading image...</p>
                 </div>
               ) : (
-                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-4">
                   <p className="text-muted-foreground">No staged image available</p>
                 </div>
               )}
+              <div className="mt-4">
+                <label htmlFor="upload-staged" className="block mb-2 text-sm font-medium">
+                  Upload Staged Image
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    id="upload-staged"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleUploadStaged}
+                    className="flex-1"
+                  />
+                  <Button variant="secondary" asChild>
+                    <label htmlFor="upload-staged" className="cursor-pointer">
+                      <Upload className="h-4 w-4" />
+                    </label>
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
