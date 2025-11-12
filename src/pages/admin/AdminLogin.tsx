@@ -164,7 +164,7 @@ export default function AdminLogin() {
                 <div className="flex justify-center py-2">
                   <Turnstile
                     ref={turnstileRef}
-                    siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
+                    siteKey={ENV.turnstile.siteKey}
                     options={{
                       theme: "light",
                       size: "normal",

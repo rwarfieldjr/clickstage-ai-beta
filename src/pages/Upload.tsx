@@ -25,6 +25,7 @@ import { logEvent } from "@/lib/logEvent";
 import { hasEnoughCredits, deductCredits, getCredits } from "@/lib/credits";
 import { processCreditOrStripeCheckout } from "@/lib/creditCheckout";
 import { PRICING_TIERS } from "@/config/pricing";
+import { ENV } from "@/config/environment";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
 import coastal from "@/assets/style-coastal.jpg";
 import scandinavian from "@/assets/style-scandinavian.jpg";
@@ -206,7 +207,7 @@ const Upload = () => {
         
         // Render new widget with manual verification (appearance: 'always')
         widgetId = (window as any).turnstile.render(turnstileRef.current, {
-          sitekey: '0x4AAAAAAB9xdhqE9Qyud_D6',
+          sitekey: ENV.turnstile.siteKey,
           theme: theme === 'dark' ? 'dark' : 'light',
           appearance: 'always', // 👈 Force manual checkbox every time (NEVER auto-verify)
           callback: (token: string) => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { useTheme } from "@/hooks/use-theme";
+import { ENV } from "@/config/environment";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -25,6 +26,20 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const turnstileRef = useRef<any>(null);
+
+  // Show Turnstile only after both email and password are filled
+  const shouldShowTurnstile = email.trim().length > 0 && password.trim().length > 0;
+
+  // Reset Turnstile when fields are cleared
+  useEffect(() => {
+    if (!shouldShowTurnstile) {
+      setTurnstileToken("");
+      if (turnstileRef.current) {
+        turnstileRef.current.reset();
+      }
+    }
+  }, [shouldShowTurnstile]);
 
   useEffect(() => {
     // Check if user is already logged in or if this is a password recovery
@@ -273,19 +288,40 @@ const Auth = () => {
                     <Button
                       type="submit"
                       className="w-full bg-accent hover:bg-accent/90"
-                      disabled={loading || !turnstileToken}
+                      disabled={loading || (shouldShowTurnstile && !turnstileToken)}
                     >
                       {loading ? "Loading..." : "Log In"}
                     </Button>
-                    <div className="flex justify-center">
-                      <Turnstile
-                        siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
-                        onSuccess={setTurnstileToken}
-                        options={{
-                          theme: theme === 'dark' ? 'dark' : 'light'
-                        }}
-                      />
-                    </div>
+                    
+                    {/* Turnstile - Only shows after email and password are filled */}
+                    {shouldShowTurnstile && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Security Verification <span className="text-destructive">*</span></Label>
+                        <div className="flex justify-center">
+                          <Turnstile
+                            ref={turnstileRef}
+                            siteKey={ENV.turnstile.siteKey}
+                            onSuccess={setTurnstileToken}
+                            onError={() => {
+                              setTurnstileToken("");
+                              if (turnstileRef.current) {
+                                turnstileRef.current.reset();
+                              }
+                            }}
+                            onExpire={() => {
+                              setTurnstileToken("");
+                              if (turnstileRef.current) {
+                                turnstileRef.current.reset();
+                              }
+                            }}
+                            options={{
+                              theme: theme === 'dark' ? 'dark' : 'light',
+                              appearance: 'always', // Force manual checkbox
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </form>
                   <div className="text-center mt-4">
                     <button
@@ -357,19 +393,40 @@ const Auth = () => {
                     <Button
                       type="submit"
                       className="w-full bg-accent hover:bg-accent/90"
-                      disabled={loading || password !== confirmPassword || !turnstileToken}
+                      disabled={loading || password !== confirmPassword || (shouldShowTurnstile && !turnstileToken)}
                     >
                       {loading ? "Loading..." : "Sign Up"}
                     </Button>
-                    <div className="flex justify-center">
-                      <Turnstile
-                        siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
-                        onSuccess={setTurnstileToken}
-                        options={{
-                          theme: theme === 'dark' ? 'dark' : 'light'
-                        }}
-                      />
-                    </div>
+                    
+                    {/* Turnstile - Only shows after email and password are filled */}
+                    {shouldShowTurnstile && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Security Verification <span className="text-destructive">*</span></Label>
+                        <div className="flex justify-center">
+                          <Turnstile
+                            ref={turnstileRef}
+                            siteKey={ENV.turnstile.siteKey}
+                            onSuccess={setTurnstileToken}
+                            onError={() => {
+                              setTurnstileToken("");
+                              if (turnstileRef.current) {
+                                turnstileRef.current.reset();
+                              }
+                            }}
+                            onExpire={() => {
+                              setTurnstileToken("");
+                              if (turnstileRef.current) {
+                                turnstileRef.current.reset();
+                              }
+                            }}
+                            options={{
+                              theme: theme === 'dark' ? 'dark' : 'light',
+                              appearance: 'always', // Force manual checkbox
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </form>
                 </TabsContent>
               </Tabs>
