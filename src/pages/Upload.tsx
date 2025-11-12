@@ -870,11 +870,8 @@ const Upload = () => {
                 {/* CAPTCHA Verification - Only shows after bundle selection */}
                 {selectedBundle && (
                   <div className="mb-4">
-                    <Label className="text-base font-semibold mb-2 block">Security Verification <span className="text-destructive">*</span></Label>
-                    <div ref={turnstileRef} className="flex justify-center"></div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Please check the box above to verify you're human before proceeding.
-                    </p>
+                    <Label className="text-base font-semibold mb-3 block">Security Verification <span className="text-destructive">*</span></Label>
+                    <div ref={turnstileRef} className="flex justify-center mb-2"></div>
                   </div>
                 )}
 
