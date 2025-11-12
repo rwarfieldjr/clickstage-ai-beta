@@ -5,11 +5,21 @@ import { useAdmin } from "@/hooks/use-admin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ExternalLink, Upload, Download, Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { ArrowLeft, Mail, Link as LinkIcon, Copy } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
+import ImageDropzone from "@/components/ImageDropzone";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface OrderDetail {
   id: string;
@@ -27,12 +37,24 @@ interface OrderDetail {
   };
 }
 
+interface OrderImage {
+  id: string;
+  image_url: string;
+  file_name: string;
+  image_type: string;
+  file_size: number;
+  created_at: string;
+}
+
 export default function AdminOrderDetail() {
   const { id } = useParams();
-  const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
+  const { isAdmin, loading, requireAdmin } = useAdmin();
   const [order, setOrder] = useState<OrderDetail | null>(null);
-  const [signedOriginalUrl, setSignedOriginalUrl] = useState<string>("");
-  const [signedStagedUrl, setSignedStagedUrl] = useState<string>("");
+  const [originalImages, setOriginalImages] = useState<OrderImage[]>([]);
+  const [stagedImages, setStagedImages] = useState<OrderImage[]>([]);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [shareLink, setShareLink] = useState<string>("");
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
