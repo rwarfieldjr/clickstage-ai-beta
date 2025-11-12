@@ -3,10 +3,11 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, ExternalLink } from "lucide-react";
+import { Download, ExternalLink, Archive } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import JSZip from "jszip";
 
 interface OrderImage {
   id: string;
@@ -139,16 +140,61 @@ export default function ClientGallery() {
   };
 
   const handleDownloadAll = async () => {
-    toast.loading("Preparing download...");
-    for (const img of images) {
-      const url = signedUrls[img.id];
-      if (url) {
-        await handleDownload(url, img.file_name);
-        await new Promise((resolve) => setTimeout(resolve, 500));
+    if (images.length === 0) return;
+
+    try {
+      toast.loading(`Preparing ${images.length} images for download...`);
+
+      const zip = new JSZip();
+      const folder = zip.folder(`Order-${orderData?.order_number || "images"}`);
+
+      // Fetch all images and add to ZIP
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        const url = signedUrls[img.id];
+        
+        if (url) {
+          try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            
+            // Add to ZIP with sequential numbering if files have same name
+            const fileName = `${i + 1}-${img.file_name}`;
+            folder?.file(fileName, blob);
+            
+            toast.loading(`Adding image ${i + 1} of ${images.length}...`);
+          } catch (error) {
+            console.error(`Failed to fetch image ${img.file_name}:`, error);
+          }
+        }
       }
+
+      toast.loading("Creating ZIP file...");
+      
+      // Generate ZIP file
+      const zipBlob = await zip.generateAsync({ 
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: { level: 6 }
+      });
+
+      // Download ZIP
+      const blobUrl = window.URL.createObjectURL(zipBlob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `${orderData?.order_number || "staged-images"}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+
+      toast.dismiss();
+      toast.success("All images downloaded as ZIP!");
+    } catch (error) {
+      console.error("Error creating ZIP:", error);
+      toast.dismiss();
+      toast.error("Failed to create ZIP file");
     }
-    toast.dismiss();
-    toast.success("All images downloaded");
   };
 
   if (loading) {
@@ -208,9 +254,9 @@ export default function ClientGallery() {
                 </div>
               </div>
               {images.length > 1 && (
-                <Button onClick={handleDownloadAll} className="w-full">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download All Images
+                <Button onClick={handleDownloadAll} className="w-full" size="lg">
+                  <Archive className="mr-2 h-5 w-5" />
+                  Download All as ZIP ({images.length} images)
                 </Button>
               )}
             </CardContent>
