@@ -159,9 +159,11 @@ const Upload = () => {
   /**
    * ⚠️ PRODUCTION STABLE - DO NOT MODIFY WITHOUT REVIEW
    * @version 1.0.0-stable
-   * @last-updated 2025-11-04
+   * @last-updated 2025-11-10
    * 
    * Turnstile widget initialization with full lifecycle management:
+   * - Manual checkbox with appearance: 'always' (NEVER auto-verifies)
+   * - Only renders after bundle selection
    * - Auto-refresh on token expiration (5-minute lifetime)
    * - Error handling with automatic retry
    * - Timeout detection
@@ -170,9 +172,15 @@ const Upload = () => {
    * 
    * DO NOT REMOVE: expired-callback, error-callback, timeout-callback
    */
-  // Initialize Turnstile widget with stability checks
+  // Initialize Turnstile widget with stability checks (only after bundle selection)
   useEffect(() => {
-    console.log("[STABILITY-CHECK] Initializing Turnstile widget");
+    // Only render Turnstile after a bundle has been selected
+    if (!selectedBundle) {
+      console.log("[STABILITY-CHECK] Waiting for bundle selection before rendering Turnstile");
+      return;
+    }
+
+    console.log("[STABILITY-CHECK] Bundle selected, initializing Turnstile widget");
     
     // Prevent multiple widget renders
     let widgetId: string | null = null;
@@ -196,10 +204,11 @@ const Upload = () => {
         // Clear any existing content
         turnstileRef.current.innerHTML = '';
         
-        // Render new widget with expiration handling
+        // Render new widget with manual verification (appearance: 'always')
         widgetId = (window as any).turnstile.render(turnstileRef.current, {
           sitekey: '0x4AAAAAAB9xdhqE9Qyud_D6',
           theme: theme === 'dark' ? 'dark' : 'light',
+          appearance: 'always', // 👈 Force manual checkbox every time (NEVER auto-verify)
           callback: (token: string) => {
             setTurnstileToken(token);
             console.log('[STABILITY-CHECK] ✓ Turnstile token received', { tokenLength: token.length });
@@ -210,6 +219,10 @@ const Upload = () => {
             toast.error("Security verification failed. Please try again or refresh the page.", {
               duration: 5000,
             });
+            // Auto-refresh the widget on error
+            if (widgetId && (window as any).turnstile) {
+              (window as any).turnstile.reset(widgetId);
+            }
           },
           'expired-callback': () => {
             console.warn('[STABILITY-CHECK] ⚠ Turnstile token expired (Cloudflare callback)');
@@ -222,7 +235,7 @@ const Upload = () => {
                 border: '1px solid #FFCDD2',
               },
             });
-            // Auto-refresh the widget
+            // Auto-refresh the widget on expiration
             if (widgetId && (window as any).turnstile) {
               (window as any).turnstile.reset(widgetId);
             }
@@ -233,10 +246,14 @@ const Upload = () => {
             toast.error("Verification timed out. Please refresh the page and try again.", {
               duration: 5000,
             });
+            // Auto-refresh the widget on timeout
+            if (widgetId && (window as any).turnstile) {
+              (window as any).turnstile.reset(widgetId);
+            }
           },
         });
         
-        console.log('[STABILITY-CHECK] ✓ Turnstile widget rendered with auto-refresh', { widgetId });
+        console.log('[STABILITY-CHECK] ✓ Turnstile widget rendered with manual verification (appearance: always)', { widgetId });
       }
     };
 
@@ -275,7 +292,7 @@ const Upload = () => {
         }
       }
     };
-  }, [theme]);
+  }, [theme, selectedBundle]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -850,14 +867,16 @@ const Upload = () => {
                   </div>
                 </div>
 
-                {/* CAPTCHA Verification */}
-                <div className="mb-4">
-                  <Label className="text-base font-semibold mb-2 block">Security Verification <span className="text-destructive">*</span></Label>
-                  <div ref={turnstileRef}></div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Complete the verification to proceed with your order.
-                  </p>
-                </div>
+                {/* CAPTCHA Verification - Only shows after bundle selection */}
+                {selectedBundle && (
+                  <div className="mb-4">
+                    <Label className="text-base font-semibold mb-2 block">Security Verification <span className="text-destructive">*</span></Label>
+                    <div ref={turnstileRef} className="flex justify-center"></div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Please check the box above to verify you're human before proceeding.
+                    </p>
+                  </div>
+                )}
 
                 {/* Status feedback */}
                 <div className="min-h-[24px] mb-2">
@@ -882,7 +901,7 @@ const Upload = () => {
                     try {
                       // Validate Turnstile token
                       if (!turnstileToken) {
-                        setError("Please complete the security verification.");
+                        setError("Please check the security verification box before continuing.");
                         setLoading(false);
                         return;
                       }
@@ -962,10 +981,10 @@ const Upload = () => {
                       setLoading(false);
                     }
                   }}
-                  disabled={loading}
+                  disabled={loading || !turnstileToken}
                   className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? "Processing..." : "Proceed to Checkout"}
+                  {loading ? "Processing..." : !turnstileToken ? "Complete Security Verification" : "Proceed to Checkout"}
                 </button>
               </form>
             </CardContent>
