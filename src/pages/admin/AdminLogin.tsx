@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,13 +7,34 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Shield } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
+import { ENV } from "@/config/environment";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string>("");
+  const [turnstileVerified, setTurnstileVerified] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const turnstileRef = useRef<any>(null);
+
+  // Check if both email and password are filled to show Turnstile
+  const shouldShowTurnstile = email.trim().length > 0 && password.trim().length > 0;
+
+  // Reset Turnstile when fields are cleared
+  useEffect(() => {
+    if (!shouldShowTurnstile) {
+      setTurnstileVerified(false);
+      setTurnstileToken("");
+      setShowWarning(false);
+      if (turnstileRef.current) {
+        turnstileRef.current.reset();
+      }
+    }
+  }, [shouldShowTurnstile]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -38,6 +59,14 @@ export default function AdminLogin() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if Turnstile is verified when fields are filled
+    if (shouldShowTurnstile && !turnstileVerified) {
+      setShowWarning(true);
+      setTimeout(() => setShowWarning(false), 4000);
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -78,6 +107,12 @@ export default function AdminLogin() {
         description: error.message,
         variant: "destructive",
       });
+      // Reset Turnstile on error
+      setTurnstileVerified(false);
+      setTurnstileToken("");
+      if (turnstileRef.current) {
+        turnstileRef.current.reset();
+      }
     } finally {
       setLoading(false);
     }
@@ -121,7 +156,56 @@ export default function AdminLogin() {
                 minLength={10}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+
+            {/* Turnstile Security Verification - Only shows after email and password are entered */}
+            {shouldShowTurnstile && (
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">Security Verification <span className="text-destructive">*</span></Label>
+                <div className="flex justify-center py-2">
+                  <Turnstile
+                    ref={turnstileRef}
+                    siteKey={ENV.recaptcha.siteKey}
+                    options={{
+                      theme: "light",
+                      size: "normal",
+                      appearance: "always", // Force manual checkbox verification
+                    }}
+                    onSuccess={(token) => {
+                      setTurnstileToken(token);
+                      setTurnstileVerified(true);
+                      setShowWarning(false);
+                    }}
+                    onError={() => {
+                      setTurnstileVerified(false);
+                      setTurnstileToken("");
+                      if (turnstileRef.current) {
+                        turnstileRef.current.reset();
+                      }
+                    }}
+                    onExpire={() => {
+                      setTurnstileVerified(false);
+                      setTurnstileToken("");
+                      if (turnstileRef.current) {
+                        turnstileRef.current.reset();
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Warning Message */}
+            {showWarning && (
+              <div className="text-destructive text-sm text-center font-medium animate-in fade-in duration-300">
+                ⚠️ Please complete the security verification before logging in.
+              </div>
+            )}
+
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading || (shouldShowTurnstile && !turnstileVerified)}
+            >
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
