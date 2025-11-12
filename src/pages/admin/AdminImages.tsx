@@ -46,7 +46,7 @@ const AdminImages = () => {
     try {
       const { data: storageFiles, error: storageError } = await supabase
         .storage
-        .from("original-images")
+        .from("uploads")
         .list("", {
           sortBy: { column: "created_at", order: "desc" },
         });
@@ -59,7 +59,7 @@ const AdminImages = () => {
       const fetchFolderContents = async (path: string = "") => {
         const { data, error } = await supabase
           .storage
-          .from("original-images")
+          .from("uploads")
           .list(path, {
             sortBy: { column: "created_at", order: "desc" },
           });
@@ -116,7 +116,7 @@ const AdminImages = () => {
         allFiles.map(async (file) => {
           const { data } = await supabase
             .storage
-            .from("original-images")
+            .from("uploads")
             .createSignedUrl(file.name, 3600);
           if (data?.signedUrl) {
             urlsMap[file.name] = data.signedUrl;
@@ -135,7 +135,7 @@ const AdminImages = () => {
     try {
       const { data, error } = await supabase
         .storage
-        .from("original-images")
+        .from("uploads")
         .download(filePath);
 
       if (error) throw error;
@@ -160,7 +160,7 @@ const AdminImages = () => {
     try {
       const { data, error } = await supabase
         .storage
-        .from("original-images")
+        .from("uploads")
         .createSignedUrl(filePath, 3600); // 1 hour expiry
 
       if (error) throw error;

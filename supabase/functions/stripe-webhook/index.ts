@@ -343,7 +343,7 @@ serve(async (req) => {
         const filePaths = files.map((fileUrl: string) => {
           // If it's a full URL, extract just the path after the bucket name
           if (fileUrl.includes('/storage/v1/object/')) {
-            const parts = fileUrl.split('/original-images/');
+            const parts = fileUrl.split('/uploads/');
             return parts[1] || fileUrl;
           }
           return fileUrl;

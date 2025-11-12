@@ -104,7 +104,7 @@ export default function AdminOrderDetail() {
       // Generate signed URLs
       const urls: Record<string, string> = {};
       for (const img of images || []) {
-        const bucket = img.image_type === "original" ? "original-images" : "staged";
+        const bucket = img.image_type === "original" ? "uploads" : "staged";
         const path = img.image_url.includes("storage/v1/object/public/")
           ? img.image_url.split(`storage/v1/object/public/${bucket}/`)[1]
           : img.image_url;
@@ -164,7 +164,7 @@ export default function AdminOrderDetail() {
     try {
       toast.loading(`Uploading ${files.length} ${type} image(s)...`);
 
-      const bucket = type === "original" ? "original-images" : "staged";
+      const bucket = type === "original" ? "uploads" : "staged";
       const uploadedImages = [];
 
       for (const file of files) {
@@ -286,7 +286,7 @@ export default function AdminOrderDetail() {
     try {
       toast.loading("Deleting image...");
 
-      const bucket = imageType === "original" ? "original-images" : "staged";
+      const bucket = imageType === "original" ? "uploads" : "staged";
       const path = imageUrl.includes("storage/v1/object/public/")
         ? imageUrl.split(`storage/v1/object/public/${bucket}/`)[1]
         : imageUrl;

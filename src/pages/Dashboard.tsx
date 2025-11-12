@@ -107,12 +107,12 @@ const Dashboard = () => {
           if (order.original_image_url) {
             // Extract the path from full URL or use as-is if it's just a path
             const originalPath = order.original_image_url.includes('storage/v1/object/public/')
-              ? order.original_image_url.split('storage/v1/object/public/original-images/')[1]
+              ? order.original_image_url.split('storage/v1/object/public/uploads/')[1]
               : order.original_image_url;
-            
+
             if (originalPath) {
               const { data: signedData } = await supabase.storage
-                .from('original-images')
+                .from('uploads')
                 .createSignedUrl(originalPath, 3600); // 1 hour expiry
               
               if (signedData?.signedUrl) {

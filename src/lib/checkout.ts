@@ -258,7 +258,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
         const fileName = `${user.id}/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("original-images")
+          .from("uploads")
           .upload(fileName, file);
 
         if (uploadError) throw uploadError;

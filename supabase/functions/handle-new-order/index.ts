@@ -131,7 +131,7 @@ serve(async (req) => {
     if (files && files.length > 0) {
       const { data: signedUrlData, error: signedUrlError } = await supabaseAdmin
         .storage
-        .from("original-images")
+        .from("uploads")
         .createSignedUrl(files[0], 604800); // 7 days expiration
 
       if (signedUrlError) {
@@ -250,7 +250,7 @@ serve(async (req) => {
       const signedUrls = await Promise.all(
         files.map(async (file) => {
           const { data, error } = await supabaseAdmin.storage
-            .from('original-images')
+            .from('uploads')
             .createSignedUrl(file, 172800); // 48 hours
           
           if (error) {

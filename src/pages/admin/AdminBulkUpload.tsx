@@ -89,7 +89,7 @@ export default function AdminBulkUpload() {
     type: 'original' | 'staged'
   ) => {
     const fileExt = file.name.split('.').pop();
-    const bucket = type === 'original' ? 'original-images' : 'staged';
+    const bucket = type === 'original' ? 'uploads' : 'staged';
     const fileName = `${userId}/${orderId}/${type}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
