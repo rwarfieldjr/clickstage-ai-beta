@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, ImageIcon, CreditCard, Activity, UserCheck, UserX } from "lucide-react";
+import { Users, ImageIcon, CreditCard, Activity, UserCheck, UserX, Clock, CheckCircle2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -13,6 +13,8 @@ interface DashboardStats {
   activeUsers: number;
   pausedUsers: number;
   totalOrders: number;
+  pendingOrders: number;
+  completedOrders: number;
   totalImages: number;
   creditsIssued: number;
   creditsUsed: number;
@@ -44,6 +46,9 @@ export default function AdminDashboard() {
       const activeUsers = usersResult.data?.filter((u) => u.status === "active").length || 0;
       const pausedUsers = usersResult.data?.filter((u) => u.status === "paused").length || 0;
 
+      const pendingOrders = ordersResult.data?.filter((o) => o.status === "pending").length || 0;
+      const completedOrders = ordersResult.data?.filter((o) => o.status === "completed").length || 0;
+
       const creditsIssued = ledgerResult.data?.reduce((sum, t) => 
         t.reason === "purchase" && t.delta > 0 ? sum + t.delta : sum, 0) || 0;
       const creditsUsed = ledgerResult.data?.reduce((sum, t) => 
@@ -54,6 +59,8 @@ export default function AdminDashboard() {
         activeUsers,
         pausedUsers,
         totalOrders: ordersResult.count || 0,
+        pendingOrders,
+        completedOrders,
         totalImages: ordersResult.data?.length || 0,
         creditsIssued,
         creditsUsed,
@@ -123,6 +130,26 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats?.totalOrders || 0}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/admin/orders")}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+              <Clock className="h-4 w-4 text-yellow-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.pendingOrders || 0}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/admin/orders")}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completed Orders</CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.completedOrders || 0}</div>
             </CardContent>
           </Card>
 
