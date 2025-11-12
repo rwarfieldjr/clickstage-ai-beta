@@ -39,6 +39,7 @@ const PurchaseCredits = lazy(() => import("./pages/PurchaseCredits"));
 const CreditsSuccess = lazy(() => import("./pages/CreditsSuccess"));
 const StabilityTest = lazy(() => import("./pages/StabilityTest"));
 const CheckoutDiagnostics = lazy(() => import("./pages/CheckoutDiagnostics"));
+const ClientGallery = lazy(() => import("./pages/ClientGallery"));
 
 const queryClient = new QueryClient();
 
@@ -82,6 +83,7 @@ const App = () => (
           <Route path="/credits-success" element={<CreditsSuccess />} />
           <Route path="/stability-test" element={<StabilityTest />} />
           <Route path="/diagnostics" element={<CheckoutDiagnostics />} />
+          <Route path="/gallery/:token" element={<ClientGallery />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
           </Routes>

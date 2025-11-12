@@ -5,11 +5,21 @@ import { useAdmin } from "@/hooks/use-admin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ExternalLink, Upload, Download, Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { ArrowLeft, Mail, Link as LinkIcon, Copy, Download, ExternalLink, Trash2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
+import ImageDropzone from "@/components/ImageDropzone";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface OrderDetail {
   id: string;
@@ -27,12 +37,24 @@ interface OrderDetail {
   };
 }
 
+interface OrderImage {
+  id: string;
+  image_url: string;
+  file_name: string;
+  image_type: string;
+  file_size: number;
+  created_at: string;
+}
+
 export default function AdminOrderDetail() {
   const { id } = useParams();
-  const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
+  const { isAdmin, loading, requireAdmin } = useAdmin();
   const [order, setOrder] = useState<OrderDetail | null>(null);
-  const [signedOriginalUrl, setSignedOriginalUrl] = useState<string>("");
-  const [signedStagedUrl, setSignedStagedUrl] = useState<string>("");
+  const [originalImages, setOriginalImages] = useState<OrderImage[]>([]);
+  const [stagedImages, setStagedImages] = useState<OrderImage[]>([]);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [shareLink, setShareLink] = useState<string>("");
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,37 +85,51 @@ export default function AdminOrderDetail() {
       if (error) throw error;
       setOrder(data);
 
-      // Generate signed URLs for images
-      if (data.original_image_url) {
-        const originalPath = data.original_image_url.includes('storage/v1/object/public/')
-          ? data.original_image_url.split('storage/v1/object/public/original-images/')[1]
-          : data.original_image_url;
-        
-        if (originalPath) {
+      // Fetch order images
+      const { data: images, error: imagesError } = await supabase
+        .from("order_images")
+        .select("*")
+        .eq("order_id", id)
+        .order("created_at", { ascending: true });
+
+      if (imagesError) throw imagesError;
+
+      const original = images?.filter((img) => img.image_type === "original") || [];
+      const staged = images?.filter((img) => img.image_type === "staged") || [];
+
+      setOriginalImages(original);
+      setStagedImages(staged);
+
+      // Generate signed URLs
+      const urls: Record<string, string> = {};
+      for (const img of images || []) {
+        const bucket = img.image_type === "original" ? "original-images" : "staged";
+        const path = img.image_url.includes("storage/v1/object/public/")
+          ? img.image_url.split(`storage/v1/object/public/${bucket}/`)[1]
+          : img.image_url;
+
+        if (path) {
           const { data: signedData } = await supabase.storage
-            .from('original-images')
-            .createSignedUrl(originalPath, 3600);
-          
+            .from(bucket)
+            .createSignedUrl(path, 3600);
+
           if (signedData?.signedUrl) {
-            setSignedOriginalUrl(signedData.signedUrl);
+            urls[img.id] = signedData.signedUrl;
           }
         }
       }
+      setSignedUrls(urls);
 
-      if (data.staged_image_url) {
-        const stagedPath = data.staged_image_url.includes('storage/v1/object/public/')
-          ? data.staged_image_url.split('storage/v1/object/public/staged/')[1]
-          : data.staged_image_url;
-        
-        if (stagedPath) {
-          const { data: signedData } = await supabase.storage
-            .from('staged')
-            .createSignedUrl(stagedPath, 3600);
-          
-          if (signedData?.signedUrl) {
-            setSignedStagedUrl(signedData.signedUrl);
-          }
-        }
+      // Check for existing share link
+      const { data: linkData } = await supabase
+        .from("shareable_links")
+        .select("token")
+        .eq("order_id", id)
+        .gt("expires_at", new Date().toISOString())
+        .single();
+
+      if (linkData) {
+        setShareLink(`${window.location.origin}/gallery/${linkData.token}`);
       }
     } catch (error) {
       console.error("Error fetching order:", error);
@@ -102,10 +138,10 @@ export default function AdminOrderDetail() {
 
   const toggleOrderStatus = async () => {
     if (!order) return;
-    
+
     try {
       const newStatus = order.status === "pending" ? "completed" : "pending";
-      
+
       const { error } = await supabase
         .from("orders")
         .update({ status: newStatus })
@@ -121,77 +157,52 @@ export default function AdminOrderDetail() {
     }
   };
 
-  const handleUploadOriginal = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!order || !e.target.files || !e.target.files[0]) return;
-    
-    const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${order.user_id}/${order.id}/original.${fileExt}`;
+  const handleUploadImages = async (files: File[], type: "original" | "staged") => {
+    if (!order) return;
 
     try {
-      toast.loading("Uploading original image...");
-      
-      const { error: uploadError } = await supabase.storage
-        .from('original-images')
-        .upload(fileName, file, { upsert: true });
+      toast.loading(`Uploading ${files.length} ${type} image(s)...`);
 
-      if (uploadError) throw uploadError;
+      const bucket = type === "original" ? "original-images" : "staged";
+      const uploadedImages = [];
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('original-images')
-        .getPublicUrl(fileName);
+      for (const file of files) {
+        const fileExt = file.name.split(".").pop();
+        const timestamp = Date.now();
+        const fileName = `${order.user_id}/${order.id}/${type}-${timestamp}.${fileExt}`;
 
-      const { error: updateError } = await supabase
-        .from("orders")
-        .update({ original_image_url: publicUrl })
-        .eq("id", order.id);
+        const { error: uploadError } = await supabase.storage
+          .from(bucket)
+          .upload(fileName, file, { upsert: true });
 
-      if (updateError) throw updateError;
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from(bucket)
+          .getPublicUrl(fileName);
+
+        // Save to order_images table
+        const { error: insertError } = await supabase
+          .from("order_images")
+          .insert({
+            order_id: order.id,
+            image_type: type,
+            image_url: publicUrl,
+            file_name: file.name,
+            file_size: file.size,
+          });
+
+        if (insertError) throw insertError;
+        uploadedImages.push(publicUrl);
+      }
 
       toast.dismiss();
-      toast.success("Original image uploaded successfully");
+      toast.success(`Successfully uploaded ${files.length} ${type} image(s)`);
       await fetchOrder();
     } catch (error: any) {
       toast.dismiss();
-      console.error("Error uploading original image:", error);
-      toast.error("Failed to upload original image");
-    }
-  };
-
-  const handleUploadStaged = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!order || !e.target.files || !e.target.files[0]) return;
-    
-    const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${order.user_id}/${order.id}/staged.${fileExt}`;
-
-    try {
-      toast.loading("Uploading staged image...");
-      
-      const { error: uploadError } = await supabase.storage
-        .from('staged')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('staged')
-        .getPublicUrl(fileName);
-
-      const { error: updateError } = await supabase
-        .from("orders")
-        .update({ staged_image_url: publicUrl })
-        .eq("id", order.id);
-
-      if (updateError) throw updateError;
-
-      toast.dismiss();
-      toast.success("Staged image uploaded successfully");
-      await fetchOrder();
-    } catch (error: any) {
-      toast.dismiss();
-      console.error("Error uploading staged image:", error);
-      toast.error("Failed to upload staged image");
+      console.error(`Error uploading ${type} images:`, error);
+      toast.error(`Failed to upload ${type} images`);
     }
   };
 
@@ -200,14 +211,14 @@ export default function AdminOrderDetail() {
       const response = await fetch(url);
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
+
+      const link = document.createElement("a");
       link.href = blobUrl;
       link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       window.URL.revokeObjectURL(blobUrl);
       toast.success("Image downloaded successfully");
     } catch (error) {
@@ -216,77 +227,96 @@ export default function AdminOrderDetail() {
     }
   };
 
-  const handleDeleteOriginal = async () => {
-    if (!order || !order.original_image_url) return;
-
-    if (!confirm("Are you sure you want to delete the original image?")) return;
+  const handleDeleteImage = async (imageId: string, imageType: string, imageUrl: string) => {
+    if (!confirm(`Are you sure you want to delete this ${imageType} image?`)) return;
 
     try {
-      toast.loading("Deleting original image...");
+      toast.loading("Deleting image...");
 
-      const originalPath = order.original_image_url.includes('storage/v1/object/public/')
-        ? order.original_image_url.split('storage/v1/object/public/original-images/')[1]
-        : order.original_image_url;
+      const bucket = imageType === "original" ? "original-images" : "staged";
+      const path = imageUrl.includes("storage/v1/object/public/")
+        ? imageUrl.split(`storage/v1/object/public/${bucket}/`)[1]
+        : imageUrl;
 
-      if (originalPath) {
+      if (path) {
         const { error: deleteError } = await supabase.storage
-          .from('original-images')
-          .remove([originalPath]);
+          .from(bucket)
+          .remove([path]);
 
         if (deleteError) throw deleteError;
       }
 
-      const { error: updateError } = await supabase
-        .from("orders")
-        .update({ original_image_url: null })
-        .eq("id", order.id);
+      const { error: dbError } = await supabase
+        .from("order_images")
+        .delete()
+        .eq("id", imageId);
 
-      if (updateError) throw updateError;
+      if (dbError) throw dbError;
 
       toast.dismiss();
-      toast.success("Original image deleted successfully");
+      toast.success("Image deleted successfully");
       await fetchOrder();
     } catch (error: any) {
       toast.dismiss();
-      console.error("Error deleting original image:", error);
-      toast.error("Failed to delete original image");
+      console.error("Error deleting image:", error);
+      toast.error("Failed to delete image");
     }
   };
 
-  const handleDeleteStaged = async () => {
-    if (!order || !order.staged_image_url) return;
-
-    if (!confirm("Are you sure you want to delete the staged image?")) return;
+  const generateShareLink = async () => {
+    if (!order) return;
 
     try {
-      toast.loading("Deleting staged image...");
+      const token = crypto.randomUUID();
 
-      const stagedPath = order.staged_image_url.includes('storage/v1/object/public/')
-        ? order.staged_image_url.split('storage/v1/object/public/staged/')[1]
-        : order.staged_image_url;
+      const { error } = await supabase
+        .from("shareable_links")
+        .insert({
+          order_id: order.id,
+          token,
+        });
 
-      if (stagedPath) {
-        const { error: deleteError } = await supabase.storage
-          .from('staged')
-          .remove([stagedPath]);
+      if (error) throw error;
 
-        if (deleteError) throw deleteError;
-      }
-
-      const { error: updateError } = await supabase
-        .from("orders")
-        .update({ staged_image_url: null })
-        .eq("id", order.id);
-
-      if (updateError) throw updateError;
-
-      toast.dismiss();
-      toast.success("Staged image deleted successfully");
-      await fetchOrder();
+      const link = `${window.location.origin}/gallery/${token}`;
+      setShareLink(link);
+      toast.success("Share link generated!");
     } catch (error: any) {
-      toast.dismiss();
-      console.error("Error deleting staged image:", error);
-      toast.error("Failed to delete staged image");
+      console.error("Error generating share link:", error);
+      toast.error("Failed to generate share link");
+    }
+  };
+
+  const copyShareLink = () => {
+    if (shareLink) {
+      navigator.clipboard.writeText(shareLink);
+      toast.success("Link copied to clipboard!");
+    }
+  };
+
+  const sendCompletionEmail = async () => {
+    if (!order || !shareLink) {
+      toast.error("Please generate a share link first");
+      return;
+    }
+
+    try {
+      const token = shareLink.split("/gallery/")[1];
+
+      const { error } = await supabase.functions.invoke("send-staging-complete-email", {
+        body: {
+          orderId: order.id,
+          shareToken: token,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success("Completion email sent to client!");
+      setShowEmailDialog(false);
+    } catch (error: any) {
+      console.error("Error sending email:", error);
+      toast.error("Failed to send email");
     }
   };
 
@@ -324,7 +354,7 @@ export default function AdminOrderDetail() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge 
+                  <Badge
                     className="cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={toggleOrderStatus}
                   >
@@ -375,141 +405,160 @@ export default function AdminOrderDetail() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader>
-              <CardTitle>Original Image</CardTitle>
+              <CardTitle>Original Images ({originalImages.length})</CardTitle>
             </CardHeader>
-            <CardContent>
-              {signedOriginalUrl ? (
-                <>
-                  <div className="aspect-video bg-muted rounded-lg overflow-hidden mb-4">
-                    <img
-                      src={signedOriginalUrl}
-                      alt="Original"
-                      className="w-full h-full object-cover"
-                    />
+            <CardContent className="space-y-4">
+              <ImageDropzone
+                onFilesSelected={(files) => handleUploadImages(files, "original")}
+                multiple={true}
+              />
+
+              <div className="grid grid-cols-1 gap-4 mt-4">
+                {originalImages.map((img) => (
+                  <div key={img.id} className="border rounded-lg overflow-hidden">
+                    <div className="aspect-video bg-muted">
+                      {signedUrls[img.id] && (
+                        <img
+                          src={signedUrls[img.id]}
+                          alt={img.file_name}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <p className="text-sm font-medium truncate">{img.file_name}</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadImage(signedUrls[img.id], img.file_name)}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={signedUrls[img.id]} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteImage(img.id, img.image_type, img.image_url)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleDownloadImage(signedOriginalUrl, `original-${order.id}.jpg`)}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Download
-                    </Button>
-                    <Button variant="outline" asChild>
-                      <a href={signedOriginalUrl} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        View Full
-                      </a>
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleDeleteOriginal}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-4">
-                  <p className="text-muted-foreground">Loading image...</p>
-                </div>
-              )}
-              <div className="mt-4">
-                <label htmlFor="upload-original" className="block mb-2 text-sm font-medium">
-                  Upload Original Image
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    id="upload-original"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleUploadOriginal}
-                    className="flex-1"
-                  />
-                  <Button variant="secondary" asChild>
-                    <label htmlFor="upload-original" className="cursor-pointer">
-                      <Upload className="h-4 w-4" />
-                    </label>
-                  </Button>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Staged Image</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle>Staged Images ({stagedImages.length})</CardTitle>
+              <div className="flex gap-2">
+                {!shareLink && stagedImages.length > 0 && (
+                  <Button size="sm" variant="outline" onClick={generateShareLink}>
+                    <LinkIcon className="mr-2 h-4 w-4" />
+                    Generate Link
+                  </Button>
+                )}
+                {stagedImages.length > 0 && (
+                  <Button size="sm" onClick={() => setShowEmailDialog(true)}>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Email Client
+                  </Button>
+                )}
+              </div>
             </CardHeader>
-            <CardContent>
-              {signedStagedUrl ? (
-                <>
-                  <div className="aspect-video bg-muted rounded-lg overflow-hidden mb-4">
-                    <img
-                      src={signedStagedUrl}
-                      alt="Staged"
-                      className="w-full h-full object-cover"
+            <CardContent className="space-y-4">
+              {shareLink && (
+                <div className="p-3 bg-muted rounded-lg space-y-2">
+                  <p className="text-sm font-medium">Share Link</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={shareLink}
+                      readOnly
+                      className="flex-1 px-3 py-2 text-sm bg-background border rounded"
                     />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleDownloadImage(signedStagedUrl, `staged-${order.id}.jpg`)}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Download
-                    </Button>
-                    <Button variant="outline" asChild>
-                      <a href={signedStagedUrl} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        View Full
-                      </a>
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleDeleteStaged}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
+                    <Button size="sm" variant="outline" onClick={copyShareLink}>
+                      <Copy className="h-4 w-4" />
                     </Button>
                   </div>
-                </>
-              ) : order.staged_image_url ? (
-                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-4">
-                  <p className="text-muted-foreground">Loading image...</p>
-                </div>
-              ) : (
-                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-4">
-                  <p className="text-muted-foreground">No staged image available</p>
                 </div>
               )}
-              <div className="mt-4">
-                <label htmlFor="upload-staged" className="block mb-2 text-sm font-medium">
-                  Upload Staged Image
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    id="upload-staged"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleUploadStaged}
-                    className="flex-1"
-                  />
-                  <Button variant="secondary" asChild>
-                    <label htmlFor="upload-staged" className="cursor-pointer">
-                      <Upload className="h-4 w-4" />
-                    </label>
-                  </Button>
-                </div>
+
+              <ImageDropzone
+                onFilesSelected={(files) => handleUploadImages(files, "staged")}
+                multiple={true}
+              />
+
+              <div className="grid grid-cols-1 gap-4 mt-4">
+                {stagedImages.map((img) => (
+                  <div key={img.id} className="border rounded-lg overflow-hidden">
+                    <div className="aspect-video bg-muted">
+                      {signedUrls[img.id] && (
+                        <img
+                          src={signedUrls[img.id]}
+                          alt={img.file_name}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <p className="text-sm font-medium truncate">{img.file_name}</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadImage(signedUrls[img.id], img.file_name)}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={signedUrls[img.id]} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteImage(img.id, img.image_type, img.image_url)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
         </div>
       </main>
       <Footer />
+
+      <AlertDialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Send Staging Complete Email</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will send an email to {order.profiles.email} with a link to view and download
+              their staged images. Are you sure?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={sendCompletionEmail}>Send Email</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
