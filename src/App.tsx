@@ -34,6 +34,8 @@ const AdminImages = lazy(() => import("./pages/admin/AdminImages"));
 const Blog = lazy(() => import("./pages/Blog"));
 const VirtualStagingGuide = lazy(() => import("./pages/blog/VirtualStagingGuide"));
 const Success = lazy(() => import("./pages/Success"));
+const PurchaseCredits = lazy(() => import("./pages/PurchaseCredits"));
+const CreditsSuccess = lazy(() => import("./pages/CreditsSuccess"));
 const StabilityTest = lazy(() => import("./pages/StabilityTest"));
 const CheckoutDiagnostics = lazy(() => import("./pages/CheckoutDiagnostics"));
 
@@ -74,6 +76,8 @@ const App = () => (
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/virtual-staging-complete-guide" element={<VirtualStagingGuide />} />
           <Route path="/success" element={<Success />} />
+          <Route path="/purchase-credits" element={<PurchaseCredits />} />
+          <Route path="/credits-success" element={<CreditsSuccess />} />
           <Route path="/stability-test" element={<StabilityTest />} />
           <Route path="/diagnostics" element={<CheckoutDiagnostics />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
