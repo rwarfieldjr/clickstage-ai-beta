@@ -5,7 +5,7 @@ import { useAdmin } from "@/hooks/use-admin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ExternalLink, Upload, Download } from "lucide-react";
+import { ArrowLeft, ExternalLink, Upload, Download, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -216,6 +216,80 @@ export default function AdminOrderDetail() {
     }
   };
 
+  const handleDeleteOriginal = async () => {
+    if (!order || !order.original_image_url) return;
+
+    if (!confirm("Are you sure you want to delete the original image?")) return;
+
+    try {
+      toast.loading("Deleting original image...");
+
+      const originalPath = order.original_image_url.includes('storage/v1/object/public/')
+        ? order.original_image_url.split('storage/v1/object/public/original-images/')[1]
+        : order.original_image_url;
+
+      if (originalPath) {
+        const { error: deleteError } = await supabase.storage
+          .from('original-images')
+          .remove([originalPath]);
+
+        if (deleteError) throw deleteError;
+      }
+
+      const { error: updateError } = await supabase
+        .from("orders")
+        .update({ original_image_url: null })
+        .eq("id", order.id);
+
+      if (updateError) throw updateError;
+
+      toast.dismiss();
+      toast.success("Original image deleted successfully");
+      await fetchOrder();
+    } catch (error: any) {
+      toast.dismiss();
+      console.error("Error deleting original image:", error);
+      toast.error("Failed to delete original image");
+    }
+  };
+
+  const handleDeleteStaged = async () => {
+    if (!order || !order.staged_image_url) return;
+
+    if (!confirm("Are you sure you want to delete the staged image?")) return;
+
+    try {
+      toast.loading("Deleting staged image...");
+
+      const stagedPath = order.staged_image_url.includes('storage/v1/object/public/')
+        ? order.staged_image_url.split('storage/v1/object/public/staged/')[1]
+        : order.staged_image_url;
+
+      if (stagedPath) {
+        const { error: deleteError } = await supabase.storage
+          .from('staged')
+          .remove([stagedPath]);
+
+        if (deleteError) throw deleteError;
+      }
+
+      const { error: updateError } = await supabase
+        .from("orders")
+        .update({ staged_image_url: null })
+        .eq("id", order.id);
+
+      if (updateError) throw updateError;
+
+      toast.dismiss();
+      toast.success("Staged image deleted successfully");
+      await fetchOrder();
+    } catch (error: any) {
+      toast.dismiss();
+      console.error("Error deleting staged image:", error);
+      toast.error("Failed to delete staged image");
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -316,7 +390,7 @@ export default function AdminOrderDetail() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <Button 
                       variant="outline" 
                       onClick={() => handleDownloadImage(signedOriginalUrl, `original-${order.id}.jpg`)}
@@ -329,6 +403,13 @@ export default function AdminOrderDetail() {
                         <ExternalLink className="mr-2 h-4 w-4" />
                         View Full
                       </a>
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={handleDeleteOriginal}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
                     </Button>
                   </div>
                 </>
@@ -373,7 +454,7 @@ export default function AdminOrderDetail() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <Button 
                       variant="outline" 
                       onClick={() => handleDownloadImage(signedStagedUrl, `staged-${order.id}.jpg`)}
@@ -386,6 +467,13 @@ export default function AdminOrderDetail() {
                         <ExternalLink className="mr-2 h-4 w-4" />
                         View Full
                       </a>
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={handleDeleteStaged}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
                     </Button>
                   </div>
                 </>
