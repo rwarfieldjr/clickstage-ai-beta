@@ -55,11 +55,17 @@ export default function ClientGallery() {
         return;
       }
 
-      // Update access count
+      // Update access count and last accessed
+      const { data: currentData } = await supabase
+        .from("shareable_links")
+        .select("accessed_count")
+        .eq("token", token)
+        .single();
+
       await supabase
         .from("shareable_links")
         .update({
-          accessed_count: supabase.rpc("increment", { x: 1 }),
+          accessed_count: (currentData?.accessed_count || 0) + 1,
           last_accessed: new Date().toISOString(),
         })
         .eq("token", token);
