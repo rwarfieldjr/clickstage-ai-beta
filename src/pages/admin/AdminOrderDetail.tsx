@@ -5,7 +5,8 @@ import { useAdmin } from "@/hooks/use-admin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Mail, Link as LinkIcon, Copy, Download, ExternalLink, Trash2 } from "lucide-react";
+import { ArrowLeft, Mail, Link as LinkIcon, Copy, Download, ExternalLink, Trash2, Archive } from "lucide-react";
+import JSZip from "jszip";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
@@ -227,6 +228,58 @@ export default function AdminOrderDetail() {
     }
   };
 
+  const handleDownloadAllImages = async (imagesList: OrderImage[], type: string) => {
+    if (imagesList.length === 0) return;
+
+    try {
+      toast.loading(`Preparing ${imagesList.length} ${type} images for download...`);
+
+      const zip = new JSZip();
+      const folder = zip.folder(`${order?.id}-${type}-images`);
+
+      for (let i = 0; i < imagesList.length; i++) {
+        const img = imagesList[i];
+        const url = signedUrls[img.id];
+
+        if (url) {
+          try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const fileName = `${i + 1}-${img.file_name}`;
+            folder?.file(fileName, blob);
+            toast.loading(`Adding ${type} image ${i + 1} of ${imagesList.length}...`);
+          } catch (error) {
+            console.error(`Failed to fetch image ${img.file_name}:`, error);
+          }
+        }
+      }
+
+      toast.loading("Creating ZIP file...");
+
+      const zipBlob = await zip.generateAsync({
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: { level: 6 },
+      });
+
+      const blobUrl = window.URL.createObjectURL(zipBlob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `${order?.id}-${type}-images.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+
+      toast.dismiss();
+      toast.success(`All ${type} images downloaded as ZIP!`);
+    } catch (error) {
+      console.error("Error creating ZIP:", error);
+      toast.dismiss();
+      toast.error("Failed to create ZIP file");
+    }
+  };
+
   const handleDeleteImage = async (imageId: string, imageType: string, imageUrl: string) => {
     if (!confirm(`Are you sure you want to delete this ${imageType} image?`)) return;
 
@@ -407,8 +460,18 @@ export default function AdminOrderDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle>Original Images ({originalImages.length})</CardTitle>
+              {originalImages.length > 1 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleDownloadAllImages(originalImages, "original")}
+                >
+                  <Archive className="mr-2 h-4 w-4" />
+                  Download All
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <ImageDropzone
@@ -462,6 +525,16 @@ export default function AdminOrderDetail() {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle>Staged Images ({stagedImages.length})</CardTitle>
               <div className="flex gap-2">
+                {stagedImages.length > 1 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDownloadAllImages(stagedImages, "staged")}
+                  >
+                    <Archive className="mr-2 h-4 w-4" />
+                    Download All
+                  </Button>
+                )}
                 {!shareLink && stagedImages.length > 0 && (
                   <Button size="sm" variant="outline" onClick={generateShareLink}>
                     <LinkIcon className="mr-2 h-4 w-4" />
