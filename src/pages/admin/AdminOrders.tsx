@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Search, UploadCloud } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
@@ -136,7 +136,13 @@ export default function AdminOrders() {
           </Button>
         </div>
 
-        <h1 className="text-3xl font-bold mb-6">Order Management</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Order Management</h1>
+          <Button onClick={() => navigate("/admin/bulk-upload")}>
+            <UploadCloud className="mr-2 h-4 w-4" />
+            Bulk Upload
+          </Button>
+        </div>
 
         <div className="mb-6 space-y-4">
           <div className="relative">
