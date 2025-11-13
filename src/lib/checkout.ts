@@ -236,37 +236,30 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
 
     console.log("[STABILITY-CHECK] ✓ File validation passed:", validationData);
 
-    // Handle credit payment
-    if (paymentMethod === "credits" && user) {
-      // Verify authentication before proceeding
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        console.error("[CHECKOUT] Authentication error:", sessionError);
-        toast.error("Authentication required. Please log in and try again.");
-        setLoading(false);
-        return;
-      }
-
-      // Check if user has enough credits
-      if (credits < files.length) {
+    // Handle credit payment (anonymous users allowed)
+    if (paymentMethod === "credits") {
+      // For authenticated users, check if they have enough credits
+      if (user && credits < files.length) {
         toast.error(`Insufficient credits. You need ${files.length} credits but only have ${credits}.`);
         setLoading(false);
         return;
       }
 
-      // Upload files to storage
+      // Upload files to storage (works for both authenticated and anonymous users)
       toast.loading("Uploading photos...");
       const sessionId = crypto.randomUUID();
-      
+
       // Get client name for filename with secure sanitization
-      const clientName = userProfile?.name || 'client';
+      const clientName = userProfile?.name || 'guest';
       const sanitizedName = sanitizeName(clientName);
-      
+
       const uploadPromises = files.map(async (file, index) => {
         const fileExt = sanitizeFilename(file.name).split(".").pop();
-        const fileName = `${user.id}/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`;
+        // Use user ID if logged in, otherwise use 'anonymous' folder
+        const userFolder = user?.id || 'anonymous';
+        const fileName = `${userFolder}/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`;
 
-        console.log(`[CHECKOUT] Uploading file ${index + 1} to uploads bucket:`, fileName);
+        console.log(`[CHECKOUT] Uploading file ${index + 1} to uploads bucket (${user ? 'authenticated' : 'anonymous'}):`, fileName);
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("uploads")
           .upload(fileName, file);
@@ -372,14 +365,12 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
 
       console.log(`[CHECKOUT] ✓ File ${index + 1} uploaded successfully:`, uploadData?.path);
 
-      // Get a signed URL with 24-hour expiration for security
-      const { data, error: signedUrlError } = await supabase.storage
+      // Get public URL (bucket is public, no auth needed)
+      const { data: publicUrlData } = supabase.storage
         .from("uploads")
-        .createSignedUrl(fileName, 86400); // 24 hours in seconds
+        .getPublicUrl(fileName);
 
-      if (signedUrlError) throw signedUrlError;
-      
-      return data.signedUrl;
+      return publicUrlData.publicUrl;
     });
 
     const uploadedFiles = await Promise.all(uploadPromises);
