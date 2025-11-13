@@ -18,6 +18,14 @@ export default function AdminLogin() {
   const [turnstileVerified, setTurnstileVerified] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
 
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { login: authLogin } = useAuth();
+  const turnstileRef = useRef<any>(null);
+
+  // Check if both email and password are filled to show Turnstile
+  const shouldShowTurnstile = email.trim().length > 0 && password.trim().length > 0;
+
   // Debug logging for Rob
   useEffect(() => {
     console.log("[ADMIN TURNSTILE DEBUG] Token state:", {
@@ -28,13 +36,6 @@ export default function AdminLogin() {
       timestamp: new Date().toISOString()
     });
   }, [turnstileToken, turnstileVerified, shouldShowTurnstile]);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { login: authLogin } = useAuth();
-  const turnstileRef = useRef<any>(null);
-
-  // Check if both email and password are filled to show Turnstile
-  const shouldShowTurnstile = email.trim().length > 0 && password.trim().length > 0;
 
   // Reset Turnstile when fields are cleared
   useEffect(() => {

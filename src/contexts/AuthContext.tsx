@@ -16,14 +16,7 @@ interface AuthContextValue extends AuthState {
   refresh: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextValue>({
-  user: null,
-  loading: true,
-  login: async () => ({ ok: false, error: "Not initialized" }),
-  signup: async () => ({ ok: false, error: "Not initialized" }),
-  logout: async () => ({ ok: false, error: "Not initialized" }),
-  refresh: async () => {},
-});
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>({
@@ -108,19 +101,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  if (state.loading) {
-    return (
-      <div style={{ padding: 40, textAlign: "center" }}>
-        <p>Loading account…</p>
-      </div>
-    );
-  }
-
   return (
     <AuthContext.Provider value={{ ...state, login, signup, logout, refresh }}>
-      {children}
+      {state.loading ? (
+        <div style={{ padding: 40, textAlign: "center", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <p>Loading...</p>
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
