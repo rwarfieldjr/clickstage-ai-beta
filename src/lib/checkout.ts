@@ -238,6 +238,15 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
 
     // Handle credit payment
     if (paymentMethod === "credits" && user) {
+      // Verify authentication before proceeding
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error("[CHECKOUT] Authentication error:", sessionError);
+        toast.error("Authentication required. Please log in and try again.");
+        setLoading(false);
+        return;
+      }
+
       // Check if user has enough credits
       if (credits < files.length) {
         toast.error(`Insufficient credits. You need ${files.length} credits but only have ${credits}.`);
@@ -257,11 +266,22 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
         const fileExt = sanitizeFilename(file.name).split(".").pop();
         const fileName = `${user.id}/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`;
 
-        const { error: uploadError } = await supabase.storage
+        console.log(`[CHECKOUT] Uploading file ${index + 1} to uploads bucket:`, fileName);
+        const { data: uploadData, error: uploadError } = await supabase.storage
           .from("uploads")
           .upload(fileName, file);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error(`[CHECKOUT] Upload failed for file ${index + 1}:`, {
+            error: uploadError,
+            message: uploadError.message,
+            fileName,
+            bucketName: 'uploads'
+          });
+          throw new Error(`Upload failed: ${uploadError.message}`);
+        }
+
+        console.log(`[CHECKOUT] ✓ File ${index + 1} uploaded successfully:`, uploadData?.path);
         return fileName;
       });
 
@@ -335,15 +355,26 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
         ? `${user.id}/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`
         : `guest/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from("original-images")
+      console.log(`[CHECKOUT] Uploading file ${index + 1} to uploads bucket:`, fileName);
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("uploads")
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error(`[CHECKOUT] Upload failed for file ${index + 1}:`, {
+          error: uploadError,
+          message: uploadError.message,
+          fileName,
+          bucketName: 'uploads'
+        });
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
+
+      console.log(`[CHECKOUT] ✓ File ${index + 1} uploaded successfully:`, uploadData?.path);
 
       // Get a signed URL with 24-hour expiration for security
       const { data, error: signedUrlError } = await supabase.storage
-        .from("original-images")
+        .from("uploads")
         .createSignedUrl(fileName, 86400); // 24 hours in seconds
 
       if (signedUrlError) throw signedUrlError;
