@@ -1,29 +1,23 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
-export default function RequireAdmin({ children }: { children: React.ReactNode }) {
-  const { user, loading, isAdmin } = useAuth();
+type RequireAdminProps = {
+  children: React.ReactNode;
+};
+
+export default function RequireAdmin({ children }: RequireAdminProps) {
+  const auth = useAuth() || { user: null, isAdmin: false, loading: false };
+  const { user, isAdmin, loading } = auth;
 
   if (loading) {
     return (
-      <div style={{
-        padding: 40,
-        textAlign: "center",
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
-      }}>
-        <p>Loading...</p>
+      <div className="flex items-center justify-center py-16 text-slate-500">
+        Loading...
       </div>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/admin/login" replace />;
-  }
-
-  if (!isAdmin) {
+  if (!user || !isAdmin) {
     return <Navigate to="/admin/login" replace />;
   }
 

@@ -28,7 +28,7 @@ const About = lazy(() => import("./pages/About"));
 const AccountSettings = lazy(() => import("./pages/AccountSettings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboardNew"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboardControl"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminUserDetail = lazy(() => import("./pages/admin/AdminUserDetail"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
