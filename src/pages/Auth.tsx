@@ -130,11 +130,11 @@ export default function AuthPage() {
 
         <CardContent>
           <Tabs value={mode} onValueChange={(v) => setMode(v as "login" | "signup")} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="login" className="text-base font-semibold">
+            <TabsList className="grid w-full grid-cols-2 mb-8 h-14 p-1">
+              <TabsTrigger value="login" className="text-lg font-semibold h-full data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
                 Login
               </TabsTrigger>
-              <TabsTrigger value="signup" className="text-base font-semibold">
+              <TabsTrigger value="signup" className="text-lg font-semibold h-full data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
                 Sign Up
               </TabsTrigger>
             </TabsList>
