@@ -47,6 +47,10 @@ const ClientGallery = lazy(() => import("./pages/ClientGallery"));
 const BucketTest = lazy(() => import("./pages/BucketTest"));
 const AccountPortal = lazy(() => import("./pages/AccountPortal"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const AccountDashboard = lazy(() => import("./pages/account/index"));
+const AccountProfile = lazy(() => import("./pages/account/profile"));
+const AccountOrders = lazy(() => import("./pages/account/orders"));
+const AccountCredits = lazy(() => import("./pages/account/credits"));
 
 const queryClient = new QueryClient();
 
@@ -77,7 +81,11 @@ const App = () => (
           <Route path="/styles" element={<Styles />} />
           <Route path="/place-order" element={<PlaceOrder />} />
           <Route path="/about" element={<About />} />
-          <Route path="/account" element={<AccountPortal />} />
+          <Route path="/account-portal" element={<AccountPortal />} />
+          <Route path="/account" element={<AccountDashboard />} />
+          <Route path="/account/profile" element={<AccountProfile />} />
+          <Route path="/account/orders" element={<AccountOrders />} />
+          <Route path="/account/credits" element={<AccountCredits />} />
           <Route path="/account-settings" element={<AccountSettings />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
