@@ -257,3 +257,25 @@ export const BUCKETS = {
   STAGED: BUCKET_STAGED,
   AVATARS: BUCKET_AVATARS
 } as const;
+
+/**
+ * Get public URL for a file (no auth required for public buckets)
+ * This is faster and more reliable than signed URLs for public buckets
+ */
+export function getPublicUrl(bucketName: string, filePath: string): string | null {
+  if (!filePath || filePath.trim() === '') {
+    console.error('[STORAGE] Invalid file path for public URL');
+    return null;
+  }
+
+  try {
+    const { data } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  } catch (err) {
+    console.error('[STORAGE] Error getting public URL:', err);
+    return null;
+  }
+}

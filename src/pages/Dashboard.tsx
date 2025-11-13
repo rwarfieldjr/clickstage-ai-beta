@@ -19,7 +19,7 @@ import { getDashboardTiers } from "@/config/pricing";
 import { hasEnoughCredits } from "@/lib/credits";
 import { handleCheckout } from "@/lib/checkout";
 import { openSimpleCheckout } from "@/lib/simpleCheckout";
-import { createSignedUrl, BUCKETS } from "@/lib/storage";
+import { getPublicUrl, BUCKETS } from "@/lib/storage";
 
 interface Order {
   id: string;
@@ -104,7 +104,7 @@ const Dashboard = () => {
         (data || []).map(async (order) => {
           const orderWithUrls: OrderWithSignedUrls = { ...order };
           
-          // Get signed URL for original image
+          // Get public URL for original image (no auth required - buckets are public)
           if (order.original_image_url) {
             // Extract the path from full URL or use as-is if it's just a path
             const originalPath = order.original_image_url.includes('storage/v1/object/public/')
@@ -112,29 +112,27 @@ const Dashboard = () => {
               : order.original_image_url;
 
             if (originalPath) {
-              const { url, error } = await createSignedUrl(BUCKETS.UPLOADS, originalPath, 3600);
-
-              if (error) {
-                console.error("[DASHBOARD] Error getting signed URL for original image:", error);
-              } else if (url) {
+              const url = getPublicUrl(BUCKETS.UPLOADS, originalPath);
+              if (url) {
                 orderWithUrls.signedOriginalUrl = url;
+              } else {
+                console.error("[DASHBOARD] Error getting public URL for original image");
               }
             }
           }
 
-          // Get signed URL for staged image
+          // Get public URL for staged image (no auth required - buckets are public)
           if (order.staged_image_url) {
             const stagedPath = order.staged_image_url.includes('storage/v1/object/public/')
               ? order.staged_image_url.split('storage/v1/object/public/staged/')[1]
               : order.staged_image_url;
 
             if (stagedPath) {
-              const { url, error } = await createSignedUrl(BUCKETS.STAGED, stagedPath, 3600);
-
-              if (error) {
-                console.error("[DASHBOARD] Error getting signed URL for staged image:", error);
-              } else if (url) {
+              const url = getPublicUrl(BUCKETS.STAGED, stagedPath);
+              if (url) {
                 orderWithUrls.signedStagedUrl = url;
+              } else {
+                console.error("[DASHBOARD] Error getting public URL for staged image");
               }
             }
           }
