@@ -81,16 +81,22 @@ export default function ImagesPage() {
 
         const { error: uploadError } = await supabase.storage
           .from('staging-originals')
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          throw uploadError;
+        }
       }
 
       toast.success("Images uploaded successfully");
       await loadUserImages();
     } catch (error: any) {
       console.error("Upload error:", error);
-      toast.error("Failed to upload images");
+      toast.error(`Failed to upload images: ${error.message || 'Unknown error'}`);
     } finally {
       setUploading(false);
       event.target.value = '';
@@ -147,20 +153,29 @@ export default function ImagesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Image Portal</h1>
-        <p className="text-gray-600 mt-2">Upload, download, and manage your images</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Image Portal</h1>
+        <p className="text-slate-600 dark:text-slate-400 mt-1">Upload, download, and manage your images</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Upload Images</CardTitle>
-          <CardDescription>Upload new images to your library</CardDescription>
+      <Card className="border-slate-200 dark:border-slate-700">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-blue-900 dark:text-blue-100">Upload Images</CardTitle>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Upload new images to your library</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4">
-            <label htmlFor="file-upload" className="cursor-pointer">
-              <Button disabled={uploading} asChild>
-                <span>
+          <div className="flex items-center gap-3">
+            <input
+              id="file-upload"
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleUpload}
+              className="hidden"
+              disabled={uploading}
+            />
+            <label htmlFor="file-upload">
+              <Button disabled={uploading} asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+                <span className="cursor-pointer">
                   {uploading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -175,46 +190,37 @@ export default function ImagesPage() {
                 </span>
               </Button>
             </label>
-            <input
-              id="file-upload"
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleUpload}
-              className="hidden"
-              disabled={uploading}
-            />
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-slate-500 dark:text-slate-400">
               Select one or more images to upload
             </span>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Images</CardTitle>
-          <CardDescription>
+      <Card className="border-slate-200 dark:border-slate-700">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-blue-900 dark:text-blue-100">Your Images</CardTitle>
+          <CardDescription className="text-slate-600 dark:text-slate-400">
             {images.length} {images.length === 1 ? 'image' : 'images'} in your library
           </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+              <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
             </div>
           ) : images.length === 0 ? (
-            <Alert>
-              <ImageIcon className="h-4 w-4" />
-              <AlertDescription>
+            <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+              <ImageIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <AlertDescription className="text-blue-900 dark:text-blue-100">
                 No images yet. Upload your first image to get started.
               </AlertDescription>
             </Alert>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {images.map((image) => (
-                <Card key={image.name} className="overflow-hidden">
-                  <div className="aspect-video bg-gray-100 relative">
+                <Card key={image.name} className="overflow-hidden border-slate-200 dark:border-slate-700">
+                  <div className="aspect-video bg-slate-100 dark:bg-slate-800 relative">
                     <img
                       src={image.url}
                       alt={image.name}
@@ -222,10 +228,10 @@ export default function ImagesPage() {
                     />
                   </div>
                   <CardContent className="p-4">
-                    <p className="text-sm font-medium text-gray-900 truncate mb-2">
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate mb-2">
                       {image.name}
                     </p>
-                    <p className="text-xs text-gray-500 mb-3">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
                       {formatFileSize(image.size)} • {new Date(image.created_at).toLocaleDateString()}
                     </p>
                     <div className="flex gap-2">
