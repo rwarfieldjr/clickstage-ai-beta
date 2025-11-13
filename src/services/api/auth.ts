@@ -13,6 +13,42 @@ export type AuthUser = {
   isAdmin?: boolean;
 };
 
+export async function signUpWithEmailPassword(
+  email: string,
+  password: string,
+  name: string
+): Promise<ApiResult<AuthUser>> {
+  return safeApiCall<AuthUser>(async () => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+        },
+      },
+    });
+
+    if (error || !data?.user) {
+      throw error || new Error("Sign up failed");
+    }
+
+    await supabase
+      .from("profiles")
+      .upsert({
+        id: data.user.id,
+        email: data.user.email,
+        name,
+      });
+
+    return {
+      id: data.user.id,
+      email: data.user.email,
+      isAdmin: false,
+    };
+  });
+}
+
 export async function loginWithEmailPassword(
   email: string,
   password: string
