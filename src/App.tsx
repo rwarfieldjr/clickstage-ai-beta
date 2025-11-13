@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import ScrollToTop from "./components/ScrollToTop";
+import DevNavigator from "./components/DevNavigator";
 
 // Lazy load all route components for better performance
 const Home = lazy(() => import("./pages/Home"));
@@ -52,6 +53,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ScrollToTop />
+        <DevNavigator />
         <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
           <Routes>
           <Route path="/" element={<Home />} />
