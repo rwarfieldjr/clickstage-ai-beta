@@ -29,7 +29,7 @@ export default function AuthPage() {
       if (user.isAdmin) {
         navigate("/admin/dashboard", { replace: true });
       } else {
-        navigate("/upload", { replace: true });
+        navigate("/account", { replace: true });
       }
     }
   }, [user, navigate]);

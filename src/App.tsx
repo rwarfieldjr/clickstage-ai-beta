@@ -45,6 +45,7 @@ const StabilityTest = lazy(() => import("./pages/StabilityTest"));
 const CheckoutDiagnostics = lazy(() => import("./pages/CheckoutDiagnostics"));
 const ClientGallery = lazy(() => import("./pages/ClientGallery"));
 const BucketTest = lazy(() => import("./pages/BucketTest"));
+const AccountPortal = lazy(() => import("./pages/AccountPortal"));
 
 const queryClient = new QueryClient();
 
@@ -74,7 +75,8 @@ const App = () => (
           <Route path="/styles" element={<Styles />} />
           <Route path="/place-order" element={<PlaceOrder />} />
           <Route path="/about" element={<About />} />
-          <Route path="/account" element={<AccountSettings />} />
+          <Route path="/account" element={<AccountPortal />} />
+          <Route path="/account-settings" element={<AccountSettings />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
