@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload as UploadIcon, X, ZoomIn, Coins, CreditCard } from "lucide-react";
+import { Upload as UploadIcon, X, ZoomIn, Coins, CreditCard, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Layout from "@/components/Layout";
@@ -522,6 +522,16 @@ const Upload = () => {
 
       <main className="flex-1 py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate(-1)}
+              className="gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
+          </div>
           <Card className="max-w-3xl mx-auto shadow-custom-lg">
             <CardHeader>
               {/* Progress Steps */}
