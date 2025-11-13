@@ -19,6 +19,7 @@ import { getDashboardTiers } from "@/config/pricing";
 import { hasEnoughCredits } from "@/lib/credits";
 import { handleCheckout } from "@/lib/checkout";
 import { openSimpleCheckout } from "@/lib/simpleCheckout";
+import { createSignedUrl, BUCKETS } from "@/lib/storage";
 
 interface Order {
   id: string;
@@ -111,29 +112,29 @@ const Dashboard = () => {
               : order.original_image_url;
 
             if (originalPath) {
-              const { data: signedData } = await supabase.storage
-                .from('uploads')
-                .createSignedUrl(originalPath, 3600); // 1 hour expiry
-              
-              if (signedData?.signedUrl) {
-                orderWithUrls.signedOriginalUrl = signedData.signedUrl;
+              const { url, error } = await createSignedUrl(BUCKETS.UPLOADS, originalPath, 3600);
+
+              if (error) {
+                console.error("[DASHBOARD] Error getting signed URL for original image:", error);
+              } else if (url) {
+                orderWithUrls.signedOriginalUrl = url;
               }
             }
           }
-          
+
           // Get signed URL for staged image
           if (order.staged_image_url) {
             const stagedPath = order.staged_image_url.includes('storage/v1/object/public/')
               ? order.staged_image_url.split('storage/v1/object/public/staged/')[1]
               : order.staged_image_url;
-            
+
             if (stagedPath) {
-              const { data: signedData } = await supabase.storage
-                .from('staged')
-                .createSignedUrl(stagedPath, 3600);
-              
-              if (signedData?.signedUrl) {
-                orderWithUrls.signedStagedUrl = signedData.signedUrl;
+              const { url, error } = await createSignedUrl(BUCKETS.STAGED, stagedPath, 3600);
+
+              if (error) {
+                console.error("[DASHBOARD] Error getting signed URL for staged image:", error);
+              } else if (url) {
+                orderWithUrls.signedStagedUrl = url;
               }
             }
           }
