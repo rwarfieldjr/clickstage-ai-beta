@@ -23,6 +23,16 @@ const Auth = () => {
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string>("");
   const [name, setName] = useState("");
+
+  // Debug logging for Rob
+  useEffect(() => {
+    console.log("[TURNSTILE DEBUG] Token state:", {
+      hasToken: !!turnstileToken,
+      tokenLength: turnstileToken.length,
+      shouldShowTurnstile,
+      timestamp: new Date().toISOString()
+    });
+  }, [turnstileToken, shouldShowTurnstile]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -60,13 +70,30 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent, isSignUp: boolean) => {
     e.preventDefault();
-    
+
+    console.log("[TURNSTILE] Form submit - checking validation", {
+      isSignUp,
+      shouldShowTurnstile,
+      hasTurnstileToken: !!turnstileToken,
+      turnstileToken: turnstileToken.substring(0, 20) + '...'
+    });
+
+    // Check Turnstile token if verification is required
+    if (shouldShowTurnstile && !turnstileToken) {
+      console.error("[TURNSTILE] Validation failed - no token present");
+      toast.error("⚠️ Please complete the security verification by clicking the checkbox.", {
+        duration: 5000,
+      });
+      return;
+    }
+
     // Validate password match on signup
     if (isSignUp && password !== confirmPassword) {
       toast.error("Passwords do not match. Please try again.");
       return;
     }
-    
+
+    console.log("[TURNSTILE] Validation passed, proceeding with auth");
     setLoading(true);
 
     try {
@@ -285,6 +312,53 @@ const Auth = () => {
                         minLength={10}
                       />
                     </div>
+                    {/* Turnstile - Only shows after email and password are filled */}
+                    {shouldShowTurnstile && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Security Verification <span className="text-destructive">*</span></Label>
+                        <p className="text-xs text-muted-foreground">Click the checkbox below to verify you're human</p>
+                        <div className="flex justify-center">
+                          <Turnstile
+                            ref={turnstileRef}
+                            siteKey={ENV.turnstile.siteKey}
+                            onSuccess={(token) => {
+                              console.log("[TURNSTILE] ✓ Verification successful (Login)", {
+                                tokenLength: token.length,
+                                timestamp: new Date().toISOString()
+                              });
+                              setTurnstileToken(token);
+                            }}
+                            onError={() => {
+                              console.error("[TURNSTILE] ✗ Verification error (Login)");
+                              setTurnstileToken("");
+                              toast.error("Security verification failed. Please try again.");
+                              if (turnstileRef.current) {
+                                turnstileRef.current.reset();
+                              }
+                            }}
+                            onExpire={() => {
+                              console.warn("[TURNSTILE] ⏰ Token expired (Login)");
+                              setTurnstileToken("");
+                              toast.error("Security verification expired. Please verify again.");
+                              if (turnstileRef.current) {
+                                turnstileRef.current.reset();
+                              }
+                            }}
+                            options={{
+                              theme: theme === 'dark' ? 'dark' : 'light',
+                              execution: 'render',
+                              appearance: 'always',
+                            }}
+                          />
+                        </div>
+                        {!turnstileToken && (
+                          <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
+                            ⚠️ You must complete verification before logging in
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     <Button
                       type="submit"
                       className="w-full bg-accent hover:bg-accent/90"
@@ -292,36 +366,6 @@ const Auth = () => {
                     >
                       {loading ? "Loading..." : "Log In"}
                     </Button>
-                    
-                    {/* Turnstile - Only shows after email and password are filled */}
-                    {shouldShowTurnstile && (
-                      <div className="space-y-2">
-                        <Label className="text-sm font-semibold">Security Verification <span className="text-destructive">*</span></Label>
-                        <div className="flex justify-center">
-                          <Turnstile
-                            ref={turnstileRef}
-                            siteKey={ENV.turnstile.siteKey}
-                            onSuccess={setTurnstileToken}
-                            onError={() => {
-                              setTurnstileToken("");
-                              if (turnstileRef.current) {
-                                turnstileRef.current.reset();
-                              }
-                            }}
-                            onExpire={() => {
-                              setTurnstileToken("");
-                              if (turnstileRef.current) {
-                                turnstileRef.current.reset();
-                              }
-                            }}
-                            options={{
-                              theme: theme === 'dark' ? 'dark' : 'light',
-                              appearance: 'always', // Force manual checkbox
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
                   </form>
                   <div className="text-center mt-4">
                     <button
@@ -390,6 +434,53 @@ const Auth = () => {
                         </p>
                       )}
                     </div>
+                    {/* Turnstile - Only shows after email and password are filled */}
+                    {shouldShowTurnstile && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Security Verification <span className="text-destructive">*</span></Label>
+                        <p className="text-xs text-muted-foreground">Click the checkbox below to verify you're human</p>
+                        <div className="flex justify-center">
+                          <Turnstile
+                            ref={turnstileRef}
+                            siteKey={ENV.turnstile.siteKey}
+                            onSuccess={(token) => {
+                              console.log("[TURNSTILE] ✓ Verification successful (Signup)", {
+                                tokenLength: token.length,
+                                timestamp: new Date().toISOString()
+                              });
+                              setTurnstileToken(token);
+                            }}
+                            onError={() => {
+                              console.error("[TURNSTILE] ✗ Verification error (Signup)");
+                              setTurnstileToken("");
+                              toast.error("Security verification failed. Please try again.");
+                              if (turnstileRef.current) {
+                                turnstileRef.current.reset();
+                              }
+                            }}
+                            onExpire={() => {
+                              console.warn("[TURNSTILE] ⏰ Token expired (Signup)");
+                              setTurnstileToken("");
+                              toast.error("Security verification expired. Please verify again.");
+                              if (turnstileRef.current) {
+                                turnstileRef.current.reset();
+                              }
+                            }}
+                            options={{
+                              theme: theme === 'dark' ? 'dark' : 'light',
+                              execution: 'render',
+                              appearance: 'always',
+                            }}
+                          />
+                        </div>
+                        {!turnstileToken && (
+                          <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
+                            ⚠️ You must complete verification before signing up
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     <Button
                       type="submit"
                       className="w-full bg-accent hover:bg-accent/90"
@@ -397,36 +488,6 @@ const Auth = () => {
                     >
                       {loading ? "Loading..." : "Sign Up"}
                     </Button>
-                    
-                    {/* Turnstile - Only shows after email and password are filled */}
-                    {shouldShowTurnstile && (
-                      <div className="space-y-2">
-                        <Label className="text-sm font-semibold">Security Verification <span className="text-destructive">*</span></Label>
-                        <div className="flex justify-center">
-                          <Turnstile
-                            ref={turnstileRef}
-                            siteKey={ENV.turnstile.siteKey}
-                            onSuccess={setTurnstileToken}
-                            onError={() => {
-                              setTurnstileToken("");
-                              if (turnstileRef.current) {
-                                turnstileRef.current.reset();
-                              }
-                            }}
-                            onExpire={() => {
-                              setTurnstileToken("");
-                              if (turnstileRef.current) {
-                                turnstileRef.current.reset();
-                              }
-                            }}
-                            options={{
-                              theme: theme === 'dark' ? 'dark' : 'light',
-                              appearance: 'always', // Force manual checkbox
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
                   </form>
                 </TabsContent>
               </Tabs>

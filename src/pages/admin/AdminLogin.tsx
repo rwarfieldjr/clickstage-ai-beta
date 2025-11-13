@@ -17,6 +17,17 @@ export default function AdminLogin() {
   const [turnstileToken, setTurnstileToken] = useState<string>("");
   const [turnstileVerified, setTurnstileVerified] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
+
+  // Debug logging for Rob
+  useEffect(() => {
+    console.log("[ADMIN TURNSTILE DEBUG] Token state:", {
+      hasToken: !!turnstileToken,
+      tokenLength: turnstileToken.length,
+      isVerified: turnstileVerified,
+      shouldShowTurnstile,
+      timestamp: new Date().toISOString()
+    });
+  }, [turnstileToken, turnstileVerified, shouldShowTurnstile]);
   const navigate = useNavigate();
   const { toast } = useToast();
   const turnstileRef = useRef<any>(null);
@@ -59,14 +70,28 @@ export default function AdminLogin() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    console.log("[ADMIN TURNSTILE] Form submit - checking validation", {
+      shouldShowTurnstile,
+      hasTurnstileToken: !!turnstileToken,
+      isVerified: turnstileVerified,
+      turnstileToken: turnstileToken.substring(0, 20) + '...'
+    });
+
     // Check if Turnstile is verified when fields are filled
     if (shouldShowTurnstile && !turnstileVerified) {
+      console.error("[ADMIN TURNSTILE] Validation failed - not verified");
       setShowWarning(true);
+      toast({
+        title: "Security Verification Required",
+        description: "⚠️ Please complete the security verification by clicking the checkbox.",
+        variant: "destructive",
+      });
       setTimeout(() => setShowWarning(false), 4000);
       return;
     }
-    
+
+    console.log("[ADMIN TURNSTILE] Validation passed, proceeding with login");
     setLoading(true);
 
     try {
@@ -161,6 +186,7 @@ export default function AdminLogin() {
             {shouldShowTurnstile && (
               <div className="space-y-2">
                 <Label className="text-base font-semibold">Security Verification <span className="text-destructive">*</span></Label>
+                <p className="text-xs text-muted-foreground">Click the checkbox below to verify you're human</p>
                 <div className="flex justify-center py-2">
                   <Turnstile
                     ref={turnstileRef}
@@ -168,29 +194,51 @@ export default function AdminLogin() {
                     options={{
                       theme: "light",
                       size: "normal",
-                      appearance: "always", // Force manual checkbox verification
+                      execution: "render",
+                      appearance: "always",
                     }}
                     onSuccess={(token) => {
+                      console.log("[ADMIN TURNSTILE] ✓ Verification successful", {
+                        tokenLength: token.length,
+                        timestamp: new Date().toISOString()
+                      });
                       setTurnstileToken(token);
                       setTurnstileVerified(true);
                       setShowWarning(false);
                     }}
                     onError={() => {
+                      console.error("[ADMIN TURNSTILE] ✗ Verification error");
                       setTurnstileVerified(false);
                       setTurnstileToken("");
+                      toast({
+                        title: "Verification Failed",
+                        description: "Security verification failed. Please try again.",
+                        variant: "destructive",
+                      });
                       if (turnstileRef.current) {
                         turnstileRef.current.reset();
                       }
                     }}
                     onExpire={() => {
+                      console.warn("[ADMIN TURNSTILE] ⏰ Token expired");
                       setTurnstileVerified(false);
                       setTurnstileToken("");
+                      toast({
+                        title: "Verification Expired",
+                        description: "Security verification expired. Please verify again.",
+                        variant: "destructive",
+                      });
                       if (turnstileRef.current) {
                         turnstileRef.current.reset();
                       }
                     }}
                   />
                 </div>
+                {!turnstileVerified && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
+                    ⚠️ You must complete verification before logging in
+                  </p>
+                )}
               </div>
             )}
 
