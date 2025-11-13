@@ -1,32 +1,90 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { loginWithEmailPassword, logout as apiLogout, getCurrentUser, AuthUser } from "@/services/api/auth";
+import { ApiResult } from "@/services/api";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AuthState {
-  user: any | null;
+  user: AuthUser | null;
   loading: boolean;
+  error?: string;
 }
 
-const AuthContext = createContext<AuthState>({
+interface AuthContextValue extends AuthState {
+  login: (email: string, password: string) => Promise<ApiResult<AuthUser>>;
+  logout: () => Promise<ApiResult<null>>;
+  refresh: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue>({
   user: null,
   loading: true,
+  login: async () => ({ ok: false, error: "Not initialized" }),
+  logout: async () => ({ ok: false, error: "Not initialized" }),
+  refresh: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    loading: true,
+    error: undefined,
+  });
+
+  const refresh = async () => {
+    const result = await getCurrentUser();
+    if (result.ok) {
+      setState({ user: result.data, loading: false, error: undefined });
+    } else {
+      setState({ user: null, loading: false, error: result.error });
+    }
+  };
+
+  const login = async (email: string, password: string): Promise<ApiResult<AuthUser>> => {
+    setState((s) => ({ ...s, loading: true, error: undefined }));
+    const result = await loginWithEmailPassword(email, password);
+
+    if (!result.ok) {
+      setState({ user: null, loading: false, error: result.error });
+      return { ok: false, error: result.error };
+    }
+
+    setState({ user: result.data, loading: false, error: undefined });
+    return { ok: true, data: result.data };
+  };
+
+  const logout = async (): Promise<ApiResult<null>> => {
+    setState((s) => ({ ...s, loading: true }));
+    const result = await apiLogout();
+
+    if (!result.ok) {
+      setState((s) => ({ ...s, loading: false, error: result.error }));
+      return { ok: false, error: result.error };
+    }
+
+    setState({ user: null, loading: false, error: undefined });
+    return { ok: true, data: null };
+  };
 
   useEffect(() => {
     let alive = true;
 
-    supabase.auth.getSession().then(({ data }) => {
+    getCurrentUser().then((result) => {
       if (!alive) return;
-      setUser(data.session?.user ?? null);
-      setLoading(false);
+      if (result.ok) {
+        setState({ user: result.data, loading: false, error: undefined });
+      } else {
+        setState({ user: null, loading: false, error: undefined });
+      }
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+      if (!alive) return;
+
+      if (session?.user) {
+        refresh();
+      } else {
+        setState({ user: null, loading: false, error: undefined });
+      }
     });
 
     return () => {
@@ -35,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  if (loading) {
+  if (state.loading) {
     return (
       <div style={{ padding: 40, textAlign: "center" }}>
         <p>Loading account…</p>
@@ -44,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ ...state, login, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   );

@@ -10,12 +10,12 @@ export const useRequireAdmin = () => {
     if (loading) return;
 
     if (!user) {
-      navigate("/admin/login");
+      navigate("/admin/login", { replace: true });
       return;
     }
 
-    if (user.email !== "rob@warfieldandco.com") {
-      navigate("/");
+    if (!user.isAdmin) {
+      navigate("/", { replace: true });
     }
   }, [user, loading, navigate]);
 };

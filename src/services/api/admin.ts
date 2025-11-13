@@ -5,7 +5,25 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { verifyAdmin } from './auth';
+import { verifyAdmin, getCurrentUser } from './auth';
+import { safeApiCall, ApiResult } from './index';
+
+export async function requireAdmin(): Promise<ApiResult<true>> {
+  return safeApiCall<true>(async () => {
+    const result = await getCurrentUser();
+
+    if (!result.ok) {
+      throw new Error(result.error || "Unable to load current user");
+    }
+
+    const user = result.data;
+    if (!user || !user.isAdmin) {
+      throw new Error("Not authorized");
+    }
+
+    return true;
+  });
+}
 
 /**
  * Get all orders with user information

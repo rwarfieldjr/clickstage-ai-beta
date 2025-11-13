@@ -5,148 +5,91 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { safeApiCall, ApiResult } from './index';
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  success: boolean;
-  user?: any;
-  session?: any;
+export type AuthUser = {
+  id: string;
+  email: string | null;
   isAdmin?: boolean;
-  error?: string;
-}
+};
 
-export interface SessionInfo {
-  user: any;
-  session: any;
-  isAdmin: boolean;
-}
-
-/**
- * Login user with email and password
- * POST /api/login
- */
-export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
-  try {
+export async function loginWithEmailPassword(
+  email: string,
+  password: string
+): Promise<ApiResult<AuthUser>> {
+  return safeApiCall<AuthUser>(async () => {
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: credentials.email,
-      password: credentials.password,
+      email,
+      password,
     });
 
-    if (error) {
-      return {
-        success: false,
-        error: error.message,
-      };
+    if (error || !data?.user) {
+      throw error || new Error("Invalid email or password");
     }
 
-    if (!data.user) {
-      return {
-        success: false,
-        error: 'Login failed',
-      };
-    }
+    let isAdmin = false;
 
-    // Check if user is admin
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', data.user.id)
+    const { data: roles, error: rolesError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.user.id)
       .maybeSingle();
 
-    const isAdmin = roleData?.role === 'admin';
+    if (!rolesError && roles?.role === "admin") {
+      isAdmin = true;
+    }
 
     return {
-      success: true,
-      user: data.user,
-      session: data.session,
+      id: data.user.id,
+      email: data.user.email,
       isAdmin,
     };
-  } catch (error: any) {
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
+  });
 }
 
-/**
- * Logout current user
- * POST /api/logout
- */
-export async function logout(): Promise<{ success: boolean; error?: string }> {
-  try {
+export async function logout(): Promise<ApiResult<null>> {
+  return safeApiCall<null>(async () => {
     const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-
-    return { success: true };
-  } catch (error: any) {
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
+    if (error) throw error;
+    return null;
+  });
 }
 
-/**
- * Get current session information
- * GET /api/admin/session
- */
-export async function getSession(): Promise<SessionInfo | null> {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
+export async function getCurrentUser(): Promise<ApiResult<AuthUser | null>> {
+  return safeApiCall<AuthUser | null>(async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
 
-    if (!session?.user) {
-      return null;
-    }
+    if (!data?.user) return null;
 
-    // Check if user is admin
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', session.user.id)
+    let isAdmin = false;
+
+    const { data: roles, error: rolesError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.user.id)
       .maybeSingle();
 
+    if (!rolesError && roles?.role === "admin") {
+      isAdmin = true;
+    }
+
     return {
-      user: session.user,
-      session: session,
-      isAdmin: roleData?.role === 'admin',
+      id: data.user.id,
+      email: data.user.email,
+      isAdmin,
     };
-  } catch (error) {
-    console.error('Error getting session:', error);
-    return null;
-  }
+  });
 }
 
-/**
- * Verify admin role
- */
-export async function verifyAdmin(): Promise<boolean> {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
+export async function verifyAdmin(): Promise<ApiResult<boolean>> {
+  return safeApiCall<boolean>(async () => {
+    const result = await getCurrentUser();
 
-    if (!user) {
+    if (!result.ok || !result.data) {
       return false;
     }
 
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    return roleData?.role === 'admin';
-  } catch (error) {
-    console.error('Error verifying admin:', error);
-    return false;
-  }
+    return result.data.isAdmin === true;
+  });
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +30,7 @@ export default function AdminLogin() {
   }, [turnstileToken, turnstileVerified, shouldShowTurnstile]);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login: authLogin } = useAuth();
   const turnstileRef = useRef<any>(null);
 
   // Check if both email and password are filled to show Turnstile
@@ -47,26 +48,13 @@ export default function AdminLogin() {
     }
   }, [shouldShowTurnstile]);
 
+  const { user } = useAuth();
+
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        const { data } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-        
-        if (data) {
-          navigate("/admin/dashboard");
-        }
-      }
-    };
-    
-    checkAuth();
-  }, [navigate]);
+    if (user?.isAdmin) {
+      navigate("/admin/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,44 +83,42 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const result = await authLogin(email, password);
 
-      if (error) throw error;
-
-      if (data.user) {
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-
-        if (!roleData) {
-          await supabase.auth.signOut();
-          toast({
-            title: "Access Denied",
-            description: "You do not have admin privileges.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        navigate("/admin/dashboard");
+      if (!result.ok) {
         toast({
-          title: "Login Successful",
-          description: "Welcome to the admin dashboard.",
+          title: "Login Failed",
+          description: result.error,
+          variant: "destructive",
         });
+        setTurnstileVerified(false);
+        setTurnstileToken("");
+        if (turnstileRef.current) {
+          turnstileRef.current.reset();
+        }
+        return;
       }
+
+      if (!result.data.isAdmin) {
+        toast({
+          title: "Access Denied",
+          description: "You do not have admin privileges.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      navigate("/admin/dashboard");
+      toast({
+        title: "Login Successful",
+        description: "Welcome to the admin dashboard.",
+      });
     } catch (error: any) {
       toast({
         title: "Login Failed",
-        description: error.message,
+        description: error.message || "An error occurred",
         variant: "destructive",
       });
-      // Reset Turnstile on error
       setTurnstileVerified(false);
       setTurnstileToken("");
       if (turnstileRef.current) {
