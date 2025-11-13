@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Upload, DollarSign, Mail, Image, HelpCircle, LayoutGrid, Users, UserCircle, Menu, X, User as UserIcon, Coins } from "lucide-react";
+import { Chrome as Home, Upload, DollarSign, Mail, Image, CircleHelp as HelpCircle, LayoutGrid, Users, CircleUser as UserCircle, Menu, X, User as UserIcon, Coins } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
