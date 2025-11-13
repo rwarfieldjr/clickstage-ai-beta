@@ -41,15 +41,11 @@ const Auth = () => {
   // Show Turnstile only after both email and password are filled
   const shouldShowTurnstile = email.trim().length > 0 && password.trim().length > 0;
 
-  // Reset Turnstile when fields are cleared
+  // Reset token when switching between login/signup tabs to prevent token reuse
   useEffect(() => {
-    if (!shouldShowTurnstile) {
-      setTurnstileToken("");
-      if (turnstileRef.current) {
-        turnstileRef.current.reset();
-      }
-    }
-  }, [shouldShowTurnstile]);
+    setTurnstileToken("");
+    console.log("[TURNSTILE] Tab changed, token cleared", { activeTab });
+  }, [activeTab]);
 
   useEffect(() => {
     // Check if user is already logged in or if this is a password recovery
@@ -324,30 +320,27 @@ const Auth = () => {
                             onSuccess={(token) => {
                               console.log("[TURNSTILE] ✓ Verification successful (Login)", {
                                 tokenLength: token.length,
+                                tokenPreview: token.substring(0, 30) + '...',
                                 timestamp: new Date().toISOString()
                               });
                               setTurnstileToken(token);
                             }}
-                            onError={() => {
-                              console.error("[TURNSTILE] ✗ Verification error (Login)");
+                            onError={(error) => {
+                              console.error("[TURNSTILE] ✗ Verification error (Login)", error);
                               setTurnstileToken("");
                               toast.error("Security verification failed. Please try again.");
-                              if (turnstileRef.current) {
-                                turnstileRef.current.reset();
-                              }
                             }}
                             onExpire={() => {
                               console.warn("[TURNSTILE] ⏰ Token expired (Login)");
                               setTurnstileToken("");
                               toast.error("Security verification expired. Please verify again.");
-                              if (turnstileRef.current) {
-                                turnstileRef.current.reset();
-                              }
                             }}
                             options={{
                               theme: theme === 'dark' ? 'dark' : 'light',
-                              execution: 'render',
-                              appearance: 'always',
+                              size: 'normal',
+                              action: 'login',
+                              cData: email,
+                              refreshExpired: 'auto',
                             }}
                           />
                         </div>
@@ -468,8 +461,10 @@ const Auth = () => {
                             }}
                             options={{
                               theme: theme === 'dark' ? 'dark' : 'light',
-                              execution: 'render',
-                              appearance: 'always',
+                              size: 'normal',
+                              action: 'signup',
+                              cData: email,
+                              refreshExpired: 'auto',
                             }}
                           />
                         </div>
