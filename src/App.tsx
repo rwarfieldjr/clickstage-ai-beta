@@ -24,7 +24,7 @@ const About = lazy(() => import("./pages/About"));
 const AccountSettings = lazy(() => import("./pages/AccountSettings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboardNew"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminUserDetail = lazy(() => import("./pages/admin/AdminUserDetail"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
@@ -32,6 +32,7 @@ const AdminOrderDetail = lazy(() => import("./pages/admin/AdminOrderDetail"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminImages = lazy(() => import("./pages/admin/AdminImages"));
 const AdminBulkUpload = lazy(() => import("./pages/admin/AdminBulkUpload"));
+const AdminTests = lazy(() => import("./pages/admin/AdminTests"));
 const Blog = lazy(() => import("./pages/Blog"));
 const VirtualStagingGuide = lazy(() => import("./pages/blog/VirtualStagingGuide"));
 const Success = lazy(() => import("./pages/Success"));
@@ -77,6 +78,7 @@ const App = () => (
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/images" element={<AdminImages />} />
           <Route path="/admin/bulk-upload" element={<AdminBulkUpload />} />
+          <Route path="/admin/tests" element={<AdminTests />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/virtual-staging-complete-guide" element={<VirtualStagingGuide />} />
           <Route path="/success" element={<Success />} />

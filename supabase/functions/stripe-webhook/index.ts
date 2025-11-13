@@ -1,6 +1,8 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import Stripe from 'npm:stripe@17.7.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
+import { sendEmail } from '../_shared/send-email.ts';
+import { orderConfirmationEmail } from '../_shared/email-templates.ts';
 
 const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
 const stripeWebhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
@@ -117,6 +119,39 @@ async function handleEvent(event: Stripe.Event) {
           return;
         }
         console.info(`Successfully processed one-time payment for session: ${checkout_session_id}`);
+
+        // Send order confirmation email
+        try {
+          const session = stripeData as Stripe.Checkout.Session;
+          const customerEmail = session.customer_details?.email || session.customer_email;
+          const customerName = session.customer_details?.name || 'Customer';
+
+          if (customerEmail) {
+            // Get metadata for order details
+            const metadata = session.metadata || {};
+            const photoCount = parseInt(metadata.photoCount || '1');
+            const stagingStyle = metadata.stagingStyle || 'Modern';
+
+            const emailHtml = orderConfirmationEmail({
+              customerName,
+              orderNumber: checkout_session_id.slice(-8).toUpperCase(),
+              photoCount,
+              stagingStyle,
+              estimatedCompletion: '24-48 hours',
+            });
+
+            await sendEmail({
+              to: customerEmail,
+              subject: `Order Confirmed - ${photoCount} Photo${photoCount > 1 ? 's' : ''} | ClickStagePro`,
+              html: emailHtml,
+            });
+
+            console.info(`Order confirmation email sent to ${customerEmail}`);
+          }
+        } catch (emailError) {
+          console.error('Error sending order confirmation email:', emailError);
+          // Don't fail the webhook if email fails
+        }
       } catch (error) {
         console.error('Error processing one-time payment:', error);
       }
