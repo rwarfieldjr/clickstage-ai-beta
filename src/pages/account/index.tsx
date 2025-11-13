@@ -9,6 +9,7 @@ export default function AccountDashboard() {
   const { user, loading } = useRequireUser();
   const [credits, setCredits] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
+  const [firstName, setFirstName] = useState("");
 
   useEffect(() => {
     async function loadStats() {
@@ -16,11 +17,12 @@ export default function AccountDashboard() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("credits")
+        .select("credits, first_name")
         .eq("id", user.id)
         .maybeSingle();
 
       setCredits(profile?.credits ?? 0);
+      setFirstName(profile?.first_name || user.user_metadata?.name?.split(" ")[0] || "");
 
       const { count } = await supabase
         .from("orders")
@@ -50,7 +52,7 @@ export default function AccountDashboard() {
       <div className="flex-1 space-y-6">
         <div className="bg-white shadow-xl rounded-2xl p-10">
           <h1 className="text-3xl font-bold mb-4 text-gray-900">
-            Welcome back, {user?.email}
+            Welcome back, {firstName || user?.email?.split("@")[0]}!
           </h1>
 
           <p className="text-gray-700">
