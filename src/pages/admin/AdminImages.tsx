@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
+import { useRequireAdmin } from "@/hooks/useRequireAdmin";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, ExternalLink } from "lucide-react";
@@ -25,6 +26,7 @@ interface OrderInfo {
 }
 
 const AdminImages = () => {
+  useRequireAdmin();
   const { isAdmin, loading: adminLoading, requireAdmin, shouldRenderAdmin } = useAdmin();
   const [files, setFiles] = useState<StorageFile[]>([]);
   const [orders, setOrders] = useState<Record<string, OrderInfo>>({});

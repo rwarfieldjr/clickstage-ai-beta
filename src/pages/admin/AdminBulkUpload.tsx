@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdmin } from "@/hooks/use-admin";
+import { useRequireAdmin } from "@/hooks/useRequireAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,7 @@ interface CSVRow {
 }
 
 export default function AdminBulkUpload() {
+  useRequireAdmin();
   const { isAdmin, loading } = useAdmin();
   const navigate = useNavigate();
   const [csvFile, setCSVFile] = useState<File | null>(null);

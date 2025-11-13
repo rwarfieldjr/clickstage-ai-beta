@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
+import { useRequireAdmin } from "@/hooks/useRequireAdmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, ImageIcon, CreditCard, Activity, UserCheck, UserX, Clock, CheckCircle2 } from "lucide-react";
@@ -21,6 +22,7 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  useRequireAdmin();
   const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const navigate = useNavigate();

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRequireAdmin } from "@/hooks/use-admin-auth";
+import { useRequireAdmin } from "@/hooks/useRequireAdmin";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
