@@ -22,6 +22,7 @@ const routes = [
   { label: "Admin Orders", path: "/admin/orders" },
   { label: "Admin Images", path: "/admin/images" },
   { label: "Admin Settings", path: "/admin/settings" },
+  { label: "Admin Credits", path: "/admin/credits" },
   { label: "Admin Tests", path: "/admin/tests" },
   { label: "---", path: "" },
   { label: "Bucket Test", path: "/bucket-test" },

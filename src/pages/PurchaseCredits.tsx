@@ -10,36 +10,75 @@ import { Turnstile } from "@marsidev/react-turnstile";
 import { ENV } from "@/config/environment";
 import { SEO } from "@/components/SEO";
 import { PRICING_TIERS } from "@/config/pricing";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function PurchaseCredits() {
   const navigate = useNavigate();
   const [selectedBundle, setSelectedBundle] = useState<string | null>(null);
   const [verifiedBundles, setVerifiedBundles] = useState<Set<string>>(new Set());
+  const [processing, setProcessing] = useState(false);
 
-  const handlePurchaseClick = (bundleId: string) => {
+  const handlePurchaseClick = async (bundleId: string) => {
     if (verifiedBundles.has(bundleId)) {
-      const bundle = PRICING_TIERS.find(b => b.id === bundleId);
-      if (bundle) {
-        window.open(bundle.checkoutUrl, '_blank');
-      }
+      await createCheckoutSession(bundleId);
     } else {
       setSelectedBundle(bundleId);
     }
   };
 
-  const handleTurnstileSuccess = (token: string) => {
+  const createCheckoutSession = async (bundleId: string) => {
+    setProcessing(true);
+    try {
+      const bundle = PRICING_TIERS.find(b => b.id === bundleId);
+      if (!bundle) {
+        throw new Error('Bundle not found');
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Please log in to purchase credits');
+        navigate('/auth');
+        return;
+      }
+
+      const response = await fetch(`${ENV.supabase.url}/functions/v1/create-credit-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          priceId: bundle.priceId,
+          credits: bundle.credits,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session');
+      }
+
+      const { url } = await response.json();
+      window.location.href = url;
+    } catch (error: any) {
+      console.error('Error creating checkout:', error);
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleTurnstileSuccess = async (token: string) => {
     if (selectedBundle) {
       setVerifiedBundles(prev => new Set([...prev, selectedBundle]));
-      const bundle = PRICING_TIERS.find(b => b.id === selectedBundle);
-      if (bundle) {
-        window.open(bundle.checkoutUrl, '_blank');
-      }
+      await createCheckoutSession(selectedBundle);
       setSelectedBundle(null);
     }
   };
 
   const handleTurnstileError = () => {
     setSelectedBundle(null);
+    toast.error('Verification failed. Please try again.');
   };
 
   return (
@@ -157,14 +196,14 @@ export default function PurchaseCredits() {
 
                       <Button
                         onClick={() => handlePurchaseClick(tier.id)}
-                        disabled={selectedBundle === tier.id}
+                        disabled={selectedBundle === tier.id || processing}
                         className={`w-full h-12 text-base font-semibold ${
                           tier.popular
                             ? 'bg-blue-600 hover:bg-blue-700'
                             : 'bg-slate-700 hover:bg-slate-800'
                         }`}
                       >
-                        {selectedBundle === tier.id ? "Verifying..." : "Purchase"}
+                        {processing ? "Processing..." : selectedBundle === tier.id ? "Verifying..." : "Purchase"}
                       </Button>
                     </CardContent>
                   </Card>

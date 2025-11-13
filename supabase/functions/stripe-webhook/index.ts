@@ -100,9 +100,42 @@ async function handleEvent(event: Stripe.Event) {
           amount_subtotal,
           amount_total,
           currency,
+          metadata,
         } = stripeData as Stripe.Checkout.Session;
 
-        // Insert the order into the stripe_orders table
+        // Check if this is a credit purchase
+        if (metadata && metadata.type === 'credits' && metadata.userId && metadata.credits) {
+          const userId = metadata.userId;
+          const creditAmount = parseInt(metadata.credits);
+
+          console.info(`Processing credit purchase: ${creditAmount} credits for user ${userId}`);
+
+          // Add credits to user account
+          const { data: newBalance, error: creditsError } = await supabase.rpc('add_credits', {
+            p_user_id: userId,
+            p_amount: creditAmount,
+          });
+
+          if (creditsError) {
+            console.error('Error adding credits:', creditsError);
+            throw creditsError;
+          }
+
+          console.info(`Successfully added ${creditAmount} credits to user ${userId}. New balance: ${newBalance}`);
+
+          // Log the credit transaction
+          await supabase.from('credit_history').insert({
+            user_id: userId,
+            admin_email: 'stripe-webhook@system',
+            change_type: 'add',
+            amount: creditAmount,
+            new_balance: newBalance,
+          });
+
+          return;
+        }
+
+        // Insert the order into the stripe_orders table for regular orders
         const { error: orderError } = await supabase.from('stripe_orders').insert({
           checkout_session_id,
           payment_intent_id: payment_intent,

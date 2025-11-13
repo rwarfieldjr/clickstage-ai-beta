@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Upload, DollarSign, Mail, Image, HelpCircle, LayoutGrid, Users, UserCircle, Menu, X, User as UserIcon } from "lucide-react";
+import { Home, Upload, DollarSign, Mail, Image, HelpCircle, LayoutGrid, Users, UserCircle, Menu, X, User as UserIcon, Coins } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
@@ -12,20 +12,69 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [credits, setCredits] = useState<number>(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        loadCredits(session.user.id);
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        loadCredits(session.user.id);
+      } else {
+        setCredits(0);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const loadCredits = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("user_credits")
+      .select("credits")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!error && data) {
+      setCredits(data.credits || 0);
+    } else {
+      setCredits(0);
+    }
+  };
+
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("credits-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "user_credits",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.new && "credits" in payload.new) {
+            setCredits((payload.new as any).credits || 0);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const handleNavClick = () => {
     setMobileMenuOpen(false);
@@ -135,16 +184,24 @@ const Navbar = () => {
                   <div className="pt-4 border-t border-border">
                     {user ? (
                       <>
-                        <Link 
-                          to="/dashboard" 
+                        <Link
+                          to="/purchase-credits"
+                          className="flex items-center gap-3 text-base font-medium text-primary hover:text-accent transition-smooth py-2 px-3 bg-primary/10 rounded-md mb-2"
+                          onClick={handleNavClick}
+                        >
+                          <Coins className="w-5 h-5" />
+                          {credits} Credits
+                        </Link>
+                        <Link
+                          to="/dashboard"
                           className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
                           onClick={handleNavClick}
                         >
                           <LayoutGrid className="w-5 h-5" />
                           Portal
                         </Link>
-                        <Link 
-                          to="/account" 
+                        <Link
+                          to="/account"
                           className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
                           onClick={handleNavClick}
                         >
@@ -174,6 +231,10 @@ const Navbar = () => {
             <div className="hidden lg:flex items-center space-x-3">
               {user ? (
                 <>
+                  <Link to="/purchase-credits" className="flex items-center gap-2 px-3 py-2 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors">
+                    <Coins className="w-4 h-4 text-primary" />
+                    <span className="font-semibold text-primary">{credits} Credits</span>
+                  </Link>
                   <Link to="/dashboard">
                     <Button variant="outline" size="sm" className="flex items-center gap-2">
                       <LayoutGrid className="w-4 h-4" />
