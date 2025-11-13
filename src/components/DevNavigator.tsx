@@ -16,7 +16,7 @@ const routes = [
   { label: "Purchase Credits", path: "/purchase-credits" },
   { label: "Auth", path: "/auth" },
   { label: "---", path: "" },
-  { label: "Admin Login", path: "/admin/login" },
+  { label: "Admin Login", path: "/admin" },
   { label: "Admin Dashboard", path: "/admin/dashboard" },
   { label: "Admin Users", path: "/admin/users" },
   { label: "Admin Orders", path: "/admin/orders" },

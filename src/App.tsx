@@ -87,6 +87,7 @@ const App = () => (
           <Route path="/account/orders" element={<AccountOrders />} />
           <Route path="/account/credits" element={<AccountCredits />} />
           <Route path="/account-settings" element={<AccountSettings />} />
+          <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
