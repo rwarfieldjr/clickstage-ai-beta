@@ -177,33 +177,49 @@ export default function AccountCredits({ user }: AccountCreditsProps) {
               <CardContent className="p-6">
                 <div className="text-center mb-6">
                   <h4 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                    {tier.name}
+                    {tier.displayName}
                   </h4>
                   <div className="flex items-baseline justify-center gap-1 mb-2">
                     <span className="text-4xl font-bold text-slate-900 dark:text-slate-100">
-                      ${tier.price}
+                      {tier.price}
                     </span>
                   </div>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {tier.credits} credits
+                    {tier.perPhoto}
                   </p>
-                  {tier.perImageCost && (
-                    <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
-                      ${tier.perImageCost.toFixed(2)} per image
-                    </p>
+                  {tier.savings && (
+                    <Badge variant="secondary" className="mt-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                      {tier.savings}
+                    </Badge>
                   )}
                 </div>
 
-                <ul className="space-y-3 mb-6">
-                  {tier.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm">
-                      <span className="text-green-600 mt-0.5">✓</span>
-                      <span className="text-slate-700 dark:text-slate-300">
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="space-y-3 mb-6 text-left">
+                  <div className="flex items-start gap-2 text-sm">
+                    <span className="text-green-600 mt-0.5">✓</span>
+                    <span className="text-slate-700 dark:text-slate-300">
+                      {tier.description}
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2 text-sm">
+                    <span className="text-green-600 mt-0.5">✓</span>
+                    <span className="text-slate-700 dark:text-slate-300">
+                      Professional, MLS-compliant
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2 text-sm">
+                    <span className="text-green-600 mt-0.5">✓</span>
+                    <span className="text-slate-700 dark:text-slate-300">
+                      24-hour delivery
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2 text-sm">
+                    <span className="text-green-600 mt-0.5">✓</span>
+                    <span className="text-slate-700 dark:text-slate-300">
+                      {tier.expiration}
+                    </span>
+                  </div>
+                </div>
 
                 <Button
                   onClick={() => handlePurchase(tier.priceId)}
