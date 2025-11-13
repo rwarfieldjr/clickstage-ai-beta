@@ -136,14 +136,6 @@ const Navbar = () => {
                     {user ? (
                       <>
                         <Link
-                          to="/dashboard"
-                          className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
-                          onClick={handleNavClick}
-                        >
-                          <LayoutGrid className="w-5 h-5" />
-                          Portal
-                        </Link>
-                        <Link
                           to="/account"
                           className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
                           onClick={handleNavClick}
@@ -154,8 +146,8 @@ const Navbar = () => {
                       </>
                     ) : (
                       <>
-                        <Link 
-                          to="/auth" 
+                        <Link
+                          to="/auth"
                           className="flex items-center gap-3 text-base font-medium text-foreground hover:text-accent transition-smooth py-2"
                           onClick={handleNavClick}
                         >
@@ -174,12 +166,6 @@ const Navbar = () => {
             <div className="hidden lg:flex items-center space-x-3">
               {user ? (
                 <>
-                  <Link to="/dashboard">
-                    <Button variant="outline" size="sm" className="flex items-center gap-2">
-                      <LayoutGrid className="w-4 h-4" />
-                      Portal
-                    </Button>
-                  </Link>
                   <Link to="/account">
                     <Button variant="ghost" size="sm" className="flex items-center gap-2">
                       <UserCircle className="w-4 h-4" />

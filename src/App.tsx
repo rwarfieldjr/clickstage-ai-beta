@@ -53,6 +53,7 @@ const AccountDashboard = lazy(() => import("./pages/account/index"));
 const AccountProfile = lazy(() => import("./pages/account/profile"));
 const AccountOrders = lazy(() => import("./pages/account/orders"));
 const AccountCredits = lazy(() => import("./pages/account/credits"));
+const AccountImages = lazy(() => import("./pages/account/images"));
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,7 @@ const App = () => (
           <Route path="/account/profile" element={<AccountProfile />} />
           <Route path="/account/orders" element={<AccountOrders />} />
           <Route path="/account/credits" element={<AccountCredits />} />
+          <Route path="/account/images" element={<AccountImages />} />
           <Route path="/account-settings" element={<AccountSettings />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/login" element={<AdminLogin />} />

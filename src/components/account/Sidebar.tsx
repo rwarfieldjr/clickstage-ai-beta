@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { Home, User, Package, CreditCard, LogOut } from "lucide-react";
+import { Home, User, Package, CreditCard, LogOut, Image } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -64,6 +64,14 @@ export default function Sidebar() {
         >
           <CreditCard className="w-5 h-5" />
           Credits
+        </NavLink>
+
+        <NavLink
+          to="/account/images"
+          className={({ isActive }) => (isActive ? `${link} ${active}` : link)}
+        >
+          <Image className="w-5 h-5" />
+          Image Portal
         </NavLink>
       </nav>
 
