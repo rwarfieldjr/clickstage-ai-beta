@@ -6,6 +6,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeFilename } from '@/lib/sanitizeFilename';
+import { safeApiCall, ApiResult } from './index';
 
 export interface UploadParams {
   file: File;
@@ -14,37 +15,30 @@ export interface UploadParams {
   userId?: string;
 }
 
-export interface UploadResult {
-  success: boolean;
-  url?: string;
-  path?: string;
-  error?: string;
+export interface UploadData {
+  url: string;
+  path: string;
 }
 
 /**
  * Upload file to Supabase Storage
- * POST /api/upload
  */
-export async function uploadFile(params: UploadParams): Promise<UploadResult> {
-  try {
+export async function uploadFile(params: UploadParams): Promise<ApiResult<UploadData>> {
+  return safeApiCall(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     const userId = params.userId || user?.id || 'anonymous';
 
-    // Determine bucket (default to 'uploads')
     const bucket = params.bucket || 'uploads';
 
-    // Sanitize filename
     const fileExt = params.file.name.split('.').pop();
     const sanitizedName = sanitizeFilename(params.file.name.replace(`.${fileExt}`, ''));
     const fileName = `${sanitizedName}_${Date.now()}.${fileExt}`;
 
-    // Build file path
     const folder = params.folder || userId;
     const filePath = `${folder}/${fileName}`;
 
     console.log(`[UPLOAD] Uploading to ${bucket}/${filePath}`);
 
-    // Upload file
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(filePath, params.file, {
@@ -54,13 +48,9 @@ export async function uploadFile(params: UploadParams): Promise<UploadResult> {
 
     if (error) {
       console.error('[UPLOAD] Upload failed:', error);
-      return {
-        success: false,
-        error: error.message,
-      };
+      throw new Error(error.message);
     }
 
-    // Get public URL
     const { data: urlData } = supabase.storage
       .from(bucket)
       .getPublicUrl(data.path);
@@ -68,90 +58,74 @@ export async function uploadFile(params: UploadParams): Promise<UploadResult> {
     console.log('[UPLOAD] Upload successful:', data.path);
 
     return {
-      success: true,
       url: urlData.publicUrl,
       path: data.path,
     };
-  } catch (error: any) {
-    console.error('[UPLOAD] Error in uploadFile:', error);
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
+  });
 }
 
 /**
  * Upload multiple files
  */
-export async function uploadFiles(files: File[], params?: Omit<UploadParams, 'file'>): Promise<UploadResult[]> {
-  const results: UploadResult[] = [];
+export async function uploadFiles(files: File[], params?: Omit<UploadParams, 'file'>): Promise<ApiResult<UploadData[]>> {
+  return safeApiCall(async () => {
+    const results: UploadData[] = [];
 
-  for (const file of files) {
-    const result = await uploadFile({ ...params, file });
-    results.push(result);
-  }
+    for (const file of files) {
+      const result = await uploadFile({ ...params, file });
+      if (!result.ok) {
+        throw new Error(result.error);
+      }
+      results.push(result.data);
+    }
 
-  return results;
+    return results;
+  });
 }
 
 /**
  * Delete file from storage
  */
-export async function deleteFile(bucket: string, path: string): Promise<{ success: boolean; error?: string }> {
-  try {
+export async function deleteFile(bucket: string, path: string): Promise<ApiResult<void>> {
+  return safeApiCall(async () => {
     const { error } = await supabase.storage
       .from(bucket)
       .remove([path]);
 
     if (error) {
-      return {
-        success: false,
-        error: error.message,
-      };
+      throw new Error(error.message);
     }
+  });
+}
 
-    return { success: true };
-  } catch (error: any) {
-    console.error('[UPLOAD] Error in deleteFile:', error);
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
+export interface SignedUrlData {
+  url: string;
 }
 
 /**
  * Get signed URL for private file
  */
-export async function getSignedUrl(bucket: string, path: string, expiresIn: number = 3600): Promise<{ url?: string; error?: string }> {
-  try {
+export async function getSignedUrl(bucket: string, path: string, expiresIn: number = 3600): Promise<ApiResult<SignedUrlData>> {
+  return safeApiCall(async () => {
     const { data, error } = await supabase.storage
       .from(bucket)
       .createSignedUrl(path, expiresIn);
 
     if (error) {
-      return {
-        error: error.message,
-      };
+      throw new Error(error.message);
     }
 
     return {
       url: data.signedUrl,
     };
-  } catch (error: any) {
-    console.error('[UPLOAD] Error in getSignedUrl:', error);
-    return {
-      error: error.message,
-    };
-  }
+  });
 }
 
 /**
  * List files in bucket
  */
-export async function listFiles(bucket: string, folder?: string): Promise<any[]> {
-  try {
+export async function listFiles(bucket: string, folder?: string): Promise<ApiResult<any[]>> {
+  return safeApiCall(async () => {
     const { data, error } = await supabase.storage
       .from(bucket)
       .list(folder, {
@@ -162,12 +136,9 @@ export async function listFiles(bucket: string, folder?: string): Promise<any[]>
 
     if (error) {
       console.error('[UPLOAD] Error listing files:', error);
-      return [];
+      throw error;
     }
 
     return data || [];
-  } catch (error) {
-    console.error('[UPLOAD] Error in listFiles:', error);
-    return [];
-  }
+  });
 }

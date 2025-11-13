@@ -7,6 +7,7 @@ import { lazy, Suspense } from "react";
 import ScrollToTop from "./components/ScrollToTop";
 import DevNavigator from "./components/DevNavigator";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 // Lazy load all route components for better performance
 const Home = lazy(() => import("./pages/Home"));
@@ -54,10 +55,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <ScrollToTop />
-          <DevNavigator />
-          <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
-          <Routes>
+          <ErrorBoundary>
+            <ScrollToTop />
+            <DevNavigator />
+            <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
+            <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/portfolio" element={<Portfolio />} />
@@ -94,8 +96,9 @@ const App = () => (
           <Route path="/gallery/:token" element={<ClientGallery />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
+            </Routes>
+          </Suspense>
+          </ErrorBoundary>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
