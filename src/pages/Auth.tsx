@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ export default function AuthPage() {
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
 
   const [localError, setLocalError] = useState<string | undefined>();
+  const [successMessage, setSuccessMessage] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -37,6 +40,7 @@ export default function AuthPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(undefined);
+    setSuccessMessage(undefined);
     setIsSubmitting(true);
 
     const result = await login(loginEmail, loginPassword);
@@ -50,6 +54,7 @@ export default function AuthPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(undefined);
+    setSuccessMessage(undefined);
 
     if (signupPassword.length < 10) {
       setLocalError("Password must be at least 10 characters");
@@ -67,6 +72,38 @@ export default function AuthPage() {
 
     if (!result.ok) {
       setLocalError(result.error || "Sign up failed");
+      setIsSubmitting(false);
+    } else {
+      setSuccessMessage("Account created! Check your email to confirm.");
+      toast.success("Account created successfully!");
+    }
+  };
+
+  const handleForgotPassword = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setLocalError(undefined);
+    setSuccessMessage(undefined);
+
+    if (!loginEmail) {
+      setLocalError("Please enter your email address");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(loginEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      setSuccessMessage("Password reset link sent to your email.");
+      toast.success("Check your email for the password reset link");
+    } catch (error: any) {
+      setLocalError(error.message || "Failed to send reset email");
+      toast.error("Failed to send reset email");
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -106,6 +143,12 @@ export default function AuthPage() {
               {localError && (
                 <Alert variant="destructive">
                   <AlertDescription>{localError}</AlertDescription>
+                </Alert>
+              )}
+
+              {successMessage && (
+                <Alert className="bg-green-50 text-green-900 border-green-200">
+                  <AlertDescription>{successMessage}</AlertDescription>
                 </Alert>
               )}
 
@@ -151,9 +194,14 @@ export default function AuthPage() {
                 </Button>
 
                 <div className="text-center">
-                  <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={isSubmitting}
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
                     Forgot Password?
-                  </a>
+                  </button>
                 </div>
               </form>
             </TabsContent>
@@ -162,6 +210,12 @@ export default function AuthPage() {
               {localError && (
                 <Alert variant="destructive">
                   <AlertDescription>{localError}</AlertDescription>
+                </Alert>
+              )}
+
+              {successMessage && (
+                <Alert className="bg-green-50 text-green-900 border-green-200">
+                  <AlertDescription>{successMessage}</AlertDescription>
                 </Alert>
               )}
 

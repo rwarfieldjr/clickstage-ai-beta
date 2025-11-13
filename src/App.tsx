@@ -46,6 +46,7 @@ const CheckoutDiagnostics = lazy(() => import("./pages/CheckoutDiagnostics"));
 const ClientGallery = lazy(() => import("./pages/ClientGallery"));
 const BucketTest = lazy(() => import("./pages/BucketTest"));
 const AccountPortal = lazy(() => import("./pages/AccountPortal"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/contact" element={<Contact />} />
