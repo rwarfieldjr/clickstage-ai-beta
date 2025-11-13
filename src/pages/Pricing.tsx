@@ -41,18 +41,9 @@ const Pricing = () => {
     });
   }, []);
 
-  const handleSelectPlan = (planName: string, priceId: string, credits: number) => {
-    // Store selected bundle in localStorage
-    const selectedBundle = {
-      name: planName,
-      priceId,
-      credits,
-      price: PRICING_TIERS.find(t => t.priceId === priceId)?.price || ""
-    };
-    localStorage.setItem("selectedBundle", JSON.stringify(selectedBundle));
-    
-    // Navigate to place order page
-    navigate("/place-order");
+  const handleSelectPlan = (checkoutUrl: string) => {
+    // Redirect directly to Stripe checkout
+    window.location.href = checkoutUrl;
   };
 
   const pricingTiers = PRICING_TIERS;
@@ -129,9 +120,9 @@ const Pricing = () => {
                     <Button
                       className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
-                      onClick={() => handleSelectPlan(tier.name, tier.priceId, tier.credits)}
+                      onClick={() => handleSelectPlan(tier.checkoutUrl)}
                     >
-                      Buy {tier.name}
+                      Purchase
                     </Button>
                   </CardContent>
                 </Card>
