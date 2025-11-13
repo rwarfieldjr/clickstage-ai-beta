@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
 export const useRequireAdmin = () => {
-  const { user, loading } = useAuth();
+  const auth = useAuth();
+  const { user, loading, isAdmin } = auth;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,8 +15,14 @@ export const useRequireAdmin = () => {
       return;
     }
 
-    if (!user.isAdmin) {
+    if (!isAdmin) {
       navigate("/", { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, isAdmin, navigate]);
+
+  return {
+    user: user || null,
+    isAdmin: isAdmin || false,
+    isLoading: loading || false,
+  };
 };

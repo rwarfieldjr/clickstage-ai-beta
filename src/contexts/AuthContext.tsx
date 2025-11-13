@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface AuthState {
   user: AuthUser | null;
   loading: boolean;
+  isAdmin: boolean;
   error?: string;
 }
 
@@ -16,21 +17,36 @@ interface AuthContextValue extends AuthState {
   refresh: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+const AuthContext = createContext<AuthContextValue>({
+  user: null,
+  loading: true,
+  isAdmin: false,
+  error: undefined,
+  login: async () => ({ ok: false, error: "Auth not initialized" }),
+  signup: async () => ({ ok: false, error: "Auth not initialized" }),
+  logout: async () => ({ ok: false, error: "Auth not initialized" }),
+  refresh: async () => {},
+});
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AuthState>({
     user: null,
     loading: true,
+    isAdmin: false,
     error: undefined,
   });
 
   const refresh = async () => {
     const result = await getCurrentUser();
     if (result.ok) {
-      setState({ user: result.data, loading: false, error: undefined });
+      setState({
+        user: result.data,
+        loading: false,
+        isAdmin: result.data?.isAdmin || false,
+        error: undefined
+      });
     } else {
-      setState({ user: null, loading: false, error: result.error });
+      setState({ user: null, loading: false, isAdmin: false, error: result.error });
     }
   };
 
@@ -39,11 +55,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const result = await signUpWithEmailPassword(email, password, name);
 
     if (!result.ok) {
-      setState({ user: null, loading: false, error: result.error });
+      setState({ user: null, loading: false, isAdmin: false, error: result.error });
       return { ok: false, error: result.error };
     }
 
-    setState({ user: result.data, loading: false, error: undefined });
+    setState({
+      user: result.data,
+      loading: false,
+      isAdmin: result.data?.isAdmin || false,
+      error: undefined
+    });
     return { ok: true, data: result.data };
   };
 
@@ -52,11 +73,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const result = await loginWithEmailPassword(email, password);
 
     if (!result.ok) {
-      setState({ user: null, loading: false, error: result.error });
+      setState({ user: null, loading: false, isAdmin: false, error: result.error });
       return { ok: false, error: result.error };
     }
 
-    setState({ user: result.data, loading: false, error: undefined });
+    setState({
+      user: result.data,
+      loading: false,
+      isAdmin: result.data?.isAdmin || false,
+      error: undefined
+    });
     return { ok: true, data: result.data };
   };
 
@@ -69,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { ok: false, error: result.error };
     }
 
-    setState({ user: null, loading: false, error: undefined });
+    setState({ user: null, loading: false, isAdmin: false, error: undefined });
     return { ok: true, data: null };
   };
 
@@ -79,9 +105,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getCurrentUser().then((result) => {
       if (!alive) return;
       if (result.ok) {
-        setState({ user: result.data, loading: false, error: undefined });
+        setState({
+          user: result.data,
+          loading: false,
+          isAdmin: result.data?.isAdmin || false,
+          error: undefined
+        });
       } else {
-        setState({ user: null, loading: false, error: undefined });
+        setState({ user: null, loading: false, isAdmin: false, error: undefined });
       }
     });
 
@@ -91,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         refresh();
       } else {
-        setState({ user: null, loading: false, error: undefined });
+        setState({ user: null, loading: false, isAdmin: false, error: undefined });
       }
     });
 
@@ -116,8 +147,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
   return context;
 };

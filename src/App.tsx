@@ -8,6 +8,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import DevNavigator from "./components/DevNavigator";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import RequireAdmin from "./components/RequireAdmin";
 
 // Lazy load all route components for better performance
 const Home = lazy(() => import("./pages/Home"));
@@ -90,16 +91,16 @@ const App = () => (
           <Route path="/account-settings" element={<AccountSettings />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/users/:id" element={<AdminUserDetail />} />
-          <Route path="/admin/orders" element={<AdminOrders />} />
-          <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-          <Route path="/admin/images" element={<AdminImages />} />
-          <Route path="/admin/bulk-upload" element={<AdminBulkUpload />} />
-          <Route path="/admin/tests" element={<AdminTests />} />
-          <Route path="/admin/credits" element={<AdminCredits />} />
+          <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+          <Route path="/admin/users" element={<RequireAdmin><AdminUsers /></RequireAdmin>} />
+          <Route path="/admin/users/:id" element={<RequireAdmin><AdminUserDetail /></RequireAdmin>} />
+          <Route path="/admin/orders" element={<RequireAdmin><AdminOrders /></RequireAdmin>} />
+          <Route path="/admin/orders/:id" element={<RequireAdmin><AdminOrderDetail /></RequireAdmin>} />
+          <Route path="/admin/settings" element={<RequireAdmin><AdminSettings /></RequireAdmin>} />
+          <Route path="/admin/images" element={<RequireAdmin><AdminImages /></RequireAdmin>} />
+          <Route path="/admin/bulk-upload" element={<RequireAdmin><AdminBulkUpload /></RequireAdmin>} />
+          <Route path="/admin/tests" element={<RequireAdmin><AdminTests /></RequireAdmin>} />
+          <Route path="/admin/credits" element={<RequireAdmin><AdminCredits /></RequireAdmin>} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/virtual-staging-complete-guide" element={<VirtualStagingGuide />} />
           <Route path="/success" element={<Success />} />
