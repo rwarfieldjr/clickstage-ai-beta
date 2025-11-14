@@ -22,7 +22,7 @@ export default function PlaceOrderStyle() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
-  const [selectedStyle, setSelectedStyle] = useState<string>("");
+  const [selectedStyle, setSelectedStyle] = useState<string | undefined>(undefined);
   const [showStylesModal, setShowStylesModal] = useState(false);
   const [showValidationError, setShowValidationError] = useState(false);
 
@@ -46,6 +46,8 @@ export default function PlaceOrderStyle() {
       const savedStyle = sessionStorage.getItem('orderStyle');
       if (savedStyle) {
         setSelectedStyle(savedStyle);
+      } else {
+        setSelectedStyle(undefined);
       }
 
       setLoading(false);
@@ -144,7 +146,7 @@ export default function PlaceOrderStyle() {
                       type="button"
                       variant="link"
                       onClick={() => setShowStylesModal(true)}
-                      className="text-blue-600 hover:text-blue-700"
+                      className="text-primary hover:text-primary/80"
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Click Here to See Styles
