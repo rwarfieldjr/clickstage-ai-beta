@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Loader2, ArrowLeft, Upload as UploadIcon, X } from "lucide-react";
+import { getPricingTierById } from "@/config/pricing";
 
 interface UploadedFile {
   path: string;
@@ -23,6 +24,10 @@ export default function PlaceOrderUpload() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [photoLimit, setPhotoLimit] = useState<number>(100);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [attemptedUploadCount, setAttemptedUploadCount] = useState(0);
+  const [existingCredits, setExistingCredits] = useState(0);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -48,6 +53,22 @@ export default function PlaceOrderUpload() {
         navigate('/place-order/style');
         return;
       }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', currentUser.id)
+        .single();
+
+      const userCredits = profile?.credits || 0;
+      setExistingCredits(userCredits);
+
+      const selectedBundleId = sessionStorage.getItem('orderBundle');
+      const tier = selectedBundleId ? getPricingTierById(selectedBundleId) : null;
+      const bundleCredits = tier?.credits || 0;
+
+      const totalLimit = bundleCredits + userCredits;
+      setPhotoLimit(totalLimit || 100);
 
       const savedFiles = sessionStorage.getItem('orderUploadedFiles');
       if (savedFiles) {
@@ -107,13 +128,15 @@ export default function PlaceOrderUpload() {
       return;
     }
 
-    const maxSize = 20 * 1024 * 1024;
-    const maxFiles = 50;
+    const totalPhotos = uploadedFiles.length + files.length;
 
-    if (uploadedFiles.length + files.length > maxFiles) {
-      toast.error(`Maximum ${maxFiles} images allowed per order`);
+    if (totalPhotos > photoLimit) {
+      setShowLimitModal(true);
+      setAttemptedUploadCount(files.length);
       return;
     }
+
+    const maxSize = 20 * 1024 * 1024;
 
     const validFiles = files.filter(file => {
       if (file.size > maxSize) {
@@ -217,8 +240,15 @@ export default function PlaceOrderUpload() {
       return;
     }
 
+    if (uploadedFiles.length > photoLimit) {
+      toast.error("You have exceeded your photo limit. Please remove some photos or choose a larger bundle.");
+      return;
+    }
+
     navigate('/place-order/bundle');
   };
+
+  const isOverLimit = uploadedFiles.length > photoLimit;
 
   const handleBack = () => {
     navigate('/place-order/style');
@@ -314,9 +344,14 @@ export default function PlaceOrderUpload() {
 
                 {uploadedFiles.length > 0 && (
                   <div className="space-y-3">
-                    <h3 className="font-semibold text-lg">
-                      Uploaded Images ({uploadedFiles.length})
-                    </h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-lg">
+                        Uploaded Images ({uploadedFiles.length})
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {uploadedFiles.length} / {photoLimit} photos used
+                      </p>
+                    </div>
                     <div className="space-y-2">
                       {uploadedFiles.map((file) => (
                         <div
@@ -348,12 +383,18 @@ export default function PlaceOrderUpload() {
 
                 <Button
                   onClick={handleSubmit}
-                  className="w-full"
+                  className={`w-full ${isOverLimit ? 'bg-gray-400 cursor-not-allowed' : ''}`}
                   size="lg"
-                  disabled={uploadedFiles.length === 0}
+                  disabled={uploadedFiles.length === 0 || isOverLimit}
                 >
                   Continue to Bundle Selection
                 </Button>
+
+                {isOverLimit && (
+                  <p className="text-sm text-red-600 text-center">
+                    You have exceeded your photo limit. Remove some photos or choose a larger bundle.
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -361,6 +402,38 @@ export default function PlaceOrderUpload() {
       </main>
 
       <Footer />
+
+      {showLimitModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 max-w-md w-full shadow-xl mx-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              You Need a Larger Photo Bundle
+            </h2>
+
+            <p className="text-gray-700 mb-6">
+              You selected a bundle with <strong>{photoLimit}</strong> credit{photoLimit !== 1 ? 's' : ''},
+              but you're trying to upload <strong>{uploadedFiles.length + attemptedUploadCount}</strong> photos.
+              Upgrade to a larger bundle or remove some photos to continue.
+            </p>
+
+            <div className="flex gap-4 justify-end">
+              <button
+                className="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors"
+                onClick={() => setShowLimitModal(false)}
+              >
+                Remove Photos
+              </button>
+
+              <button
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                onClick={() => navigate('/place-order/bundle')}
+              >
+                Choose Larger Bundle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
