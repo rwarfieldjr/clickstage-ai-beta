@@ -100,6 +100,7 @@ const App = () => (
           <Route path="/account" element={<AccountDashboard />} />
           <Route path="/account/profile" element={<AccountProfile />} />
           <Route path="/account/orders" element={<AccountOrders />} />
+          <Route path="/account/orders/:orderId" element={<AccountOrderDetail />} />
           <Route path="/account/credits" element={<AccountCredits />} />
           <Route path="/account/images" element={<AccountImages />} />
           <Route path="/account-settings" element={<AccountSettings />} />

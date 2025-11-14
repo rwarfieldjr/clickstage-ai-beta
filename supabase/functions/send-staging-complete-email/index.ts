@@ -7,8 +7,8 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  orderId: string;
-  shareToken: string;
+  order_id: string;
+  user_id: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -22,30 +22,37 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { orderId, shareToken }: EmailRequest = await req.json();
+    const { order_id, user_id }: EmailRequest = await req.json();
 
-    // Get order and user details
+    // Fetch order from staging_orders by order_id
     const { data: order, error: orderError } = await supabaseClient
-      .from("orders")
-      .select(`
-        *,
-        profiles (
-          name,
-          email
-        )
-      `)
-      .eq("id", orderId)
+      .from("staging_orders")
+      .select("id, address_of_property, status")
+      .eq("id", order_id)
       .single();
 
     if (orderError || !order) {
+      console.error("Order fetch error:", orderError);
       throw new Error("Order not found");
     }
 
-    const clientUrl = `${Deno.env.get("SITE_URL")}/gallery/${shareToken}`;
+    // Fetch user from profiles by user_id
+    const { data: user, error: userError } = await supabaseClient
+      .from("profiles")
+      .select("email, name")
+      .eq("id", user_id)
+      .single();
 
-    // Using Resend API directly via fetch
+    if (userError || !user) {
+      console.error("User fetch error:", userError);
+      throw new Error("User not found");
+    }
+
+    // Build URL: https://clickstagepro.com/account/orders/${order.id}
+    const clientUrl = `https://clickstagepro.com/account/orders/${order.id}`;
+
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    
+
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -53,17 +60,17 @@ const handler = async (req: Request): Promise<Response> => {
         "Authorization": `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: "Virtual Staging <onboarding@resend.dev>",
-        to: [order.profiles.email],
-        subject: "Your Staged Images Are Ready! 🎉",
+        from: "ClickStage Pro <orders@clickstagepro.com>",
+        to: [user.email],
+        subject: "Your Staged Photos Are Ready!",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <p style="font-size:16px;color:#222;">
-              Hi ${order.profiles.name?.split(' ')[0] || order.profiles.name},
+              Hi ${user.name?.split(' ')[0] || user.name},
             </p>
 
             <p style="font-size:16px;color:#222;">
-              Your staged photos for <strong>${order.property_address || 'your property'}</strong> are now ready.
+              Your staged photos for <strong>${order.address_of_property}</strong> are now ready.
             </p>
 
             <p style="margin:24px 0;">
