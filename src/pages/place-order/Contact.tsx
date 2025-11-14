@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Loader2 } from "lucide-react";
+import { getPricingTierById } from "@/config/pricing";
 
 export interface ContactFormData {
   firstName: string;
@@ -21,8 +22,10 @@ export interface ContactFormData {
 
 export default function PlaceOrderContact() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [selectedBundle, setSelectedBundle] = useState<string>("");
   const [formData, setFormData] = useState<ContactFormData>({
     firstName: "",
     lastName: "",
@@ -30,6 +33,7 @@ export default function PlaceOrderContact() {
     phone: "",
     propertyAddress: ""
   });
+  const [errors, setErrors] = useState<Partial<ContactFormData>>({});
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -41,57 +45,97 @@ export default function PlaceOrderContact() {
       }
       setUser(currentUser);
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('name, email, phone')
-        .eq('id', currentUser.id)
-        .single();
+      const bundleParam = searchParams.get('bundle') || sessionStorage.getItem('orderBundle');
+      if (!bundleParam) {
+        toast.error("Please select a bundle from the pricing page");
+        navigate('/pricing');
+        return;
+      }
 
-      if (profile) {
-        const nameParts = profile.name?.split(' ') || ['', ''];
-        setFormData({
-          firstName: nameParts[0] || '',
-          lastName: nameParts.slice(1).join(' ') || '',
-          email: profile.email || currentUser.email || '',
-          phone: profile.phone || '',
-          propertyAddress: ''
-        });
+      const tier = getPricingTierById(bundleParam);
+      if (!tier) {
+        toast.error("Invalid bundle selection");
+        navigate('/pricing');
+        return;
+      }
+
+      setSelectedBundle(tier.displayName);
+      sessionStorage.setItem('orderBundle', bundleParam);
+
+      const savedContactData = sessionStorage.getItem('orderContactData');
+      if (savedContactData) {
+        setFormData(JSON.parse(savedContactData));
+      } else {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name, email, phone')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (profile) {
+          const nameParts = profile.name?.split(' ') || ['', ''];
+          setFormData({
+            firstName: nameParts[0] || '',
+            lastName: nameParts.slice(1).join(' ') || '',
+            email: profile.email || currentUser.email || '',
+            phone: profile.phone || '',
+            propertyAddress: ''
+          });
+        }
       }
 
       setLoading(false);
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, searchParams]);
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string): boolean => {
+    const digitsOnly = phone.replace(/\D/g, '');
+    return digitsOnly.length >= 10;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    const newErrors: Partial<ContactFormData> = {};
+
     if (!formData.firstName.trim()) {
-      toast.error("Please enter your first name");
-      return;
+      newErrors.firstName = "First name is required";
     }
 
     if (!formData.lastName.trim()) {
-      toast.error("Please enter your last name");
-      return;
+      newErrors.lastName = "Last name is required";
     }
 
     if (!formData.email.trim()) {
-      toast.error("Please enter your email");
-      return;
+      newErrors.email = "Email is required";
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
     }
 
     if (!formData.phone.trim()) {
-      toast.error("Please enter your phone number");
-      return;
+      newErrors.phone = "Phone number is required";
+    } else if (!validatePhone(formData.phone)) {
+      newErrors.phone = "Phone number must be at least 10 digits";
     }
 
     if (!formData.propertyAddress.trim()) {
-      toast.error("Please enter the property address");
+      newErrors.propertyAddress = "Property address is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error("Please fill in all required fields correctly");
       return;
     }
 
+    setErrors({});
     sessionStorage.setItem('orderContactData', JSON.stringify(formData));
 
     navigate('/place-order/style');
@@ -121,6 +165,13 @@ export default function PlaceOrderContact() {
               <CardDescription>
                 Step 1 of 4 - Enter your contact details for this order
               </CardDescription>
+              {selectedBundle && (
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    Selected Bundle: <span className="font-bold text-foreground">{selectedBundle}</span>
+                  </p>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -129,21 +180,37 @@ export default function PlaceOrderContact() {
                     <Label htmlFor="firstName">First Name *</Label>
                     <Input
                       id="firstName"
+                      name="firstName"
                       value={formData.firstName}
-                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, firstName: e.target.value });
+                        if (errors.firstName) setErrors({ ...errors, firstName: undefined });
+                      }}
                       placeholder="John"
                       required
+                      className={errors.firstName ? "border-red-500" : ""}
                     />
+                    {errors.firstName && (
+                      <p className="text-xs text-red-600">{errors.firstName}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name *</Label>
                     <Input
                       id="lastName"
+                      name="lastName"
                       value={formData.lastName}
-                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, lastName: e.target.value });
+                        if (errors.lastName) setErrors({ ...errors, lastName: undefined });
+                      }}
                       placeholder="Doe"
                       required
+                      className={errors.lastName ? "border-red-500" : ""}
                     />
+                    {errors.lastName && (
+                      <p className="text-xs text-red-600">{errors.lastName}</p>
+                    )}
                   </div>
                 </div>
 
@@ -151,35 +218,59 @@ export default function PlaceOrderContact() {
                   <Label htmlFor="email">Email *</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, email: e.target.value });
+                      if (errors.email) setErrors({ ...errors, email: undefined });
+                    }}
                     placeholder="john@example.com"
                     required
+                    className={errors.email ? "border-red-500" : ""}
                   />
+                  {errors.email && (
+                    <p className="text-xs text-red-600">{errors.email}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number *</Label>
                   <Input
                     id="phone"
+                    name="phone"
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, phone: e.target.value });
+                      if (errors.phone) setErrors({ ...errors, phone: undefined });
+                    }}
                     placeholder="(555) 123-4567"
                     required
+                    className={errors.phone ? "border-red-500" : ""}
                   />
+                  {errors.phone && (
+                    <p className="text-xs text-red-600">{errors.phone}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="propertyAddress">Property Address *</Label>
+                  <Label htmlFor="propertyAddress">Address of Property to Be Staged *</Label>
                   <Input
                     id="propertyAddress"
+                    name="propertyAddress"
                     value={formData.propertyAddress}
-                    onChange={(e) => setFormData({ ...formData, propertyAddress: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, propertyAddress: e.target.value });
+                      if (errors.propertyAddress) setErrors({ ...errors, propertyAddress: undefined });
+                    }}
                     placeholder="123 Main St, City, State 12345"
                     required
+                    className={errors.propertyAddress ? "border-red-500" : ""}
                   />
+                  {errors.propertyAddress && (
+                    <p className="text-xs text-red-600">{errors.propertyAddress}</p>
+                  )}
                 </div>
 
                 <Button type="submit" className="w-full" size="lg">

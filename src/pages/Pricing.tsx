@@ -41,7 +41,7 @@ const Pricing = () => {
     });
   }, []);
 
-  const handleSelectPlan = async (credits: number) => {
+  const handleSelectPlan = async (tierId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {
@@ -49,7 +49,7 @@ const Pricing = () => {
       return;
     }
 
-    navigate('/place-order/contact');
+    navigate(`/place-order/contact?bundle=${tierId}`);
   };
 
   const pricingTiers = PRICING_TIERS;
@@ -126,7 +126,7 @@ const Pricing = () => {
                     <Button
                       className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
-                      onClick={() => handleSelectPlan(tier.credits)}
+                      onClick={() => handleSelectPlan(tier.id)}
                     >
                       Buy {tier.credits} Photo Credit{tier.credits > 1 ? 's' : ''}
                     </Button>
