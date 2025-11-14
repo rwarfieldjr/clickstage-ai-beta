@@ -5,7 +5,7 @@ import { useAdmin } from "@/hooks/use-admin";
 import { useRequireAdmin } from "@/hooks/useRequireAdmin";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, ImageIcon, CreditCard, UserCheck, UserX, Clock, CheckCircle2, Package, Settings, ArrowRight } from "lucide-react";
+import { Users, CreditCard, Clock, Package, Settings, ArrowRight } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
 interface DashboardStats {
@@ -22,13 +22,9 @@ interface DashboardStats {
 
 export default function AdminDashboard() {
   useRequireAdmin();
-  const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
+  const { isAdmin, loading } = useAdmin();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    requireAdmin();
-  }, [isAdmin, loading]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -156,7 +152,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
           <Card className="bg-white shadow-lg rounded-2xl cursor-pointer hover:shadow-xl transition-shadow" onClick={() => navigate("/admin/users")}>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
@@ -171,39 +167,11 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white shadow-lg rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <UserCheck className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Active Users</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats?.activeUsers || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-lg rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-orange-100 rounded-lg">
-                  <UserX className="w-6 h-6 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Paused Users</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats?.pausedUsers || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           <Card className="bg-white shadow-lg rounded-2xl cursor-pointer hover:shadow-xl transition-shadow" onClick={() => navigate("/admin/orders")}>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <Package className="w-6 h-6 text-purple-600" />
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <Package className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Total Orders</p>
@@ -213,57 +181,15 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white shadow-lg rounded-2xl cursor-pointer hover:shadow-xl transition-shadow" onClick={() => navigate("/admin/orders")}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <Clock className="w-6 h-6 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Pending Orders</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats?.pendingOrders || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-lg rounded-2xl cursor-pointer hover:shadow-xl transition-shadow" onClick={() => navigate("/admin/orders")}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <CheckCircle2 className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Completed Orders</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats?.completedOrders || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-lg rounded-2xl cursor-pointer hover:shadow-xl transition-shadow" onClick={() => navigate("/admin/images")}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-indigo-100 rounded-lg">
-                  <ImageIcon className="w-6 h-6 text-indigo-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total Images</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats?.totalImages || 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           <Card className="bg-white shadow-lg rounded-2xl">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <CreditCard className="w-6 h-6 text-blue-600" />
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Clock className="w-6 h-6 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Credits Issued</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats?.creditsIssued || 0}</p>
+                  <p className="text-sm text-gray-600">Member Since</p>
+                  <p className="text-2xl font-bold text-gray-900">Admin</p>
                 </div>
               </div>
             </CardContent>
