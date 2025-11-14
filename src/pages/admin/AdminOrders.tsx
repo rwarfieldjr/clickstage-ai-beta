@@ -16,6 +16,7 @@ interface OrderWithUser {
   id: string;
   created_at: string;
   status: string;
+  completed_at: string | null;
   staging_style: string;
   user_id: string;
   archived: boolean;
@@ -32,6 +33,7 @@ export default function AdminOrders() {
   const [filteredOrders, setFilteredOrders] = useState<OrderWithUser[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showArchived, setShowArchived] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function AdminOrders() {
 
   useEffect(() => {
     filterOrders();
-  }, [searchTerm, orders, showArchived]);
+  }, [searchTerm, orders, showArchived, statusFilter]);
 
   const fetchOrders = async () => {
     try {
@@ -70,7 +72,12 @@ export default function AdminOrders() {
 
   const filterOrders = () => {
     let filtered = orders.filter(order => showArchived ? order.archived : !order.archived);
-    
+
+    // Filter by status
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(order => order.status === statusFilter);
+    }
+
     if (searchTerm) {
       filtered = filtered.filter(
         (order) =>
@@ -158,12 +165,42 @@ export default function AdminOrders() {
           </div>
           <div className="flex items-center gap-2">
             <Button
-              variant={showArchived ? "default" : "outline"}
-              onClick={() => setShowArchived(!showArchived)}
+              variant={statusFilter === "all" ? "default" : "outline"}
+              onClick={() => setStatusFilter("all")}
               size="sm"
             >
-              {showArchived ? "Show Active Orders" : "Show Archived Orders"}
+              All Orders
             </Button>
+            <Button
+              variant={statusFilter === "pending" ? "default" : "outline"}
+              onClick={() => setStatusFilter("pending")}
+              size="sm"
+            >
+              Pending
+            </Button>
+            <Button
+              variant={statusFilter === "processing" ? "default" : "outline"}
+              onClick={() => setStatusFilter("processing")}
+              size="sm"
+            >
+              Processing
+            </Button>
+            <Button
+              variant={statusFilter === "completed" ? "default" : "outline"}
+              onClick={() => setStatusFilter("completed")}
+              size="sm"
+            >
+              Completed
+            </Button>
+            <div className="ml-auto">
+              <Button
+                variant={showArchived ? "default" : "outline"}
+                onClick={() => setShowArchived(!showArchived)}
+                size="sm"
+              >
+                {showArchived ? "Show Active Orders" : "Show Archived Orders"}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -172,38 +209,55 @@ export default function AdminOrders() {
             <TableHeader>
               <TableRow>
                 <TableHead>Order ID</TableHead>
-                <TableHead>Date</TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Style</TableHead>
+                <TableHead>Created Date</TableHead>
+                <TableHead>Completed Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
+                <TableRow
+                  key={order.id}
+                  className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => navigate(`/admin/images?userId=${order.user_id}`)}
+                >
                   <TableCell className="font-mono text-sm">{order.id.slice(0, 8)}...</TableCell>
-                  <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>{order.profiles?.name}</TableCell>
                   <TableCell>{order.profiles?.email}</TableCell>
-                  <TableCell className="capitalize">{order.staging_style}</TableCell>
+                  <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <Badge 
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => toggleOrderStatus(order.id, order.status)}
+                    {order.completed_at
+                      ? new Date(order.completed_at).toLocaleDateString()
+                      : "-"
+                    }
+                  </TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Badge
+                      variant={
+                        order.status === "completed" ? "default" :
+                        order.status === "processing" ? "secondary" :
+                        "outline"
+                      }
+                      className={
+                        order.status === "completed" ? "bg-green-500 hover:bg-green-600" :
+                        order.status === "processing" ? "bg-blue-500 hover:bg-blue-600" :
+                        "bg-yellow-500 hover:bg-yellow-600 text-slate-900"
+                      }
                     >
                       {order.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => navigate(`/admin/orders/${order.id}`)}
+                        onClick={() => navigate(`/admin/images?userId=${order.user_id}`)}
                       >
-                        View Details
+                        View Images
                       </Button>
                       <Button
                         size="sm"

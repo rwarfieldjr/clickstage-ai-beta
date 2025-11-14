@@ -11,6 +11,8 @@ interface CompletionNoticeRequest {
   userId: string;
   email: string;
   name: string;
+  orderId?: string;
+  isResend?: boolean;
 }
 
 Deno.serve(async (req: Request) => {
@@ -67,7 +69,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { userId, email, name }: CompletionNoticeRequest = await req.json();
+    const { userId, email, name, orderId, isResend }: CompletionNoticeRequest = await req.json();
 
     if (!userId || !email) {
       return new Response(
@@ -79,13 +81,21 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { data: orders, error: ordersError } = await supabaseClient
-      .from("orders")
-      .select("id, order_number")
-      .eq("user_id", userId)
-      .eq("status", "completed")
-      .order("created_at", { ascending: false })
-      .limit(1);
+    let targetOrderId = orderId;
+
+    // If no orderId provided, find the most recent order
+    if (!targetOrderId) {
+      const { data: orders, error: ordersError } = await supabaseClient
+        .from("orders")
+        .select("id, order_number")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (orders && orders.length > 0) {
+        targetOrderId = orders[0].id;
+      }
+    }
 
     const accountUrl = `${Deno.env.get("SITE_URL") || "https://clickstagepro.com"}/account/images`;
 
@@ -161,19 +171,32 @@ Deno.serve(async (req: Request) => {
     const emailData = await emailResponse.json();
     console.log("Email sent successfully:", emailData);
 
+    // Update order status to completed if not a resend
+    if (targetOrderId && !isResend) {
+      await supabaseClient
+        .from("orders")
+        .update({
+          status: "completed",
+          completed_at: new Date().toISOString()
+        })
+        .eq("id", targetOrderId);
+    }
+
+    // Log the email
     await supabaseClient.from("email_logs").insert({
       user_id: userId,
       email: email,
-      type: "completion_notice",
+      type: isResend ? "completion_notice_resend" : "completion_notice",
       metadata: {
         sent_by: user.id,
         sent_at: new Date().toISOString(),
         email_id: emailData.id,
+        order_id: targetOrderId,
       }
     });
 
     return new Response(
-      JSON.stringify({ success: true, emailId: emailData.id }),
+      JSON.stringify({ success: true, emailId: emailData.id, orderId: targetOrderId }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

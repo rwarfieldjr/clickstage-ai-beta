@@ -29,6 +29,9 @@ import { useRequireAdmin } from "@/hooks/useRequireAdmin";
 interface AdminStats {
   totalUsers: number;
   totalOrders: number;
+  pendingOrders: number;
+  completedOrders: number;
+  todaysCompleted: number;
   totalCreditsSold: number;
   storageUsed: string;
   todaysOrders: number;
@@ -41,6 +44,9 @@ export default function AdminDashboardNew() {
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
     totalOrders: 0,
+    pendingOrders: 0,
+    completedOrders: 0,
+    todaysCompleted: 0,
     totalCreditsSold: 0,
     storageUsed: "0 GB",
     todaysOrders: 0,
@@ -76,11 +82,24 @@ export default function AdminDashboardNew() {
         .select("*", { count: "exact", head: true })
         .gte("created_at", today.toISOString());
 
-      // Fetch pending jobs
+      // Fetch pending orders
       const { count: pendingCount } = await supabase
         .from("orders")
         .select("*", { count: "exact", head: true })
         .eq("status", "pending");
+
+      // Fetch completed orders
+      const { count: completedCount } = await supabase
+        .from("orders")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "completed");
+
+      // Fetch today's completed orders
+      const { count: todayCompletedCount } = await supabase
+        .from("orders")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "completed")
+        .gte("completed_at", today.toISOString());
 
       // Fetch total credits sold from credit_history
       const { data: creditHistory } = await supabase
@@ -96,6 +115,9 @@ export default function AdminDashboardNew() {
       setStats({
         totalUsers: userCount || 0,
         totalOrders: orderCount || 0,
+        pendingOrders: pendingCount || 0,
+        completedOrders: completedCount || 0,
+        todaysCompleted: todayCompletedCount || 0,
         totalCreditsSold: totalCredits,
         storageUsed: "0 GB",
         todaysOrders: todayCount || 0,
@@ -201,8 +223,8 @@ export default function AdminDashboardNew() {
               icon={<Package className="w-6 h-6" />}
               label="Total Orders"
               value={loading ? "..." : stats.totalOrders.toString()}
-              bgColor="bg-green-100 dark:bg-green-900/30"
-              iconColor="text-green-600 dark:text-green-400"
+              bgColor="bg-slate-100 dark:bg-slate-900/30"
+              iconColor="text-slate-600 dark:text-slate-400"
             />
             <MetricCard
               icon={<CreditCard className="w-6 h-6" />}
@@ -212,25 +234,25 @@ export default function AdminDashboardNew() {
               iconColor="text-purple-600 dark:text-purple-400"
             />
             <MetricCard
-              icon={<HardDrive className="w-6 h-6" />}
-              label="Storage Used"
-              value={stats.storageUsed}
-              bgColor="bg-orange-100 dark:bg-orange-900/30"
-              iconColor="text-orange-600 dark:text-orange-400"
+              icon={<Clock className="w-6 h-6" />}
+              label="Pending Orders"
+              value={loading ? "..." : stats.pendingOrders.toString()}
+              bgColor="bg-yellow-100 dark:bg-yellow-900/30"
+              iconColor="text-yellow-600 dark:text-yellow-400"
             />
             <MetricCard
-              icon={<Clock className="w-6 h-6" />}
-              label="Today's Orders"
-              value={loading ? "..." : stats.todaysOrders.toString()}
-              bgColor="bg-cyan-100 dark:bg-cyan-900/30"
-              iconColor="text-cyan-600 dark:text-cyan-400"
+              icon={<Package className="w-6 h-6" />}
+              label="Completed Orders"
+              value={loading ? "..." : stats.completedOrders.toString()}
+              bgColor="bg-green-100 dark:bg-green-900/30"
+              iconColor="text-green-600 dark:text-green-400"
             />
             <MetricCard
               icon={<Activity className="w-6 h-6" />}
-              label="Pending Jobs"
-              value={loading ? "..." : stats.pendingJobs.toString()}
-              bgColor="bg-red-100 dark:bg-red-900/30"
-              iconColor="text-red-600 dark:text-red-400"
+              label="Today's Completed"
+              value={loading ? "..." : stats.todaysCompleted.toString()}
+              bgColor="bg-cyan-100 dark:bg-cyan-900/30"
+              iconColor="text-cyan-600 dark:text-cyan-400"
             />
           </div>
 
