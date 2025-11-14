@@ -244,11 +244,7 @@ export default function PurchaseCredits() {
                       <Button
                         onClick={() => handlePurchaseClick(tier.id)}
                         disabled={processing === tier.id}
-                        className={`w-full h-12 text-base font-semibold ${
-                          tier.popular
-                            ? 'bg-blue-600 hover:bg-blue-700'
-                            : 'bg-slate-700 hover:bg-slate-800'
-                        }`}
+                        className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700"
                       >
                         {processing === tier.id ? "Processing..." : "Purchase"}
                       </Button>
