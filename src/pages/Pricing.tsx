@@ -41,9 +41,15 @@ const Pricing = () => {
     });
   }, []);
 
-  const handleSelectPlan = (credits: number) => {
-    // Navigate to place-order page with credits as query param
-    navigate(`/place-order?credits=${credits}`);
+  const handleSelectPlan = async (credits: number) => {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      navigate('/auth');
+      return;
+    }
+
+    navigate('/place-order/contact');
   };
 
   const pricingTiers = PRICING_TIERS;

@@ -24,6 +24,10 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const SMSPolicy = lazy(() => import("./pages/SMSPolicy"));
 const Styles = lazy(() => import("./pages/Styles"));
 const PlaceOrder = lazy(() => import("./pages/PlaceOrder"));
+const PlaceOrderContact = lazy(() => import("./pages/place-order/Contact"));
+const PlaceOrderStyle = lazy(() => import("./pages/place-order/Style"));
+const PlaceOrderUpload = lazy(() => import("./pages/place-order/Upload"));
+const PlaceOrderBundle = lazy(() => import("./pages/place-order/Bundle"));
 const About = lazy(() => import("./pages/About"));
 const AccountSettings = lazy(() => import("./pages/AccountSettings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -87,6 +91,10 @@ const App = () => (
           <Route path="/sms-policy" element={<SMSPolicy />} />
           <Route path="/styles" element={<Styles />} />
           <Route path="/place-order" element={<PlaceOrder />} />
+          <Route path="/place-order/contact" element={<PlaceOrderContact />} />
+          <Route path="/place-order/style" element={<PlaceOrderStyle />} />
+          <Route path="/place-order/upload" element={<PlaceOrderUpload />} />
+          <Route path="/place-order/bundle" element={<PlaceOrderBundle />} />
           <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/about" element={<About />} />
           <Route path="/account-portal" element={<AccountPortal />} />
