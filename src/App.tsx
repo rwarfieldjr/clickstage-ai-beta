@@ -36,6 +36,7 @@ const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminOrderDetail = lazy(() => import("./pages/admin/AdminOrderDetail"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminImages = lazy(() => import("./pages/admin/AdminImages"));
+const AdminImagesNew = lazy(() => import("./pages/admin/AdminImagesNew"));
 const AdminBulkUpload = lazy(() => import("./pages/admin/AdminBulkUpload"));
 const AdminTests = lazy(() => import("./pages/admin/AdminTests"));
 const AdminCredits = lazy(() => import("./pages/admin/AdminCredits"));
@@ -102,7 +103,8 @@ const App = () => (
           <Route path="/admin/orders" element={<RequireAdmin><AdminOrders /></RequireAdmin>} />
           <Route path="/admin/orders/:id" element={<RequireAdmin><AdminOrderDetail /></RequireAdmin>} />
           <Route path="/admin/settings" element={<RequireAdmin><AdminSettings /></RequireAdmin>} />
-          <Route path="/admin/images" element={<RequireAdmin><AdminImages /></RequireAdmin>} />
+          <Route path="/admin/images" element={<RequireAdmin><AdminImagesNew /></RequireAdmin>} />
+          <Route path="/admin/images-old" element={<RequireAdmin><AdminImages /></RequireAdmin>} />
           <Route path="/admin/bulk-upload" element={<RequireAdmin><AdminBulkUpload /></RequireAdmin>} />
           <Route path="/admin/tests" element={<RequireAdmin><AdminTests /></RequireAdmin>} />
           <Route path="/admin/credits" element={<RequireAdmin><AdminCredits /></RequireAdmin>} />

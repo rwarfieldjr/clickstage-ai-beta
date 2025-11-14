@@ -178,11 +178,11 @@ export default function AdminDashboardNew() {
                 </div>
               </div>
               <Button
-                onClick={() => navigate('/admin/dashboard-control')}
+                onClick={() => navigate('/admin/images')}
                 size="lg"
                 className="w-full md:w-auto bg-white text-blue-600 hover:bg-white/90 font-semibold text-lg px-8 py-6 h-auto shadow-lg hover:shadow-xl transition-all"
               >
-                Open Admin Panel
+                Open Admin Image Portal
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </CardContent>
