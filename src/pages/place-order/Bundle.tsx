@@ -319,21 +319,20 @@ export default function PlaceOrderBundle() {
                   />
                 </div>
 
-                <Button
+                <button
                   onClick={handleProceedToCheckout}
-                  className="w-full bg-[#003A70] hover:bg-[#002850] text-white"
-                  size="lg"
+                  className="w-full bg-[#2F74FF] text-white font-semibold py-4 rounded-xl hover:bg-[#1F5BD4] transition disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={!selectedBundle || !smsConsent || processing}
                 >
                   {processing ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin inline" />
                       Processing...
                     </>
                   ) : (
                     'Proceed to Checkout'
                   )}
-                </Button>
+                </button>
 
                 <p className="text-xs text-center text-gray-500">
                   You will be redirected to Stripe to complete your purchase securely.

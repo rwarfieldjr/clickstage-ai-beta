@@ -200,14 +200,13 @@ export default function PlaceOrderStyle() {
                   )}
                 </div>
 
-                <Button
+                <button
                   type="submit"
-                  className="w-full bg-[#003A70] hover:bg-[#002850] text-white"
-                  size="lg"
+                  className="w-full bg-[#2F74FF] text-white font-semibold py-4 rounded-xl hover:bg-[#1F5BD4] transition disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={!selectedStyle}
                 >
                   Continue to Upload Photos
-                </Button>
+                </button>
               </form>
             </CardContent>
           </Card>

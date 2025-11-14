@@ -324,9 +324,12 @@ export default function PlaceOrderContact() {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full bg-[#003A70] hover:bg-[#002850] text-white" size="lg">
+                <button
+                  type="submit"
+                  className="w-full bg-[#2F74FF] text-white font-semibold py-4 rounded-xl hover:bg-[#1F5BD4] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Continue to Select Style
-                </Button>
+                </button>
               </form>
             </CardContent>
           </Card>

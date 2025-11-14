@@ -381,14 +381,13 @@ export default function PlaceOrderUpload() {
                   </div>
                 )}
 
-                <Button
+                <button
                   onClick={handleSubmit}
-                  className={`w-full ${isOverLimit ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#003A70] hover:bg-[#002850] text-white'}`}
-                  size="lg"
+                  className="w-full bg-[#2F74FF] text-white font-semibold py-4 rounded-xl hover:bg-[#1F5BD4] transition disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={uploadedFiles.length === 0 || isOverLimit}
                 >
                   Continue to Bundle Selection
-                </Button>
+                </button>
 
                 {isOverLimit && (
                   <p className="text-sm text-red-600 text-center">
