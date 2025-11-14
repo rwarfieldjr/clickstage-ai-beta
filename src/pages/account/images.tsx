@@ -386,28 +386,9 @@ export default function ImagesPage() {
                           </Button>
                         </div>
                       )}
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {formatFileSize(image.size)} • {new Date(image.created_at).toLocaleDateString()}
                       </p>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDownload(image)}
-                          className="h-7 text-xs"
-                        >
-                          <Download className="w-3 h-3 mr-1" />
-                          Download
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => setDeleteConfirm(image)}
-                          className="h-7 text-xs"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
                     </div>
                   </div>
                 </Card>
