@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Download, Trash2, Loader2, Upload, Edit2, X, Check } from "lucide-react";
+import { Download, Trash2, Loader2, Upload, Edit2, X, Check, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 interface ImageFile {
@@ -25,6 +26,7 @@ interface ImageFile {
 }
 
 export default function ImagesPage() {
+  const navigate = useNavigate();
   const [originalImages, setOriginalImages] = useState<ImageFile[]>([]);
   const [stagedImages, setStagedImages] = useState<ImageFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -447,6 +449,14 @@ export default function ImagesPage() {
   return (
     <div className="space-y-6">
       <div>
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/account')}
+          className="mb-4 -ml-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Account
+        </Button>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Image Portal</h1>
         <p className="text-slate-600 dark:text-slate-400 mt-1">Upload, organize, and manage your original and staged photos</p>
       </div>

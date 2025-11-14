@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { Home, User, Package, CreditCard, LogOut, Image } from "lucide-react";
+import { Home, User, Package, CreditCard, LogOut, Image, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +30,15 @@ export default function Sidebar() {
 
   return (
     <div className="w-64 bg-white shadow-lg rounded-2xl p-6 h-fit">
+      <Button
+        variant="ghost"
+        onClick={() => navigate('/')}
+        className="w-full justify-start mb-4 -ml-2 text-gray-600 hover:text-gray-900"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Home
+      </Button>
+
       <h2 className="text-xl font-semibold mb-6 text-gray-900">My Account</h2>
 
       <nav className="space-y-2">

@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Trash2, AlertCircle } from "lucide-react";
+import { Loader2, Trash2, AlertCircle, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { deleteBrokenFiles } from "@/lib/deleteBrokenFiles";
 
@@ -15,6 +16,7 @@ interface BrokenFile {
 }
 
 export default function AdminStorageCleanup() {
+  const navigate = useNavigate();
   const [scanning, setScanning] = useState(false);
   const [brokenFiles, setBrokenFiles] = useState<BrokenFile[]>([]);
   const [cleaning, setCleaning] = useState(false);
@@ -143,6 +145,14 @@ export default function AdminStorageCleanup() {
   return (
     <div className="space-y-6">
       <div>
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/admin/dashboard')}
+          className="mb-4 -ml-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Admin Dashboard
+        </Button>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Storage Cleanup</h1>
         <p className="text-slate-600 dark:text-slate-400 mt-1">
           Scan and remove broken or corrupted files from storage
