@@ -156,7 +156,7 @@ const Portfolio = () => {
                 <p className="text-muted-foreground mb-6">
                   Converting an empty room into a functional and inspiring home office that showcases the potential of every space
                 </p>
-                <Link to="/place-order">
+                <Link to="/pricing">
                   <Button size="lg" className="bg-accent hover:bg-accent/90">
                     Place Staging Order
                     <ArrowRight className="ml-2 w-5 h-5" />
