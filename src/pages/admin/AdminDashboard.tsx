@@ -3,11 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
 import { useRequireAdmin } from "@/hooks/useRequireAdmin";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, ImageIcon, CreditCard, Activity, UserCheck, UserX, Clock, CheckCircle2 } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { Users, ImageIcon, CreditCard, UserCheck, UserX, Clock, CheckCircle2, Package, Settings, ArrowRight } from "lucide-react";
+import AdminSidebar from "@/components/admin/AdminSidebar";
 
 interface DashboardStats {
   totalUsers: number;
@@ -72,13 +71,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/admin/login");
-  };
-
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg text-gray-600">Loading...</div>
+      </div>
+    );
   }
 
   if (!isAdmin) {
@@ -86,139 +84,192 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <Button onClick={handleLogout} variant="outline">Logout</Button>
+    <div className="flex gap-8 p-10 min-h-screen bg-gray-50">
+      <AdminSidebar />
+
+      <div className="flex-1 space-y-6">
+        <div className="bg-white shadow-xl rounded-2xl p-10">
+          <h1 className="text-3xl font-bold mb-4 text-gray-900">
+            Welcome back, Admin!
+          </h1>
+          <p className="text-gray-700">
+            Use the menu to the left to manage users, orders, credits, and system settings.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/admin/users")}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.totalUsers || 0}</div>
+        <Card className="shadow-xl border-0 overflow-hidden relative bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mt-32 -mr-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -mb-24 -ml-24" />
+          <CardContent className="p-8 relative z-10">
+            <div className="flex items-start justify-between gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                    <Settings className="w-7 h-7 text-white" />
+                  </div>
+                  <h2 className="text-3xl font-bold text-white">Admin Tools</h2>
+                </div>
+                <p className="text-white/90 text-base mb-6 max-w-2xl">
+                  Manage users, orders, credits, and system settings from a centralized dashboard
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Users className="w-5 h-5 text-white" />
+                      <h3 className="font-semibold text-white">Users</h3>
+                    </div>
+                    <p className="text-white/80 text-sm">
+                      Manage accounts and permissions
+                    </p>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Package className="w-5 h-5 text-white" />
+                      <h3 className="font-semibold text-white">Orders</h3>
+                    </div>
+                    <p className="text-white/80 text-sm">
+                      Track and manage all orders
+                    </p>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CreditCard className="w-5 h-5 text-white" />
+                      <h3 className="font-semibold text-white">Credits</h3>
+                    </div>
+                    <p className="text-white/80 text-sm">
+                      Monitor credit usage and history
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => navigate('/admin/users')}
+                  size="lg"
+                  className="bg-white text-blue-600 hover:bg-white/90 font-semibold text-base px-6 py-6 h-auto shadow-lg hover:shadow-xl transition-all"
+                >
+                  Manage Users
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid md:grid-cols-4 gap-6">
+          <Card className="bg-white shadow-lg rounded-2xl cursor-pointer hover:shadow-xl transition-shadow" onClick={() => navigate("/admin/users")}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Users</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.totalUsers || 0}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-              <UserCheck className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.activeUsers || 0}</div>
+          <Card className="bg-white shadow-lg rounded-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <UserCheck className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Active Users</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.activeUsers || 0}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Paused Users</CardTitle>
-              <UserX className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.pausedUsers || 0}</div>
+          <Card className="bg-white shadow-lg rounded-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <UserX className="w-6 h-6 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Paused Users</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.pausedUsers || 0}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/admin/orders")}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.totalOrders || 0}</div>
+          <Card className="bg-white shadow-lg rounded-2xl cursor-pointer hover:shadow-xl transition-shadow" onClick={() => navigate("/admin/orders")}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Package className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Orders</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.totalOrders || 0}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/admin/orders")}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
-              <Clock className="h-4 w-4 text-yellow-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.pendingOrders || 0}</div>
+          <Card className="bg-white shadow-lg rounded-2xl cursor-pointer hover:shadow-xl transition-shadow" onClick={() => navigate("/admin/orders")}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-yellow-100 rounded-lg">
+                  <Clock className="w-6 h-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Pending Orders</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.pendingOrders || 0}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/admin/orders")}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed Orders</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.completedOrders || 0}</div>
+          <Card className="bg-white shadow-lg rounded-2xl cursor-pointer hover:shadow-xl transition-shadow" onClick={() => navigate("/admin/orders")}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <CheckCircle2 className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Completed Orders</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.completedOrders || 0}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/admin/images")}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Images</CardTitle>
-              <ImageIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.totalImages || 0}</div>
+          <Card className="bg-white shadow-lg rounded-2xl cursor-pointer hover:shadow-xl transition-shadow" onClick={() => navigate("/admin/images")}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-indigo-100 rounded-lg">
+                  <ImageIcon className="w-6 h-6 text-indigo-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Images</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.totalImages || 0}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Credits Issued</CardTitle>
-              <CreditCard className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.creditsIssued || 0}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Credits Used</CardTitle>
-              <CreditCard className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.creditsUsed || 0}</div>
+          <Card className="bg-white shadow-lg rounded-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <CreditCard className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Credits Issued</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.creditsIssued || 0}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/admin/users")}>
-            <CardHeader>
-              <CardTitle>User Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">Manage user accounts, credits, and status</p>
-              <Button variant="outline" className="w-full">Go to Users</Button>
-            </CardContent>
-          </Card>
-
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/admin/orders")}>
-            <CardHeader>
-              <CardTitle>Order Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">View and manage all orders</p>
-              <Button variant="outline" className="w-full">Go to Orders</Button>
-            </CardContent>
-          </Card>
-
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/admin/images")}>
-            <CardHeader>
-              <CardTitle>Uploaded Images</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">View and download all uploaded customer images</p>
-              <Button variant="outline" className="w-full">Go to Images</Button>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 }
