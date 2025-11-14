@@ -18,19 +18,30 @@ export default function LoginForm() {
     setLoading(true);
     setErrorMsg("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      setErrorMsg(error.message);
+      if (error) {
+        setErrorMsg(error.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!data?.session) {
+        setErrorMsg("Login failed - no session created");
+        setLoading(false);
+        return;
+      }
+
       setLoading(false);
-      return;
+      navigate("/account");
+    } catch (err: any) {
+      setErrorMsg(err?.message || "An unexpected error occurred");
+      setLoading(false);
     }
-
-    setLoading(false);
-    navigate("/account");
   }
 
   return (
