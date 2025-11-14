@@ -1,21 +1,23 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, ArrowLeft, Check } from "lucide-react";
+import { CreditCard, ArrowLeft, Check, X } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { PRICING_TIERS } from "@/config/pricing";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
+import DelayedTurnstile from "@/components/DelayedTurnstile";
 
 export default function PurchaseCredits() {
   const navigate = useNavigate();
-  const [processing, setProcessing] = useState<string | null>(null);
-  const turnstileRef = useRef<TurnstileInstance>(null);
+  const [processing, setProcessing] = useState(false);
+  const [showTurnstile, setShowTurnstile] = useState(false);
+  const [selectedPriceId, setSelectedPriceId] = useState<string | null>(null);
+  const [selectedBundleId, setSelectedBundleId] = useState<string | null>(null);
 
   const handlePurchaseClick = async (bundleId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -25,28 +27,26 @@ export default function PurchaseCredits() {
       return;
     }
 
-    await createCheckoutSession(bundleId);
+    const bundle = PRICING_TIERS.find(b => b.id === bundleId);
+    if (!bundle) {
+      toast.error('Bundle not found');
+      return;
+    }
+
+    setSelectedPriceId(bundle.priceId);
+    setSelectedBundleId(bundleId);
+    setShowTurnstile(true);
   };
 
-  const createCheckoutSession = async (bundleId: string) => {
-    setProcessing(bundleId);
-    try {
-      const bundle = PRICING_TIERS.find(b => b.id === bundleId);
-      if (!bundle) {
-        throw new Error('Bundle not found');
-      }
+  const handleTurnstileSuccess = async (token: string) => {
+    if (!selectedPriceId) return;
 
+    setProcessing(true);
+    try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error('Please log in to purchase credits');
         navigate('/auth');
-        return;
-      }
-
-      const turnstileToken = turnstileRef.current?.getResponse();
-      if (!turnstileToken) {
-        toast.error('Please complete security verification');
-        turnstileRef.current?.reset();
         return;
       }
 
@@ -57,8 +57,8 @@ export default function PurchaseCredits() {
           'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          priceId: bundle.priceId,
-          turnstileToken,
+          priceId: selectedPriceId,
+          turnstileToken: token,
         }),
       });
 
@@ -77,10 +77,16 @@ export default function PurchaseCredits() {
     } catch (error: any) {
       console.error('Error creating checkout:', error);
       toast.error(error.message || 'Failed to start checkout. Please try again.');
-      turnstileRef.current?.reset();
-    } finally {
-      setProcessing(null);
+      setShowTurnstile(false);
+      setProcessing(false);
     }
+  };
+
+  const handleCancelTurnstile = () => {
+    setShowTurnstile(false);
+    setSelectedPriceId(null);
+    setSelectedBundleId(null);
+    setProcessing(false);
   };
 
   return (
@@ -143,10 +149,10 @@ export default function PurchaseCredits() {
                         2
                       </div>
                       <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                        Secure Checkout
+                        Verify & Checkout
                       </h4>
                       <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Complete payment safely through Stripe
+                        Complete security verification and payment
                       </p>
                     </div>
                     <div className="text-center">
@@ -164,6 +170,37 @@ export default function PurchaseCredits() {
                 </CardContent>
               </Card>
             </div>
+
+            {showTurnstile && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <Card className="w-full max-w-md bg-white dark:bg-slate-800">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl">Verify to Continue</CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancelTurnstile}
+                        disabled={processing}
+                      >
+                        <X className="w-5 h-5" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 text-center">
+                      Please complete the security verification below to proceed to checkout
+                    </p>
+                    <div className="flex justify-center">
+                      <DelayedTurnstile
+                        siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                        onSuccess={handleTurnstileSuccess}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {PRICING_TIERS.map((tier) => (
@@ -243,10 +280,10 @@ export default function PurchaseCredits() {
 
                       <Button
                         onClick={() => handlePurchaseClick(tier.id)}
-                        disabled={processing === tier.id}
+                        disabled={processing || (showTurnstile && selectedBundleId !== tier.id)}
                         className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700"
                       >
-                        {processing === tier.id ? "Processing..." : "Purchase"}
+                        {processing && selectedBundleId === tier.id ? "Processing..." : "Purchase"}
                       </Button>
                     </CardContent>
                   </Card>
@@ -276,19 +313,6 @@ export default function PurchaseCredits() {
                   </p>
                 </CardContent>
               </Card>
-            </div>
-
-            <div className="max-w-3xl mx-auto mb-8">
-              <div className="flex justify-center">
-                <Turnstile
-                  ref={turnstileRef}
-                  siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-                  options={{
-                    theme: 'light',
-                    size: 'normal',
-                  }}
-                />
-              </div>
             </div>
           </div>
         </div>
