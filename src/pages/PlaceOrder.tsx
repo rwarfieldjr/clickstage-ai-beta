@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getPricingTierByCredits } from "@/config/pricing";
 
 const formSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required").max(100, "First name must be less than 100 characters"),
@@ -23,15 +24,27 @@ type FormData = z.infer<typeof formSchema>;
 
 const PlaceOrder = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [selectedBundle, setSelectedBundle] = useState<any>(null);
 
   useEffect(() => {
-    // Get selected bundle from localStorage
+    // Get credits from query params (priority)
+    const creditsParam = searchParams.get('credits');
+    if (creditsParam) {
+      const credits = parseInt(creditsParam, 10);
+      const tier = getPricingTierByCredits(credits);
+      if (tier) {
+        setSelectedBundle(tier);
+        return;
+      }
+    }
+
+    // Fallback: Get selected bundle from localStorage
     const bundleData = localStorage.getItem('selectedBundle');
     if (bundleData) {
       setSelectedBundle(JSON.parse(bundleData));
     }
-  }, []);
+  }, [searchParams]);
 
   const {
     register,
@@ -93,6 +106,20 @@ const PlaceOrder = () => {
               <CardDescription className="text-center">
                 We'll use this information to send you updates about your staging order.
               </CardDescription>
+
+              {selectedBundle && (
+                <div className="mt-4 p-4 bg-accent/10 rounded-lg border border-accent/20">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-1">Selected Package</p>
+                    <p className="text-lg font-semibold text-accent">
+                      {selectedBundle.credits} Photo Credit{selectedBundle.credits > 1 ? 's' : ''} - {selectedBundle.price}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {selectedBundle.perPhoto}
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardHeader>
 
             <CardContent>
