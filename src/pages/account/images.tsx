@@ -36,7 +36,7 @@ export default function ImagesPage() {
       setUserId(user.id);
 
       const { data: files, error } = await supabase.storage
-        .from('staging-originals')
+        .from('uploads')
         .list(`${user.id}/`, {
           sortBy: { column: 'created_at', order: 'desc' }
         });
@@ -46,7 +46,7 @@ export default function ImagesPage() {
       const imageUrls = await Promise.all(
         (files || []).map(async (file) => {
           const { data: { publicUrl } } = supabase.storage
-            .from('staging-originals')
+            .from('uploads')
             .getPublicUrl(`${user.id}/${file.name}`);
 
           return {
@@ -80,7 +80,7 @@ export default function ImagesPage() {
         const filePath = `${userId}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('staging-originals')
+          .from('uploads')
           .upload(filePath, file, {
             cacheControl: '3600',
             upsert: false
@@ -129,7 +129,7 @@ export default function ImagesPage() {
 
     try {
       const { error } = await supabase.storage
-        .from('staging-originals')
+        .from('uploads')
         .remove([`${userId}/${image.name}`]);
 
       if (error) throw error;
