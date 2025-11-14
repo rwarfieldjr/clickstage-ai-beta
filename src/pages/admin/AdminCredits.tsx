@@ -5,12 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Plus, Minus, Edit } from "lucide-react";
+import { Loader2, Plus, Minus, Edit2 } from "lucide-react";
 
 interface UserCredit {
-  user_id: string;
+  id: string;
   email: string;
-  balance: number;
+  credits: number;
   name: string | null;
 }
 
@@ -18,6 +18,7 @@ export default function AdminCredits() {
   const [users, setUsers] = useState<UserCredit[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,103 +50,90 @@ export default function AdminCredits() {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("credits_view")
-        .select("*")
-        .order("email");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
-      if (error) throw error;
+      const result = await supabase.rpc('admin_get_all_user_credits', {
+        p_admin_id: user.id
+      });
 
-      setUsers(data || []);
-    } catch (error) {
+      if (result.error) throw result.error;
+
+      if (result.data && result.data.users) {
+        setUsers(result.data.users);
+      }
+    } catch (error: any) {
       console.error("Error loading users:", error);
-      toast.error("Failed to load users");
+      toast.error(error.message || "Failed to load users");
     } finally {
       setLoading(false);
     }
   };
 
-  const adjustCredits = async (
-    userId: string,
-    email: string,
-    type: "add" | "subtract" | "set",
-    amount: number
-  ) => {
+  const handleInputChange = (userId: string, value: string) => {
+    setInputValues(prev => ({ ...prev, [userId]: value }));
+  };
+
+  const adjustCredits = async (userId: string, action: 'add' | 'subtract' | 'set') => {
+    const inputValue = inputValues[userId];
+    if (!inputValue || inputValue.trim() === '') {
+      toast.error("Please enter a number");
+      return;
+    }
+
+    const amount = parseInt(inputValue);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid positive number");
+      return;
+    }
+
     setProcessing(userId);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      let newBalance: number;
-      let error: any;
-
-      if (type === "add") {
-        const result = await supabase.rpc("add_credits", {
-          p_user_id: userId,
-          p_amount: amount,
-        });
-        error = result.error;
-        newBalance = result.data;
-      } else if (type === "subtract") {
-        const result = await supabase.rpc("subtract_credits", {
-          p_user_id: userId,
-          p_amount: amount,
-        });
-        error = result.error;
-        newBalance = result.data;
-      } else {
-        const result = await supabase.rpc("set_credits", {
-          p_user_id: userId,
-          p_amount: amount,
-        });
-        error = result.error;
-        newBalance = result.data;
+      let adjustAmount = amount;
+      if (action === 'subtract') {
+        adjustAmount = -amount;
+      } else if (action === 'set') {
+        const currentUser = users.find(u => u.id === userId);
+        if (!currentUser) throw new Error("User not found");
+        adjustAmount = amount - currentUser.credits;
       }
+
+      const { data, error } = await supabase.rpc('admin_adjust_credits', {
+        p_admin_id: user.id,
+        p_user_id: userId,
+        p_amount: adjustAmount,
+        p_note: `Admin ${action}: ${amount} credits`
+      });
 
       if (error) throw error;
 
-      await supabase.from("credit_history").insert({
-        user_id: userId,
-        admin_email: user.email,
-        change_type: type,
-        amount,
-        new_balance: newBalance,
-      });
+      toast.success(`Credits ${action === 'add' ? 'added' : action === 'subtract' ? 'subtracted' : 'set'} successfully`);
 
-      toast.success(`Credits ${type === "add" ? "added" : type === "subtract" ? "subtracted" : "set"} successfully`);
+      setInputValues(prev => ({ ...prev, [userId]: '' }));
       await loadUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adjusting credits:", error);
-      toast.error("Failed to adjust credits");
+      toast.error(error.message || "Failed to adjust credits");
     } finally {
       setProcessing(null);
-    }
-  };
-
-  const handleSetCredits = (userId: string, email: string) => {
-    const input = prompt("Set credits to:");
-    if (input) {
-      const amount = parseInt(input);
-      if (!isNaN(amount) && amount >= 0) {
-        adjustCredits(userId, email, "set", amount);
-      } else {
-        toast.error("Please enter a valid number");
-      }
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
     );
   }
 
   return (
     <div className="container mx-auto p-8">
-      <Card>
+      <Card className="shadow-custom-lg">
         <CardHeader>
           <CardTitle className="text-3xl font-bold">Admin Credit Control</CardTitle>
           <CardDescription>
@@ -154,7 +142,7 @@ export default function AdminCredits() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full">
               <thead>
                 <tr className="border-b">
                   <th className="text-left p-4 font-semibold">Email</th>
@@ -164,62 +152,86 @@ export default function AdminCredits() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
-                  <tr key={user.user_id} className="border-b hover:bg-muted/50">
-                    <td className="p-4">{user.email}</td>
-                    <td className="p-4">{user.name || "-"}</td>
-                    <td className="p-4 text-center font-semibold">{user.balance}</td>
-                    <td className="p-4">
-                      <div className="flex gap-2 justify-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => adjustCredits(user.user_id, user.email, "add", 10)}
-                          disabled={processing === user.user_id}
-                        >
-                          {processing === user.user_id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Plus className="w-4 h-4 mr-1" />
-                              +10
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => adjustCredits(user.user_id, user.email, "subtract", 10)}
-                          disabled={processing === user.user_id}
-                        >
-                          {processing === user.user_id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Minus className="w-4 h-4 mr-1" />
-                              -10
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSetCredits(user.user_id, user.email)}
-                          disabled={processing === user.user_id}
-                        >
-                          {processing === user.user_id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Edit className="w-4 h-4 mr-1" />
-                              Set
-                            </>
-                          )}
-                        </Button>
-                      </div>
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                      No users found
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  users.map((user) => (
+                    <tr key={user.id} className="border-b hover:bg-muted/50">
+                      <td className="p-4">{user.email}</td>
+                      <td className="p-4">{user.name || "-"}</td>
+                      <td className="p-4 text-center">
+                        <span className="font-semibold text-lg text-accent">
+                          {user.credits}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex gap-2 justify-center items-center">
+                          <Input
+                            type="number"
+                            min="1"
+                            placeholder="Amount"
+                            value={inputValues[user.id] || ''}
+                            onChange={(e) => handleInputChange(user.id, e.target.value)}
+                            className="w-24 text-center"
+                            disabled={processing === user.id}
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => adjustCredits(user.id, 'add')}
+                            disabled={processing === user.id}
+                            className="min-w-[80px]"
+                          >
+                            {processing === user.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <>
+                                <Plus className="w-4 h-4 mr-1" />
+                                Add
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => adjustCredits(user.id, 'subtract')}
+                            disabled={processing === user.id}
+                            className="min-w-[100px]"
+                          >
+                            {processing === user.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <>
+                                <Minus className="w-4 h-4 mr-1" />
+                                Subtract
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => adjustCredits(user.id, 'set')}
+                            disabled={processing === user.id}
+                            className="min-w-[70px]"
+                          >
+                            {processing === user.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <>
+                                <Edit2 className="w-4 h-4 mr-1" />
+                                Set
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
