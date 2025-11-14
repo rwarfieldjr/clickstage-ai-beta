@@ -53,7 +53,7 @@ export default function PlaceOrderStyle() {
     checkAuth();
   }, [navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedStyle) {
@@ -61,9 +61,36 @@ export default function PlaceOrderStyle() {
       return;
     }
 
-    sessionStorage.setItem('orderStyle', selectedStyle);
+    setLoading(true);
 
-    navigate('/place-order/upload');
+    try {
+      const orderId = sessionStorage.getItem('currentOrderId');
+      if (!orderId) {
+        toast.error('Order not found. Please start from the beginning.');
+        navigate('/place-order/contact');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('staging_orders')
+        .update({ staging_style: selectedStyle })
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('Style update error:', error);
+        toast.error('Failed to save staging style');
+        setLoading(false);
+        return;
+      }
+
+      sessionStorage.setItem('orderStyle', selectedStyle);
+      navigate('/place-order/upload');
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBack = () => {

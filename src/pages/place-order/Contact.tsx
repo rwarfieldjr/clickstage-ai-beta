@@ -100,7 +100,7 @@ export default function PlaceOrderContact() {
     return digitsOnly.length >= 10;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors: Partial<ContactFormData> = {};
@@ -136,9 +136,60 @@ export default function PlaceOrderContact() {
     }
 
     setErrors({});
-    sessionStorage.setItem('orderContactData', JSON.stringify(formData));
+    setLoading(true);
 
-    navigate('/place-order/style');
+    try {
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          name: fullName,
+          email: formData.email,
+          phone: formData.phone,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'id'
+        });
+
+      if (profileError) {
+        console.error('Profile save error:', profileError);
+        toast.error('Failed to save contact information');
+        setLoading(false);
+        return;
+      }
+
+      const bundleId = sessionStorage.getItem('orderBundle');
+
+      const { data: orderData, error: orderError } = await supabase
+        .from('staging_orders')
+        .insert({
+          user_id: user.id,
+          bundle_selected: bundleId || '',
+          address_of_property: formData.propertyAddress,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        toast.error('Failed to create order');
+        setLoading(false);
+        return;
+      }
+
+      sessionStorage.setItem('orderContactData', JSON.stringify(formData));
+      sessionStorage.setItem('currentOrderId', orderData.id);
+
+      navigate('/place-order/style');
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {

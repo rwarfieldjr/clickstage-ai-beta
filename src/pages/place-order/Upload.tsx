@@ -100,7 +100,21 @@ export default function PlaceOrderUpload() {
   const handleFiles = async (files: File[]) => {
     if (!user) return;
 
+    const orderId = sessionStorage.getItem('currentOrderId');
+    if (!orderId) {
+      toast.error('Order not found. Please start from the beginning.');
+      navigate('/place-order/contact');
+      return;
+    }
+
     const maxSize = 20 * 1024 * 1024;
+    const maxFiles = 50;
+
+    if (uploadedFiles.length + files.length > maxFiles) {
+      toast.error(`Maximum ${maxFiles} images allowed per order`);
+      return;
+    }
+
     const validFiles = files.filter(file => {
       if (file.size > maxSize) {
         toast.error(`${file.name} is too large. Maximum size is 20MB`);
@@ -120,7 +134,7 @@ export default function PlaceOrderUpload() {
       for (const file of validFiles) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
+        const filePath = `originals/${user.id}/${orderId}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('uploads')
@@ -137,6 +151,20 @@ export default function PlaceOrderUpload() {
         const { data: { publicUrl } } = supabase.storage
           .from('uploads')
           .getPublicUrl(filePath);
+
+        const { error: dbError } = await supabase
+          .from('staging_original_photos')
+          .insert({
+            user_id: user.id,
+            order_id: orderId,
+            file_path: filePath,
+            file_name: file.name
+          });
+
+        if (dbError) {
+          console.error("Database error:", dbError);
+          throw dbError;
+        }
 
         newFiles.push({
           path: filePath,
@@ -160,11 +188,18 @@ export default function PlaceOrderUpload() {
 
   const handleRemoveFile = async (file: UploadedFile) => {
     try {
-      const { error } = await supabase.storage
+      const { error: dbError } = await supabase
+        .from('staging_original_photos')
+        .delete()
+        .eq('file_path', file.path);
+
+      if (dbError) throw dbError;
+
+      const { error: storageError } = await supabase.storage
         .from('uploads')
         .remove([file.path]);
 
-      if (error) throw error;
+      if (storageError) throw storageError;
 
       const updatedFiles = uploadedFiles.filter(f => f.path !== file.path);
       setUploadedFiles(updatedFiles);
