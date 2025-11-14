@@ -85,6 +85,11 @@ const Footer = () => {
                   Place an Order
                 </Link>
               </li>
+              <li>
+                <Link to="/admin/login" className="text-muted-foreground hover:text-accent transition-smooth">
+                  Admin
+                </Link>
+              </li>
             </ul>
 
             <h4 className="font-medium mb-4">Connect</h4>
