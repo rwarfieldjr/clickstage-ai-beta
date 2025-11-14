@@ -174,7 +174,6 @@ export default function PlaceOrderStyle() {
                         <SelectItem
                           key={style.id}
                           value={style.id}
-                          className="hover:bg-blue-50 focus:bg-[#2F74FF] focus:text-white cursor-pointer"
                         >
                           {style.name}
                         </SelectItem>
