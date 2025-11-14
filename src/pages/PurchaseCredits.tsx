@@ -20,6 +20,13 @@ export default function PurchaseCredits() {
   const [processing, setProcessing] = useState(false);
 
   const handlePurchaseClick = async (bundleId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast.error('Please log in to purchase credits');
+      navigate('/auth');
+      return;
+    }
+
     if (verifiedBundles.has(bundleId)) {
       await createCheckoutSession(bundleId);
     } else {
@@ -27,7 +34,7 @@ export default function PurchaseCredits() {
     }
   };
 
-  const createCheckoutSession = async (bundleId: string) => {
+  const createCheckoutSession = async (bundleId: string, turnstileToken?: string) => {
     setProcessing(true);
     try {
       const bundle = PRICING_TIERS.find(b => b.id === bundleId);
@@ -42,7 +49,7 @@ export default function PurchaseCredits() {
         return;
       }
 
-      const response = await fetch(`${ENV.supabase.url}/functions/v1/create-credit-checkout`, {
+      const response = await fetch(`${ENV.supabase.url}/functions/v1/create-simple-checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -50,19 +57,25 @@ export default function PurchaseCredits() {
         },
         body: JSON.stringify({
           priceId: bundle.priceId,
-          credits: bundle.credits,
+          turnstileToken: turnstileToken || '',
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to create checkout session');
       }
 
-      const { url } = await response.json();
-      window.location.href = url;
+      const data = await response.json();
+
+      if (!data.url) {
+        throw new Error('No checkout URL received');
+      }
+
+      window.location.href = data.url;
     } catch (error: any) {
       console.error('Error creating checkout:', error);
-      toast.error('Failed to start checkout. Please try again.');
+      toast.error(error.message || 'Failed to start checkout. Please try again.');
     } finally {
       setProcessing(false);
     }
@@ -71,7 +84,7 @@ export default function PurchaseCredits() {
   const handleTurnstileSuccess = async (token: string) => {
     if (selectedBundle) {
       setVerifiedBundles(prev => new Set([...prev, selectedBundle]));
-      await createCheckoutSession(selectedBundle);
+      await createCheckoutSession(selectedBundle, token);
       setSelectedBundle(null);
     }
   };
