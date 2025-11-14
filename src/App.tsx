@@ -29,6 +29,7 @@ const AccountSettings = lazy(() => import("./pages/AccountSettings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboardControl"));
+const AdminDashboardNew = lazy(() => import("./pages/admin/AdminDashboardNew"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminUserDetail = lazy(() => import("./pages/admin/AdminUserDetail"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
@@ -94,7 +95,8 @@ const App = () => (
           <Route path="/account-settings" element={<AccountSettings />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+          <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboardNew /></RequireAdmin>} />
+          <Route path="/admin/dashboard-control" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
           <Route path="/admin/users" element={<RequireAdmin><AdminUsers /></RequireAdmin>} />
           <Route path="/admin/users/:id" element={<RequireAdmin><AdminUserDetail /></RequireAdmin>} />
           <Route path="/admin/orders" element={<RequireAdmin><AdminOrders /></RequireAdmin>} />
