@@ -12,7 +12,6 @@ import Footer from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { PRICING_TIERS } from "@/config/pricing";
 import { Loader2, ArrowLeft, Check } from "lucide-react";
-import { Turnstile } from "@marsidev/react-turnstile";
 
 export default function PlaceOrderBundle() {
   const navigate = useNavigate();
@@ -24,7 +23,7 @@ export default function PlaceOrderBundle() {
   const [turnstileToken, setTurnstileToken] = useState<string>("");
   const [processing, setProcessing] = useState(false);
   const [turnstileReady, setTurnstileReady] = useState(false);
-  const turnstileRef = useRef<any>(null);
+  const turnstileRendered = useRef(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -75,6 +74,20 @@ export default function PlaceOrderBundle() {
     checkAuth();
   }, [navigate]);
 
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    return () => {
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+    };
+  }, []);
+
   const handleBundleSelect = (bundleId: string) => {
     setSelectedBundle(bundleId);
     sessionStorage.setItem('orderBundle', bundleId);
@@ -110,9 +123,37 @@ export default function PlaceOrderBundle() {
 
     setTurnstileReady(true);
     setProcessing(true);
+
+    setTimeout(() => {
+      if (!turnstileRendered.current && (window as any).turnstile) {
+        const container = document.getElementById('turnstile-container');
+        if (container) {
+          container.style.display = 'block';
+          (window as any).turnstile.render('#turnstile-container', {
+            sitekey: '0x4AAAAAAB9xdhqE9Qyud_D6',
+            callback: (token: string) => {
+              handleTurnstileSuccess(token);
+            },
+            'error-callback': () => {
+              toast.error('Security verification failed');
+              setProcessing(false);
+              setTurnstileReady(false);
+              turnstileRendered.current = false;
+            }
+          });
+          turnstileRendered.current = true;
+        }
+      }
+    }, 100);
   };
 
   const handleTurnstileSuccess = async (token: string) => {
+    if (!token) {
+      toast.error('Security verification failed');
+      setProcessing(false);
+      return;
+    }
+
     setTurnstileToken(token);
 
     try {
@@ -312,24 +353,7 @@ export default function PlaceOrderBundle() {
                   )}
                 </button>
 
-                {turnstileReady && (
-                  <div className="mt-4 flex justify-center">
-                    <Turnstile
-                      ref={turnstileRef}
-                      siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
-                      onSuccess={handleTurnstileSuccess}
-                      onError={() => {
-                        toast.error("Security verification failed");
-                        setProcessing(false);
-                        setTurnstileReady(false);
-                      }}
-                      options={{
-                        theme: 'light',
-                        size: 'normal',
-                      }}
-                    />
-                  </div>
-                )}
+                <div id="turnstile-container" className="mt-4 flex justify-center" style={{ display: 'none' }}></div>
 
                 <p className="text-xs text-center text-gray-500">
                   You will be redirected to Stripe to complete your purchase securely.
