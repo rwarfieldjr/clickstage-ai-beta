@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Plus, Minus, Edit2 } from "lucide-react";
+import { Loader2, Plus, Minus, Edit2, ArrowLeft } from "lucide-react";
 
 interface UserCredit {
   id: string;
@@ -133,6 +133,14 @@ export default function AdminCredits() {
 
   return (
     <div className="container mx-auto p-8">
+      <Button
+        variant="ghost"
+        onClick={() => navigate("/admin/dashboard")}
+        className="mb-4"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Dashboard
+      </Button>
       <Card className="shadow-custom-lg">
         <CardHeader>
           <CardTitle className="text-3xl font-bold">Admin Credit Control</CardTitle>

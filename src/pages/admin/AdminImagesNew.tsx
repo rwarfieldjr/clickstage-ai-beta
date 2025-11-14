@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useRequireAdmin } from "@/hooks/useRequireAdmin";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Download, Trash2, Loader2, Upload, Edit2, X, Check, Bell } from "lucide-react";
+import { Download, Trash2, Loader2, Upload, Edit2, X, Check, Bell, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -51,6 +52,7 @@ interface OrderStatus {
 
 export default function AdminImagesNew() {
   const { isAdmin, isLoading } = useRequireAdmin();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -567,6 +569,13 @@ export default function AdminImagesNew() {
       <main className="flex-1 py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
           <div className="max-w-7xl mx-auto">
+            <div className="mb-6">
+              <Button variant="ghost" onClick={() => navigate("/admin/dashboard")}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            </div>
+
             <div className="mb-8">
               <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                 Admin Image Portal
