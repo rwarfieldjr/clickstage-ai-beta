@@ -174,6 +174,7 @@ export default function PlaceOrderStyle() {
                         <SelectItem
                           key={style.id}
                           value={style.id}
+                          className="cursor-pointer"
                         >
                           {style.name}
                         </SelectItem>
