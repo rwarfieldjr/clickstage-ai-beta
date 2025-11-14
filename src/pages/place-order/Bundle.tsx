@@ -57,11 +57,27 @@ export default function PlaceOrderBundle() {
         return;
       }
 
+      const savedBundle = sessionStorage.getItem('orderBundle');
+      if (savedBundle) {
+        setSelectedBundle(savedBundle);
+      } else {
+        const defaultBundle = PRICING_TIERS.find(t => t.popular)?.id || PRICING_TIERS[0]?.id;
+        if (defaultBundle) {
+          setSelectedBundle(defaultBundle);
+          sessionStorage.setItem('orderBundle', defaultBundle);
+        }
+      }
+
       setLoading(false);
     };
 
     checkAuth();
   }, [navigate]);
+
+  const handleBundleSelect = (bundleId: string) => {
+    setSelectedBundle(bundleId);
+    sessionStorage.setItem('orderBundle', bundleId);
+  };
 
   const handleProceedToCheckout = async () => {
     if (!selectedBundle) {
@@ -72,6 +88,21 @@ export default function PlaceOrderBundle() {
     if (!smsConsent) {
       toast.error("Please consent to SMS notifications");
       return;
+    }
+
+    sessionStorage.setItem('orderBundle', selectedBundle);
+    sessionStorage.setItem('orderNotes', notes);
+
+    const orderId = sessionStorage.getItem('currentOrderId');
+    if (orderId) {
+      try {
+        await supabase
+          .from('staging_orders')
+          .update({ notes })
+          .eq('id', orderId);
+      } catch (error) {
+        console.error('Failed to save notes:', error);
+      }
     }
 
     setProcessing(true);
@@ -100,6 +131,8 @@ export default function PlaceOrderBundle() {
       const style = sessionStorage.getItem('orderStyle');
       const files = JSON.parse(sessionStorage.getItem('orderUploadedFiles') || '[]');
 
+      const orderId = sessionStorage.getItem('currentOrderId');
+
       const { data, error } = await supabase.functions.invoke('create-simple-checkout', {
         body: {
           priceId: tier.priceId,
@@ -107,6 +140,8 @@ export default function PlaceOrderBundle() {
           customerEmail: contactData.email,
           metadata: {
             userId: user.id,
+            orderId: orderId || '',
+            bundleId: selectedBundle,
             firstName: contactData.firstName,
             lastName: contactData.lastName,
             phone: contactData.phone,
@@ -195,7 +230,7 @@ export default function PlaceOrderBundle() {
                       <button
                         key={tier.id}
                         type="button"
-                        onClick={() => setSelectedBundle(tier.id)}
+                        onClick={() => handleBundleSelect(tier.id)}
                         disabled={processing}
                         className={`relative p-6 rounded-lg border-2 transition-all text-left hover:border-blue-500 hover:shadow-md ${
                           selectedBundle === tier.id
@@ -203,6 +238,15 @@ export default function PlaceOrderBundle() {
                             : 'border-gray-200 bg-white'
                         } ${tier.popular ? 'ring-2 ring-blue-400' : ''}`}
                       >
+                        <input
+                          type="radio"
+                          name="bundle"
+                          className="absolute top-3 left-3 h-5 w-5 cursor-pointer z-10"
+                          checked={selectedBundle === tier.id}
+                          onChange={() => handleBundleSelect(tier.id)}
+                          disabled={processing}
+                          onClick={(e) => e.stopPropagation()}
+                        />
                         {tier.popular && (
                           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                             <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
@@ -210,14 +254,7 @@ export default function PlaceOrderBundle() {
                             </span>
                           </div>
                         )}
-                        {selectedBundle === tier.id && (
-                          <div className="absolute top-4 right-4">
-                            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                              <Check className="w-4 h-4 text-white" />
-                            </div>
-                          </div>
-                        )}
-                        <div className="space-y-2">
+                        <div className="space-y-2 pl-8">
                           <h4 className="font-bold text-lg">Buy {tier.credits} Photo Credit{tier.credits > 1 ? 's' : ''}</h4>
                           <p className="text-3xl font-bold text-blue-600">{tier.price}</p>
                           <p className="text-sm text-gray-600">{tier.perPhoto}</p>
@@ -236,14 +273,17 @@ export default function PlaceOrderBundle() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="notes">Additional Notes (Optional)</Label>
+                  <Label htmlFor="notes" className="text-lg font-semibold text-gray-900">
+                    Notes for the Staging Team
+                  </Label>
                   <Textarea
                     id="notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Any special requests or instructions..."
+                    placeholder="Any special requests or staging instructions..."
                     rows={4}
                     disabled={processing}
+                    className="w-full border rounded-lg p-4"
                   />
                 </div>
 
