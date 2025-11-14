@@ -58,6 +58,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AccountDashboard = lazy(() => import("./pages/account/index"));
 const AccountProfile = lazy(() => import("./pages/account/profile"));
 const AccountOrders = lazy(() => import("./pages/account/orders"));
+const AccountOrderDetail = lazy(() => import("./pages/account/order-detail"));
 const AccountCredits = lazy(() => import("./pages/account/credits"));
 const AccountImages = lazy(() => import("./pages/account/images"));
 const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
