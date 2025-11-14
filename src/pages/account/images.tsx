@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import Sidebar from "@/components/account/Sidebar";
+import { useRequireUser } from "@/hooks/useRequireUser";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Download, Trash2, Loader2, Upload, Edit2, X, Check, ArrowLeft } from "lucide-react";
+import { Download, Trash2, Loader2, Upload, Edit2, X, Check } from "lucide-react";
 import { toast } from "sonner";
 
 interface ImageFile {
@@ -26,7 +27,7 @@ interface ImageFile {
 }
 
 export default function ImagesPage() {
-  const navigate = useNavigate();
+  const { user, loading: userLoading } = useRequireUser();
   const [originalImages, setOriginalImages] = useState<ImageFile[]>([]);
   const [stagedImages, setStagedImages] = useState<ImageFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,19 +38,16 @@ export default function ImagesPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<ImageFile | null>(null);
 
   useEffect(() => {
-    loadUserImages();
-  }, []);
+    if (user) {
+      loadUserImages();
+    }
+  }, [user]);
 
   const loadUserImages = async () => {
+    if (!user) return;
+
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        toast.error("Please log in to view your images");
-        return;
-      }
-
       setUserId(user.id);
 
       const [uploadsData, stagedData] = await Promise.all([
@@ -307,10 +305,10 @@ export default function ImagesPage() {
     bucket: 'uploads' | 'staged',
     inputId: string
   ) => (
-    <Card className="border-slate-200 dark:border-slate-700 h-full">
+    <Card className="border-gray-200 h-full bg-gray-50">
       <CardHeader className="pb-4">
-        <CardTitle className="text-blue-900 dark:text-blue-100">{title}</CardTitle>
-        <CardDescription className="text-slate-600 dark:text-slate-400">{description}</CardDescription>
+        <CardTitle className="text-gray-900">{title}</CardTitle>
+        <CardDescription className="text-gray-600">{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <div
@@ -319,15 +317,15 @@ export default function ImagesPage() {
           onDrop={(e) => handleDrop(e, bucket)}
           className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
             dragging === (bucket === 'uploads' ? 'original' : 'staged')
-              ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
-              : 'border-slate-300 dark:border-slate-600'
+              ? 'border-blue-500 bg-blue-50'
+              : 'border-gray-300 bg-white'
           }`}
         >
-          <Upload className="w-12 h-12 mx-auto mb-4 text-slate-400" />
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+          <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+          <p className="text-sm font-medium text-gray-700 mb-2">
             Drag and drop images here
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">or</p>
+          <p className="text-xs text-gray-500 mb-4">or</p>
           <input
             id={inputId}
             type="file"
@@ -347,23 +345,23 @@ export default function ImagesPage() {
         </div>
 
         <div className="mt-6 space-y-3">
-          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <p className="text-sm font-semibold text-gray-700">
             {images.length} {images.length === 1 ? 'image' : 'images'}
           </p>
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
             </div>
           ) : images.length === 0 ? (
-            <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">
+            <div className="text-center py-8 text-gray-500 text-sm">
               No images yet. Drop or upload your first image.
             </div>
           ) : (
             <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
               {images.map((image) => (
-                <Card key={image.name} className="overflow-hidden border-slate-200 dark:border-slate-700">
+                <Card key={image.name} className="overflow-hidden border-gray-200 bg-white">
                   <div className="flex gap-3 p-3">
-                    <div className="w-20 h-20 flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded overflow-hidden">
+                    <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
                       <img
                         src={image.url}
                         alt={image.name}
@@ -393,7 +391,7 @@ export default function ImagesPage() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                          <p className="text-sm font-medium text-gray-900 truncate">
                             {image.name}
                           </p>
                           <Button
@@ -406,7 +404,7 @@ export default function ImagesPage() {
                           </Button>
                         </div>
                       )}
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                      <p className="text-xs text-gray-500 mb-2">
                         {formatFileSize(image.size)} • {new Date(image.created_at).toLocaleDateString()}
                         {image.size === 0 && (
                           <span className="ml-2 text-red-600 font-semibold">⚠ Broken file</span>
@@ -446,22 +444,25 @@ export default function ImagesPage() {
     </Card>
   );
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/account')}
-          className="mb-4 -ml-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Account
-        </Button>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Image Portal</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">Upload, organize, and manage your original and staged photos</p>
+  if (userLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
       </div>
+    );
+  }
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  return (
+    <div className="flex gap-8 p-10 min-h-screen bg-gray-50">
+      <Sidebar />
+
+      <div className="flex-1 bg-white shadow-xl rounded-2xl p-10 space-y-8">
+        <div>
+          <h1 className="text-2xl font-bold mb-2 text-gray-900">Image Portal</h1>
+          <p className="text-gray-600">Upload, organize, and manage your original and staged photos</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {renderDropZone(
           "Original Photos",
           "Upload your original listing photos here",
@@ -478,22 +479,23 @@ export default function ImagesPage() {
         )}
       </div>
 
-      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Image</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete <strong>{deleteConfirm?.name}</strong>? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Image</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <strong>{deleteConfirm?.name}</strong>? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }
