@@ -98,25 +98,11 @@ export default function PlaceOrderUpload() {
     e.stopPropagation();
     setDragging(false);
 
-    const files = Array.from(e.dataTransfer.files).filter(file =>
-      file.type === 'image/jpeg' || file.type === 'image/png'
-    );
-
-    if (files.length === 0) {
-      toast.error("Please drop JPEG or PNG images only");
-      return;
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      await handleFiles(files);
     }
-
-    await handleFiles(files);
-  }, [user]);
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    await handleFiles(Array.from(files));
-    e.target.value = '';
-  };
+  }, [uploadedFiles, photoLimit, user]);
 
   const handleFiles = async (files: File[]) => {
     if (!user) return;
@@ -299,9 +285,10 @@ export default function PlaceOrderUpload() {
             <CardContent>
               <div className="space-y-6">
                 <div
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDragEnter={(e) => e.preventDefault()}
+                  onDragLeave={handleDragLeave}
                   className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
                     dragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-white'
                   }`}
@@ -311,34 +298,39 @@ export default function PlaceOrderUpload() {
                     Drag and drop images here
                   </p>
                   <p className="text-sm text-gray-500 mb-4">or</p>
-                  <input
-                    id="file-upload"
-                    type="file"
-                    multiple
-                    accept="image/jpeg,image/png"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    disabled={uploading}
-                  />
-                  <label htmlFor="file-upload">
+
+                  <div className="flex flex-col items-center">
                     <button
                       type="button"
+                      className="bg-[#2F74FF] text-white px-6 py-3 rounded-xl font-semibold shadow-sm hover:opacity-90 transition"
+                      onClick={() => document.getElementById("upload-multi-input")?.click()}
                       disabled={uploading}
-                      className="inline-flex items-center justify-center bg-[#2F74FF] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[#1F5BD4] transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       {uploading ? (
                         <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin inline" />
                           Uploading...
                         </>
                       ) : (
-                        <>
-                          <UploadIcon className="w-4 h-4 mr-2" />
-                          Choose Files
-                        </>
+                        'Choose Files'
                       )}
                     </button>
-                  </label>
+
+                    <input
+                      id="upload-multi-input"
+                      type="file"
+                      multiple
+                      accept="image/jpeg,image/png"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files) {
+                          handleFiles(Array.from(e.target.files));
+                        }
+                        e.target.value = '';
+                      }}
+                    />
+                  </div>
+
                   <p className="text-xs text-gray-500 mt-4">
                     Accepts JPEG and PNG files up to 20MB each
                   </p>
