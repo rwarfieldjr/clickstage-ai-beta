@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import ScrollToTop from "./components/ScrollToTop";
 import DevNavigator from "./components/DevNavigator";
@@ -30,7 +30,6 @@ const PlaceOrderUpload = lazy(() => import("./pages/place-order/Upload"));
 const PlaceOrderBundle = lazy(() => import("./pages/place-order/Bundle"));
 const About = lazy(() => import("./pages/About"));
 const AccountSettings = lazy(() => import("./pages/AccountSettings"));
-const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboardControl"));
 const AdminDashboardNew = lazy(() => import("./pages/admin/AdminDashboardNew"));
@@ -129,7 +128,7 @@ const App = () => (
           <Route path="/bucket-test" element={<BucketTest />} />
           <Route path="/gallery/:token" element={<ClientGallery />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
           </ErrorBoundary>
