@@ -331,10 +331,13 @@ export default function PlaceOrderBundle() {
                   />
                   <label
                     htmlFor="sms-consent"
-                    className="text-sm leading-relaxed cursor-pointer"
+                    className="text-sm leading-relaxed cursor-pointer text-gray-700"
                   >
-                    I consent to receive SMS notifications about my order status and updates from ClickStage Pro.
-                    Message and data rates may apply. You can opt out at any time.
+                    By checking this box, you agree to receive text messages from <span className="font-semibold">ClickStagePro</span> related to your order, account updates, and occasional offers. Message & data rates may apply. Reply <span className="font-bold">STOP</span> to opt out or <span className="font-bold">HELP</span> for help. See our{' '}
+                    <a href="/sms-policy" className="text-[#2F74FF] hover:underline">
+                      SMS Messaging Policy
+                    </a>
+                    .
                   </label>
                 </div>
 
