@@ -57,6 +57,7 @@ const AccountProfile = lazy(() => import("./pages/account/profile"));
 const AccountOrders = lazy(() => import("./pages/account/orders"));
 const AccountCredits = lazy(() => import("./pages/account/credits"));
 const AccountImages = lazy(() => import("./pages/account/images"));
+const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
 
 const queryClient = new QueryClient();
 
@@ -86,6 +87,7 @@ const App = () => (
           <Route path="/sms-policy" element={<SMSPolicy />} />
           <Route path="/styles" element={<Styles />} />
           <Route path="/place-order" element={<PlaceOrder />} />
+          <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/about" element={<About />} />
           <Route path="/account-portal" element={<AccountPortal />} />
           <Route path="/account" element={<AccountDashboard />} />
