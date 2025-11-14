@@ -6,8 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { CreditCard, ArrowLeft, Check } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Turnstile } from "@marsidev/react-turnstile";
-import { ENV } from "@/config/environment";
 import { SEO } from "@/components/SEO";
 import { PRICING_TIERS } from "@/config/pricing";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,9 +13,7 @@ import { toast } from "sonner";
 
 export default function PurchaseCredits() {
   const navigate = useNavigate();
-  const [selectedBundle, setSelectedBundle] = useState<string | null>(null);
-  const [verifiedBundles, setVerifiedBundles] = useState<Set<string>>(new Set());
-  const [processing, setProcessing] = useState(false);
+  const [processing, setProcessing] = useState<string | null>(null);
 
   const handlePurchaseClick = async (bundleId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -27,15 +23,11 @@ export default function PurchaseCredits() {
       return;
     }
 
-    if (verifiedBundles.has(bundleId)) {
-      await createCheckoutSession(bundleId);
-    } else {
-      setSelectedBundle(bundleId);
-    }
+    await createCheckoutSession(bundleId);
   };
 
-  const createCheckoutSession = async (bundleId: string, turnstileToken?: string) => {
-    setProcessing(true);
+  const createCheckoutSession = async (bundleId: string) => {
+    setProcessing(bundleId);
     try {
       const bundle = PRICING_TIERS.find(b => b.id === bundleId);
       if (!bundle) {
@@ -49,7 +41,7 @@ export default function PurchaseCredits() {
         return;
       }
 
-      const response = await fetch(`${ENV.supabase.url}/functions/v1/create-simple-checkout`, {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-simple-checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,7 +49,7 @@ export default function PurchaseCredits() {
         },
         body: JSON.stringify({
           priceId: bundle.priceId,
-          turnstileToken: turnstileToken || '',
+          turnstileToken: '',
         }),
       });
 
@@ -77,21 +69,8 @@ export default function PurchaseCredits() {
       console.error('Error creating checkout:', error);
       toast.error(error.message || 'Failed to start checkout. Please try again.');
     } finally {
-      setProcessing(false);
+      setProcessing(null);
     }
-  };
-
-  const handleTurnstileSuccess = async (token: string) => {
-    if (selectedBundle) {
-      setVerifiedBundles(prev => new Set([...prev, selectedBundle]));
-      await createCheckoutSession(selectedBundle, token);
-      setSelectedBundle(null);
-    }
-  };
-
-  const handleTurnstileError = () => {
-    setSelectedBundle(null);
-    toast.error('Verification failed. Please try again.');
   };
 
   return (
@@ -209,37 +188,17 @@ export default function PurchaseCredits() {
 
                       <Button
                         onClick={() => handlePurchaseClick(tier.id)}
-                        disabled={selectedBundle === tier.id || processing}
+                        disabled={processing === tier.id}
                         className={`w-full h-12 text-base font-semibold ${
                           tier.popular
                             ? 'bg-blue-600 hover:bg-blue-700'
                             : 'bg-slate-700 hover:bg-slate-800'
                         }`}
                       >
-                        {processing ? "Processing..." : selectedBundle === tier.id ? "Verifying..." : "Purchase"}
+                        {processing === tier.id ? "Processing..." : "Purchase"}
                       </Button>
                     </CardContent>
                   </Card>
-
-                  {selectedBundle === tier.id && (
-                    <div className="mt-4 p-6 border-2 border-blue-200 dark:border-blue-800 rounded-lg bg-white dark:bg-slate-800 shadow-lg">
-                      <p className="text-sm text-slate-700 dark:text-slate-300 mb-4 text-center font-medium">
-                        Complete security verification to purchase credits:
-                      </p>
-                      <div className="flex justify-center">
-                        <Turnstile
-                          siteKey={ENV.turnstile.siteKey}
-                          onSuccess={handleTurnstileSuccess}
-                          onError={handleTurnstileError}
-                          options={{
-                            theme: "light",
-                            size: "normal",
-                            appearance: "always",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
