@@ -1,23 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Download, Trash2, Loader2, Image as ImageIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Download, Trash2, Loader2, Upload, Edit2, X, Check } from "lucide-react";
 import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ImageFile {
   name: string;
   url: string;
   created_at: string;
   size: number;
+  bucket: 'uploads' | 'staged';
 }
 
 export default function ImagesPage() {
-  const [images, setImages] = useState<ImageFile[]>([]);
+  const [originalImages, setOriginalImages] = useState<ImageFile[]>([]);
+  const [stagedImages, setStagedImages] = useState<ImageFile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<'original' | 'staged' | null>(null);
+  const [editingName, setEditingName] = useState<string | null>(null);
+  const [newName, setNewName] = useState("");
 
   useEffect(() => {
     loadUserImages();
@@ -35,30 +39,39 @@ export default function ImagesPage() {
 
       setUserId(user.id);
 
-      const { data: files, error } = await supabase.storage
-        .from('uploads')
-        .list(`${user.id}/`, {
-          sortBy: { column: 'created_at', order: 'desc' }
-        });
+      const [uploadsData, stagedData] = await Promise.all([
+        supabase.storage.from('uploads').list(`${user.id}/`, { sortBy: { column: 'created_at', order: 'desc' } }),
+        supabase.storage.from('staged').list(`${user.id}/`, { sortBy: { column: 'created_at', order: 'desc' } })
+      ]);
 
-      if (error) throw error;
-
-      const imageUrls = await Promise.all(
-        (files || []).map(async (file) => {
-          const { data: { publicUrl } } = supabase.storage
-            .from('uploads')
-            .getPublicUrl(`${user.id}/${file.name}`);
-
+      const uploadImages = await Promise.all(
+        (uploadsData.data || []).map(async (file) => {
+          const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(`${user.id}/${file.name}`);
           return {
             name: file.name,
             url: publicUrl,
             created_at: file.created_at || new Date().toISOString(),
-            size: file.metadata?.size || 0
+            size: file.metadata?.size || 0,
+            bucket: 'uploads' as const
           };
         })
       );
 
-      setImages(imageUrls);
+      const stagedImgs = await Promise.all(
+        (stagedData.data || []).map(async (file) => {
+          const { data: { publicUrl } } = supabase.storage.from('staged').getPublicUrl(`${user.id}/${file.name}`);
+          return {
+            name: file.name,
+            url: publicUrl,
+            created_at: file.created_at || new Date().toISOString(),
+            size: file.metadata?.size || 0,
+            bucket: 'staged' as const
+          };
+        })
+      );
+
+      setOriginalImages(uploadImages);
+      setStagedImages(stagedImgs);
     } catch (error: any) {
       console.error("Error loading images:", error);
       toast.error("Failed to load images");
@@ -67,20 +80,42 @@ export default function ImagesPage() {
     }
   };
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || !userId) return;
+  const handleDragOver = useCallback((e: React.DragEvent, type: 'original' | 'staged') => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(type);
+  }, []);
 
-    setUploading(true);
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(null);
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent, bucket: 'uploads' | 'staged') => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(null);
+
+    if (!userId) return;
+
+    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+
+    if (files.length === 0) {
+      toast.error("Please drop image files only");
+      return;
+    }
+
+    toast.info(`Uploading ${files.length} image(s)...`);
 
     try {
-      for (const file of Array.from(files)) {
+      for (const file of files) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         const filePath = `${userId}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from('uploads')
+          .from(bucket)
           .upload(filePath, file, {
             cacheControl: '3600',
             upsert: false
@@ -97,10 +132,42 @@ export default function ImagesPage() {
     } catch (error: any) {
       console.error("Upload error:", error);
       toast.error(`Failed to upload images: ${error.message || 'Unknown error'}`);
-    } finally {
-      setUploading(false);
-      event.target.value = '';
     }
+  }, [userId]);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, bucket: 'uploads' | 'staged') => {
+    const files = e.target.files;
+    if (!files || !userId) return;
+
+    toast.info(`Uploading ${files.length} image(s)...`);
+
+    try {
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${userId}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from(bucket)
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          throw uploadError;
+        }
+      }
+
+      toast.success("Images uploaded successfully");
+      await loadUserImages();
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast.error(`Failed to upload images: ${error.message || 'Unknown error'}`);
+    }
+
+    e.target.value = '';
   };
 
   const handleDownload = async (image: ImageFile) => {
@@ -129,7 +196,7 @@ export default function ImagesPage() {
 
     try {
       const { error } = await supabase.storage
-        .from('uploads')
+        .from(image.bucket)
         .remove([`${userId}/${image.name}`]);
 
       if (error) throw error;
@@ -142,6 +209,59 @@ export default function ImagesPage() {
     }
   };
 
+  const handleRename = async (image: ImageFile) => {
+    if (!userId || !newName.trim()) return;
+
+    const fileExt = image.name.split('.').pop();
+    const sanitizedName = newName.trim().replace(/[^a-zA-Z0-9-_]/g, '_');
+    const finalName = `${sanitizedName}.${fileExt}`;
+
+    try {
+      const oldPath = `${userId}/${image.name}`;
+      const newPath = `${userId}/${finalName}`;
+
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from(image.bucket)
+        .download(oldPath);
+
+      if (downloadError) throw downloadError;
+
+      const { error: uploadError } = await supabase.storage
+        .from(image.bucket)
+        .upload(newPath, fileData, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { error: deleteError } = await supabase.storage
+        .from(image.bucket)
+        .remove([oldPath]);
+
+      if (deleteError) throw deleteError;
+
+      toast.success("Image renamed successfully");
+      setEditingName(null);
+      setNewName("");
+      await loadUserImages();
+    } catch (error: any) {
+      console.error("Rename error:", error);
+      toast.error(`Failed to rename image: ${error.message || 'Unknown error'}`);
+    }
+  };
+
+  const startRename = (image: ImageFile) => {
+    setEditingName(image.name);
+    const nameWithoutExt = image.name.substring(0, image.name.lastIndexOf('.'));
+    setNewName(nameWithoutExt);
+  };
+
+  const cancelRename = () => {
+    setEditingName(null);
+    setNewName("");
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -150,115 +270,168 @@ export default function ImagesPage() {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Image Portal</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">Upload, download, and manage your images</p>
-      </div>
+  const renderDropZone = (
+    title: string,
+    description: string,
+    images: ImageFile[],
+    bucket: 'uploads' | 'staged',
+    inputId: string
+  ) => (
+    <Card className="border-slate-200 dark:border-slate-700 h-full">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-blue-900 dark:text-blue-100">{title}</CardTitle>
+        <CardDescription className="text-slate-600 dark:text-slate-400">{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div
+          onDragOver={(e) => handleDragOver(e, bucket === 'uploads' ? 'original' : 'staged')}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, bucket)}
+          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+            dragging === (bucket === 'uploads' ? 'original' : 'staged')
+              ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
+              : 'border-slate-300 dark:border-slate-600'
+          }`}
+        >
+          <Upload className="w-12 h-12 mx-auto mb-4 text-slate-400" />
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Drag and drop images here
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">or</p>
+          <input
+            id={inputId}
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={(e) => handleFileSelect(e, bucket)}
+            className="hidden"
+          />
+          <label htmlFor={inputId}>
+            <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+              <span className="cursor-pointer">
+                <Upload className="w-4 h-4 mr-2" />
+                Choose Files
+              </span>
+            </Button>
+          </label>
+        </div>
 
-      <Card className="border-slate-200 dark:border-slate-700">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-blue-900 dark:text-blue-100">Upload Images</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Upload new images to your library</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-3">
-            <input
-              id="file-upload"
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleUpload}
-              className="hidden"
-              disabled={uploading}
-            />
-            <label htmlFor="file-upload">
-              <Button disabled={uploading} asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                <span className="cursor-pointer">
-                  {uploading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Choose Files
-                    </>
-                  )}
-                </span>
-              </Button>
-            </label>
-            <span className="text-sm text-slate-500 dark:text-slate-400">
-              Select one or more images to upload
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-slate-200 dark:border-slate-700">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-blue-900 dark:text-blue-100">Your Images</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">
-            {images.length} {images.length === 1 ? 'image' : 'images'} in your library
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <div className="mt-6 space-y-3">
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            {images.length} {images.length === 1 ? 'image' : 'images'}
+          </p>
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
             </div>
           ) : images.length === 0 ? (
-            <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
-              <ImageIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              <AlertDescription className="text-blue-900 dark:text-blue-100">
-                No images yet. Upload your first image to get started.
-              </AlertDescription>
-            </Alert>
+            <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">
+              No images yet. Drop or upload your first image.
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
               {images.map((image) => (
                 <Card key={image.name} className="overflow-hidden border-slate-200 dark:border-slate-700">
-                  <div className="aspect-video bg-slate-100 dark:bg-slate-800 relative">
-                    <img
-                      src={image.url}
-                      alt={image.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <CardContent className="p-4">
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate mb-2">
-                      {image.name}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-                      {formatFileSize(image.size)} • {new Date(image.created_at).toLocaleDateString()}
-                    </p>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDownload(image)}
-                        className="flex-1"
-                      >
-                        <Download className="w-4 h-4 mr-1" />
-                        Download
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(image)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                  <div className="flex gap-3 p-3">
+                    <div className="w-20 h-20 flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded overflow-hidden">
+                      <img
+                        src={image.url}
+                        alt={image.name}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                  </CardContent>
+                    <div className="flex-1 min-w-0">
+                      {editingName === image.name ? (
+                        <div className="flex gap-2 mb-2">
+                          <Input
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                            className="h-8 text-sm"
+                            placeholder="New name"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleRename(image);
+                              if (e.key === 'Escape') cancelRename();
+                            }}
+                          />
+                          <Button size="sm" variant="ghost" onClick={() => handleRename(image)} className="h-8 w-8 p-0">
+                            <Check className="w-4 h-4 text-green-600" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={cancelRename} className="h-8 w-8 p-0">
+                            <X className="w-4 h-4 text-red-600" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                            {image.name}
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => startRename(image)}
+                            className="h-6 w-6 p-0 flex-shrink-0"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                        {formatFileSize(image.size)} • {new Date(image.created_at).toLocaleDateString()}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownload(image)}
+                          className="h-7 text-xs"
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Download
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDelete(image)}
+                          className="h-7 text-xs"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </Card>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Image Portal</h1>
+        <p className="text-slate-600 dark:text-slate-400 mt-1">Upload, organize, and manage your original and staged photos</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {renderDropZone(
+          "Original Photos",
+          "Upload your original listing photos here",
+          originalImages,
+          'uploads',
+          'original-upload'
+        )}
+        {renderDropZone(
+          "Staged Photos",
+          "Upload your AI-staged photos here",
+          stagedImages,
+          'staged',
+          'staged-upload'
+        )}
+      </div>
     </div>
   );
 }
