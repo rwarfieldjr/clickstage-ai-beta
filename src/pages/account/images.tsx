@@ -3,6 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Download, Trash2, Loader2, Upload, Edit2, X, Check } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,6 +32,7 @@ export default function ImagesPage() {
   const [dragging, setDragging] = useState<'original' | 'staged' | null>(null);
   const [editingName, setEditingName] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState<ImageFile | null>(null);
 
   useEffect(() => {
     loadUserImages();
@@ -189,19 +200,18 @@ export default function ImagesPage() {
     }
   };
 
-  const handleDelete = async (image: ImageFile) => {
-    if (!userId) return;
-
-    if (!confirm(`Delete ${image.name}?`)) return;
+  const confirmDelete = async () => {
+    if (!userId || !deleteConfirm) return;
 
     try {
       const { error } = await supabase.storage
-        .from(image.bucket)
-        .remove([`${userId}/${image.name}`]);
+        .from(deleteConfirm.bucket)
+        .remove([`${userId}/${deleteConfirm.name}`]);
 
       if (error) throw error;
 
       toast.success("Image deleted");
+      setDeleteConfirm(null);
       await loadUserImages();
     } catch (error: any) {
       console.error("Delete error:", error);
@@ -392,7 +402,7 @@ export default function ImagesPage() {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => handleDelete(image)}
+                          onClick={() => setDeleteConfirm(image)}
                           className="h-7 text-xs"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -432,6 +442,23 @@ export default function ImagesPage() {
           'staged-upload'
         )}
       </div>
+
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Image</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{deleteConfirm?.name}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
