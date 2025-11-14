@@ -120,6 +120,51 @@ export default function PurchaseCredits() {
               </p>
             </div>
 
+            <div className="max-w-3xl mx-auto mb-12">
+              <Card>
+                <CardContent className="p-8">
+                  <h3 className="font-bold text-xl text-slate-900 dark:text-slate-100 mb-4 text-center">
+                    How It Works
+                  </h3>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-3">
+                        1
+                      </div>
+                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                        Choose Bundle
+                      </h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Select the credit package that fits your needs
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-3">
+                        2
+                      </div>
+                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                        Secure Checkout
+                      </h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Complete payment safely through Stripe
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-3">
+                        3
+                      </div>
+                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                        Start Staging
+                      </h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Credits appear instantly in your account
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {PRICING_TIERS.map((tier) => (
                 <div key={tier.id} className="flex flex-col">
@@ -248,51 +293,6 @@ export default function PurchaseCredits() {
                   }}
                 />
               </div>
-            </div>
-
-            <div className="max-w-3xl mx-auto">
-              <Card>
-                <CardContent className="p-8">
-                  <h3 className="font-bold text-xl text-slate-900 dark:text-slate-100 mb-4 text-center">
-                    How It Works
-                  </h3>
-                  <div className="grid md:grid-cols-3 gap-6">
-                    <div className="text-center">
-                      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-3">
-                        1
-                      </div>
-                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                        Choose Bundle
-                      </h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Select the credit package that fits your needs
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-3">
-                        2
-                      </div>
-                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                        Secure Checkout
-                      </h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Complete payment safely through Stripe
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-3">
-                        3
-                      </div>
-                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                        Start Staging
-                      </h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Credits appear instantly in your account
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>
