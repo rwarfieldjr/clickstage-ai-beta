@@ -386,9 +386,35 @@ export default function ImagesPage() {
                           </Button>
                         </div>
                       )}
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
                         {formatFileSize(image.size)} • {new Date(image.created_at).toLocaleDateString()}
+                        {image.size === 0 && (
+                          <span className="ml-2 text-red-600 font-semibold">⚠ Broken file</span>
+                        )}
                       </p>
+                      <div className="flex gap-2">
+                        {image.size > 0 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownload(image)}
+                            className="h-7 text-xs"
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            Download
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => setDeleteConfirm(image)}
+                          className="h-7 text-xs"
+                          title={image.size === 0 ? "Delete broken file" : "Delete image"}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          {image.size === 0 ? "Remove" : ""}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </Card>

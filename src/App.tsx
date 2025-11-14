@@ -38,6 +38,7 @@ const AdminImages = lazy(() => import("./pages/admin/AdminImages"));
 const AdminBulkUpload = lazy(() => import("./pages/admin/AdminBulkUpload"));
 const AdminTests = lazy(() => import("./pages/admin/AdminTests"));
 const AdminCredits = lazy(() => import("./pages/admin/AdminCredits"));
+const AdminStorageCleanup = lazy(() => import("./pages/admin/AdminStorageCleanup"));
 const Blog = lazy(() => import("./pages/Blog"));
 const VirtualStagingGuide = lazy(() => import("./pages/blog/VirtualStagingGuide"));
 const Success = lazy(() => import("./pages/Success"));
@@ -103,6 +104,7 @@ const App = () => (
           <Route path="/admin/bulk-upload" element={<RequireAdmin><AdminBulkUpload /></RequireAdmin>} />
           <Route path="/admin/tests" element={<RequireAdmin><AdminTests /></RequireAdmin>} />
           <Route path="/admin/credits" element={<RequireAdmin><AdminCredits /></RequireAdmin>} />
+          <Route path="/admin/storage-cleanup" element={<RequireAdmin><AdminStorageCleanup /></RequireAdmin>} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/virtual-staging-complete-guide" element={<VirtualStagingGuide />} />
           <Route path="/success" element={<Success />} />
