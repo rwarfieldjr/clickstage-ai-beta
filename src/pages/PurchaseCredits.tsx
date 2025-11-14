@@ -218,10 +218,10 @@ export default function PurchaseCredits() {
               <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
                 <CardContent className="p-6">
                   <h3 className="font-bold text-lg text-green-900 dark:text-green-100 mb-3">
-                    Credits Never Expire
+                    Credit Expiration Policy
                   </h3>
                   <p className="text-sm text-green-800 dark:text-green-200">
-                    Your credits remain in your account until you use them. Stage photos whenever you need, with no time pressure or expiration dates.
+                    Photo credits are valid for 6 months on smaller bundles (1-10 photos) and 12 months on larger bundles (20-100 photos). You will receive email alerts before your credits expire.
                   </p>
                 </CardContent>
               </Card>
