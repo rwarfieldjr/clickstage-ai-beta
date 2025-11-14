@@ -342,7 +342,7 @@ export default function AdminImagesNew() {
         return;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-staging-complete-email`, {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-send-completion-notice`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -356,14 +356,18 @@ export default function AdminImagesNew() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send notification');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to send notification');
       }
+
+      const result = await response.json();
+      console.log('Notification sent successfully:', result);
 
       toast.success(`Notification sent to ${selectedUser.email}`);
       setShowNotifyDialog(false);
     } catch (error: any) {
       console.error("Notify error:", error);
-      toast.error("Failed to send notification");
+      toast.error(error.message || "Failed to send notification");
     } finally {
       setSending(false);
     }
