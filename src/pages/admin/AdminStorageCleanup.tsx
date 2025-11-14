@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Trash2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { deleteBrokenFiles } from "@/lib/deleteBrokenFiles";
 
 interface BrokenFile {
   bucket: string;
@@ -114,35 +115,28 @@ export default function AdminStorageCleanup() {
   const deleteSpecificFiles = async () => {
     setCleaning(true);
 
-    const specificFiles = [
-      { bucket: 'uploads', name: '80e84dc4-f3da-490e-beb0-5f9d601246ab' },
-      { bucket: 'uploads', name: '2f55a65a-bc3e-4001-9b16-db05c7fd5ce0' }
-    ];
+    const result = await deleteBrokenFiles();
 
-    let deletedCount = 0;
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      const totalDeleted = result.results.success.length;
+      const totalFailed = result.results.failed.length;
 
-    const { data: { users } } = await supabase.auth.admin.listUsers();
+      if (totalDeleted > 0) {
+        toast.success(`Deleted ${totalDeleted} broken file(s)`);
+      }
 
-    for (const user of users || []) {
-      for (const file of specificFiles) {
-        try {
-          const { error } = await supabase.storage
-            .from(file.bucket as any)
-            .remove([`${user.id}/${file.name}`]);
+      if (totalFailed > 0) {
+        toast.error(`Failed to delete ${totalFailed} file(s)`);
+      }
 
-          if (!error) {
-            deletedCount++;
-            console.log(`Deleted ${file.bucket}/${user.id}/${file.name}`);
-          }
-        } catch (error) {
-          console.log(`File not found or already deleted: ${file.name}`);
-        }
+      if (totalDeleted === 0 && totalFailed === 0) {
+        toast.info('No broken files found');
       }
     }
 
     setCleaning(false);
-    toast.success(`Deleted ${deletedCount} specific file(s)`);
-
     await scanForBrokenFiles();
   };
 

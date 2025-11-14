@@ -142,3 +142,44 @@ export async function listFiles(bucket: string, folder?: string): Promise<ApiRes
     return data || [];
   });
 }
+
+/**
+ * Delete image from both storage and database
+ */
+export async function deleteImage(userId: string, imageId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { data: image, error: fetchError } = await supabase
+      .from('images')
+      .select('storage_path, bucket')
+      .eq('id', imageId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    if (!image) {
+      return { success: false, error: 'Image not found' };
+    }
+
+    const { error: storageError } = await supabase.storage
+      .from(image.bucket)
+      .remove([image.storage_path]);
+
+    if (storageError) {
+      console.error('Storage delete error:', storageError);
+    }
+
+    const { error: dbError } = await supabase
+      .from('images')
+      .delete()
+      .eq('id', imageId)
+      .eq('user_id', userId);
+
+    if (dbError) throw dbError;
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Image delete failed:', err);
+    return { success: false, error: err.message || 'Unknown error' };
+  }
+}

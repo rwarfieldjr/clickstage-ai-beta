@@ -56,29 +56,47 @@ export default function ImagesPage() {
       ]);
 
       const uploadImages = await Promise.all(
-        (uploadsData.data || []).map(async (file) => {
-          const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(`${user.id}/${file.name}`);
-          return {
-            name: file.name,
-            url: publicUrl,
-            created_at: file.created_at || new Date().toISOString(),
-            size: file.metadata?.size || 0,
-            bucket: 'uploads' as const
-          };
-        })
+        (uploadsData.data || [])
+          .filter(file => {
+            const size = file.metadata?.size || 0;
+            if (size === 0) {
+              console.warn(`Filtering out 0-byte file: ${file.name}`);
+              return false;
+            }
+            return true;
+          })
+          .map(async (file) => {
+            const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(`${user.id}/${file.name}`);
+            return {
+              name: file.name,
+              url: publicUrl,
+              created_at: file.created_at || new Date().toISOString(),
+              size: file.metadata?.size || 0,
+              bucket: 'uploads' as const
+            };
+          })
       );
 
       const stagedImgs = await Promise.all(
-        (stagedData.data || []).map(async (file) => {
-          const { data: { publicUrl } } = supabase.storage.from('staged').getPublicUrl(`${user.id}/${file.name}`);
-          return {
-            name: file.name,
-            url: publicUrl,
-            created_at: file.created_at || new Date().toISOString(),
-            size: file.metadata?.size || 0,
-            bucket: 'staged' as const
-          };
-        })
+        (stagedData.data || [])
+          .filter(file => {
+            const size = file.metadata?.size || 0;
+            if (size === 0) {
+              console.warn(`Filtering out 0-byte file: ${file.name}`);
+              return false;
+            }
+            return true;
+          })
+          .map(async (file) => {
+            const { data: { publicUrl } } = supabase.storage.from('staged').getPublicUrl(`${user.id}/${file.name}`);
+            return {
+              name: file.name,
+              url: publicUrl,
+              created_at: file.created_at || new Date().toISOString(),
+              size: file.metadata?.size || 0,
+              bucket: 'staged' as const
+            };
+          })
       );
 
       setOriginalImages(uploadImages);
