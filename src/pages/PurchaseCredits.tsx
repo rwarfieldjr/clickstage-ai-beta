@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,12 @@ import { SEO } from "@/components/SEO";
 import { PRICING_TIERS } from "@/config/pricing";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 
 export default function PurchaseCredits() {
   const navigate = useNavigate();
   const [processing, setProcessing] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileInstance>(null);
 
   const handlePurchaseClick = async (bundleId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -41,6 +43,13 @@ export default function PurchaseCredits() {
         return;
       }
 
+      const turnstileToken = turnstileRef.current?.getResponse();
+      if (!turnstileToken) {
+        toast.error('Please complete security verification');
+        turnstileRef.current?.reset();
+        return;
+      }
+
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-simple-checkout`, {
         method: 'POST',
         headers: {
@@ -49,7 +58,7 @@ export default function PurchaseCredits() {
         },
         body: JSON.stringify({
           priceId: bundle.priceId,
-          turnstileToken: '',
+          turnstileToken,
         }),
       });
 
@@ -68,6 +77,7 @@ export default function PurchaseCredits() {
     } catch (error: any) {
       console.error('Error creating checkout:', error);
       toast.error(error.message || 'Failed to start checkout. Please try again.');
+      turnstileRef.current?.reset();
     } finally {
       setProcessing(null);
     }
@@ -225,6 +235,19 @@ export default function PurchaseCredits() {
                   </p>
                 </CardContent>
               </Card>
+            </div>
+
+            <div className="max-w-3xl mx-auto mb-8">
+              <div className="flex justify-center">
+                <Turnstile
+                  ref={turnstileRef}
+                  siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                  options={{
+                    theme: 'light',
+                    size: 'normal',
+                  }}
+                />
+              </div>
             </div>
 
             <div className="max-w-3xl mx-auto">
