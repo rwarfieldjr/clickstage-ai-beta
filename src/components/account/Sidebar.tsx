@@ -52,6 +52,14 @@ export default function Sidebar() {
         </NavLink>
 
         <NavLink
+          to="/account/images"
+          className={({ isActive }) => (isActive ? `${link} ${active}` : link)}
+        >
+          <Image className="w-5 h-5" />
+          Image Portal
+        </NavLink>
+
+        <NavLink
           to="/account/profile"
           className={({ isActive }) => (isActive ? `${link} ${active}` : link)}
         >
@@ -73,14 +81,6 @@ export default function Sidebar() {
         >
           <CreditCard className="w-5 h-5" />
           Credits
-        </NavLink>
-
-        <NavLink
-          to="/account/images"
-          className={({ isActive }) => (isActive ? `${link} ${active}` : link)}
-        >
-          <Image className="w-5 h-5" />
-          Image Portal
         </NavLink>
       </nav>
 
