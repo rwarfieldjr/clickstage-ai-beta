@@ -14,7 +14,7 @@ import Footer from "@/components/Footer";
 import { format } from "date-fns";
 import { useCredits } from "@/hooks/use-credits";
 import { useTheme } from "@/hooks/use-theme";
-import { Coins, CreditCard } from "lucide-react";
+import { Coins, CreditCard, Image, Upload, ArrowRight } from "lucide-react";
 import { getDashboardTiers } from "@/config/pricing";
 import { hasEnoughCredits } from "@/lib/credits";
 import { handleCheckout } from "@/lib/checkout";
@@ -344,12 +344,59 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-4xl font-bold text-accent mb-4">{credits} Credits</div>
-              <Button 
+              <Button
                 onClick={() => document.getElementById('purchase-section')?.scrollIntoView({ behavior: 'smooth' })}
                 className="mt-2"
               >
                 <CreditCard className="w-4 h-4 mr-2" />
                 Purchase More Credits
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Image Portal - Star Feature */}
+          <Card className="shadow-custom-lg mb-6 bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 border-0 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mt-32 -mr-32" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -mb-24 -ml-24" />
+            <CardHeader className="relative z-10">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <Image className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-3xl text-white">Image Portal</CardTitle>
+              </div>
+              <CardDescription className="text-white/90 text-base">
+                Upload, organize, and manage all your original and staged photos in one place
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="relative z-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Upload className="w-5 h-5 text-white" />
+                    <h3 className="font-semibold text-white text-lg">Upload Photos</h3>
+                  </div>
+                  <p className="text-white/80 text-sm">
+                    Drag and drop your original listing photos
+                  </p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Image className="w-5 h-5 text-white" />
+                    <h3 className="font-semibold text-white text-lg">Manage Images</h3>
+                  </div>
+                  <p className="text-white/80 text-sm">
+                    Download, rename, and organize your staged photos
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => navigate('/account/images')}
+                size="lg"
+                className="w-full md:w-auto bg-white text-blue-600 hover:bg-white/90 font-semibold text-lg px-8 py-6 h-auto shadow-lg hover:shadow-xl transition-all"
+              >
+                Open Image Portal
+                <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </CardContent>
           </Card>
