@@ -324,7 +324,7 @@ export default function PlaceOrderContact() {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full" size="lg">
+                <Button type="submit" className="w-full bg-[#003A70] hover:bg-[#002850] text-white" size="lg">
                   Continue to Select Style
                 </Button>
               </form>

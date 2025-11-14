@@ -321,7 +321,7 @@ export default function PlaceOrderBundle() {
 
                 <Button
                   onClick={handleProceedToCheckout}
-                  className="w-full"
+                  className="w-full bg-[#003A70] hover:bg-[#002850] text-white"
                   size="lg"
                   disabled={!selectedBundle || !smsConsent || processing}
                 >

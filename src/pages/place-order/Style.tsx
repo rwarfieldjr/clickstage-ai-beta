@@ -24,6 +24,7 @@ export default function PlaceOrderStyle() {
   const [user, setUser] = useState<any>(null);
   const [selectedStyle, setSelectedStyle] = useState<string>("");
   const [showStylesModal, setShowStylesModal] = useState(false);
+  const [showValidationError, setShowValidationError] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -57,9 +58,12 @@ export default function PlaceOrderStyle() {
     e.preventDefault();
 
     if (!selectedStyle) {
+      setShowValidationError(true);
       toast.error("Please select a staging style");
       return;
     }
+
+    setShowValidationError(false);
 
     setLoading(true);
 
@@ -147,18 +151,40 @@ export default function PlaceOrderStyle() {
                     </Button>
                   </div>
 
-                  <Select value={selectedStyle} onValueChange={setSelectedStyle}>
-                    <SelectTrigger id="style" className="w-full">
-                      <SelectValue placeholder="Choose a staging style" />
+                  <Select
+                    value={selectedStyle}
+                    onValueChange={(value) => {
+                      setSelectedStyle(value);
+                      setShowValidationError(false);
+                    }}
+                  >
+                    <SelectTrigger
+                      id="style"
+                      className={`w-full font-semibold ${!selectedStyle ? 'text-gray-500' : 'text-[#1A2B49]'} ${showValidationError ? 'border-red-500' : ''}`}
+                    >
+                      <SelectValue
+                        placeholder="Select Your Staging Style"
+                        className="font-semibold text-[#1A2B49]"
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {STAGING_STYLES.map((style) => (
-                        <SelectItem key={style.id} value={style.id}>
+                        <SelectItem
+                          key={style.id}
+                          value={style.id}
+                          className="hover:bg-blue-50 focus:bg-[#2F74FF] focus:text-white cursor-pointer"
+                        >
                           {style.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+
+                  {showValidationError && !selectedStyle && (
+                    <p className="text-sm text-red-600 mt-1">
+                      Please select a staging style before continuing.
+                    </p>
+                  )}
 
                   {selectedStyle && (
                     <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -174,7 +200,7 @@ export default function PlaceOrderStyle() {
 
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="w-full bg-[#003A70] hover:bg-[#002850] text-white"
                   size="lg"
                   disabled={!selectedStyle}
                 >

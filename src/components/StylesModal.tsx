@@ -18,6 +18,12 @@ import transitionalImage from "@/assets/style-transitional.jpg";
 
 const STAGING_STYLES = [
   {
+    id: "modern-farmhouse",
+    name: "Modern Farmhouse",
+    description: "Rustic charm meets contemporary comfort with natural wood and neutral tones",
+    image: modernFarmhouseImage
+  },
+  {
     id: "japandi",
     name: "Japandi",
     description: "Minimalist blend of Japanese and Scandinavian design with clean lines and natural materials",
@@ -40,12 +46,6 @@ const STAGING_STYLES = [
     name: "Mid-Century Modern",
     description: "Iconic 1950s-60s design with clean lines and organic shapes",
     image: midCenturyImage
-  },
-  {
-    id: "modern-farmhouse",
-    name: "Modern Farmhouse",
-    description: "Rustic charm meets contemporary comfort with natural wood and neutral tones",
-    image: modernFarmhouseImage
   },
   {
     id: "scandinavian",

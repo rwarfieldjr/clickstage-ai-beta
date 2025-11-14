@@ -383,7 +383,7 @@ export default function PlaceOrderUpload() {
 
                 <Button
                   onClick={handleSubmit}
-                  className={`w-full ${isOverLimit ? 'bg-gray-400 cursor-not-allowed' : ''}`}
+                  className={`w-full ${isOverLimit ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#003A70] hover:bg-[#002850] text-white'}`}
                   size="lg"
                   disabled={uploadedFiles.length === 0 || isOverLimit}
                 >
