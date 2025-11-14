@@ -57,22 +57,25 @@ const handler = async (req: Request): Promise<Response> => {
         to: [order.profiles.email],
         subject: "Your Staged Images Are Ready! 🎉",
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #333;">Your Virtual Staging is Complete!</h1>
-            <p>Hi ${order.profiles.name},</p>
-            <p>Great news! Your virtually staged images are now ready for viewing and download.</p>
-            <p>Order: <strong>${order.order_number}</strong></p>
-            <p style="margin: 30px 0;">
-              <a href="${clientUrl}" 
-                 style="background-color: #0066cc; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                View Your Staged Images
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <p style="font-size:16px;color:#222;">
+              Hi ${order.profiles.name?.split(' ')[0] || order.profiles.name},
+            </p>
+
+            <p style="font-size:16px;color:#222;">
+              Your staged photos for <strong>${order.property_address || 'your property'}</strong> are now ready.
+            </p>
+
+            <p style="margin:24px 0;">
+              <a href="${clientUrl}"
+                 style="background:#1D4ED8;color:white;padding:12px 20px;
+                        border-radius:8px;font-size:16px;text-decoration:none;display:inline-block;">
+                View Your Staged Photos
               </a>
             </p>
-            <p style="color: #666; font-size: 14px;">
-              This link will remain active for 30 days. You can download your images at any time during this period.
-            </p>
-            <p style="color: #666; font-size: 12px; margin-top: 40px;">
-              If you have any questions, please don't hesitate to reach out to us.
+
+            <p style="font-size:14px;color:#555;">
+              Thank you for using ClickStage Pro.
             </p>
           </div>
         `,
