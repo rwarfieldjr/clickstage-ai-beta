@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEO } from "@/components/SEO";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { getPricingTierById } from "@/config/pricing";
 
 export interface ContactFormData {
@@ -210,15 +210,6 @@ export default function PlaceOrderContact() {
 
       <main className="flex-1 py-20 bg-gray-50">
         <div className="container mx-auto px-4 max-w-2xl">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/pricing')}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Pricing
-          </Button>
-
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="text-3xl font-bold">Contact Information</CardTitle>
