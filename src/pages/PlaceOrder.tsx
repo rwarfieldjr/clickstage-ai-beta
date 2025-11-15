@@ -1,190 +1,187 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SEO } from "@/components/SEO";
+import { getPricingTierByCredits } from "@/config/pricing";
+import ProgressHeader from "@/components/order/ProgressHeader";
+import Step1Contact, { ContactFormData } from "@/components/order/Step1Contact";
+import Step2Upload from "@/components/order/Step2Upload";
+import Step3Payment from "@/components/order/Step3Payment";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
-const formSchema = z.object({
-  firstName: z.string().trim().min(1, "First name is required").max(100, "First name must be less than 100 characters"),
-  lastName: z.string().trim().min(1, "Last name is required").max(100, "Last name must be less than 100 characters"),
-  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
-  phoneNumber: z.string().trim().min(1, "Phone number is required").max(20, "Phone number must be less than 20 characters"),
-  propertyAddress: z.string().trim().min(1, "Property address is required").max(255, "Property address must be less than 255 characters"),
-});
-
-type FormData = z.infer<typeof formSchema>;
+interface UploadedFile {
+  path: string;
+  url: string;
+  name: string;
+}
 
 const PlaceOrder = () => {
   const navigate = useNavigate();
-  const [selectedBundle, setSelectedBundle] = useState<any>(null);
+  const [searchParams] = useSearchParams();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [userCredits, setUserCredits] = useState(0);
+
+  const [selectedCredits, setSelectedCredits] = useState<number | null>(null);
+  const [selectedTier, setSelectedTier] = useState<any>(null);
+
+  const [contactData, setContactData] = useState<ContactFormData | null>(null);
+  const [uploadedPhotos, setUploadedPhotos] = useState<UploadedFile[]>([]);
 
   useEffect(() => {
-    // Get selected bundle from localStorage
-    const bundleData = localStorage.getItem('selectedBundle');
-    if (bundleData) {
-      setSelectedBundle(JSON.parse(bundleData));
-    }
-  }, []);
+    const initOrder = async () => {
+      try {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (!currentUser) {
+          toast.error("Please sign in to place an order");
+          navigate('/auth');
+          return;
+        }
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-  });
+        setUser(currentUser);
 
-  const onSubmit = async (data: FormData) => {
-    if (!selectedBundle) {
-      toast.error("No bundle selected. Please go back to pricing.");
-      return;
-    }
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('credits')
+          .eq('id', currentUser.id)
+          .single();
 
-    // Store contact info for next step (upload photos)
-    localStorage.setItem('orderContactInfo', JSON.stringify({
-      ...data,
-      selectedBundle,
-    }));
-    
-    toast.success("Contact information saved!");
-    navigate("/upload");
+        setUserCredits(profile?.credits || 0);
+
+        const creditsParam = searchParams.get('credits');
+        if (!creditsParam) {
+          toast.error("No credit package selected. Redirecting to pricing...");
+          navigate('/pricing');
+          return;
+        }
+
+        const credits = parseInt(creditsParam, 10);
+        if (isNaN(credits) || credits <= 0) {
+          toast.error("Invalid credit amount. Redirecting to pricing...");
+          navigate('/pricing');
+          return;
+        }
+
+        const tier = getPricingTierByCredits(credits);
+        if (!tier) {
+          toast.error("Invalid credit package. Redirecting to pricing...");
+          navigate('/pricing');
+          return;
+        }
+
+        setSelectedCredits(credits);
+        setSelectedTier(tier);
+      } catch (error) {
+        console.error("Init error:", error);
+        toast.error("Failed to initialize order");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initOrder();
+  }, [searchParams, navigate]);
+
+  const handleStep1Complete = (data: ContactFormData) => {
+    setContactData(data);
+    setCurrentStep(2);
   };
+
+  const handleStep2Complete = (photos: UploadedFile[]) => {
+    setUploadedPhotos(photos);
+    setCurrentStep(3);
+  };
+
+  const handleOrderComplete = (orderId: string) => {
+    navigate(`/order-success?orderId=${orderId}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-accent" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!selectedCredits || !selectedTier || !user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title="Place Your Virtual Staging Order - ClickStage Pro"
+        description="Complete your virtual staging order in 3 easy steps"
+      />
       <Navbar />
 
       <main className="flex-1 py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
           <Card className="max-w-2xl mx-auto shadow-custom-lg">
             <CardHeader>
-              {/* Progress Steps */}
-              <div className="flex items-center justify-center gap-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center text-sm font-semibold">
-                    1
-                  </div>
-                  <span className="text-sm font-medium text-accent">Contact Info</span>
-                </div>
-                <div className="w-12 h-0.5 bg-border"></div>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-semibold">
-                    2
-                  </div>
-                  <span className="text-sm font-medium text-muted-foreground">Upload Photos</span>
-                </div>
-                <div className="w-12 h-0.5 bg-border"></div>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-semibold">
-                    3
-                  </div>
-                  <span className="text-sm font-medium text-muted-foreground">Payment</span>
-                </div>
-              </div>
+              <ProgressHeader currentStep={currentStep} />
 
               <CardTitle className="text-2xl text-center">Place Staging Order</CardTitle>
               <CardDescription className="text-center">
-                We'll use this information to send you updates about your staging order.
+                {currentStep === 1 && "We'll use this information to send you updates about your staging order."}
+                {currentStep === 2 && "Upload the photos you want staged. We accept JPG, PNG, HEIC, and WebP files."}
+                {currentStep === 3 && "Choose how you'd like to pay for your staging order."}
               </CardDescription>
+
+              {selectedTier && (
+                <div className="mt-4 p-4 bg-accent/10 rounded-lg border border-accent/20">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-1">Selected Package</p>
+                    <p className="text-lg font-semibold text-accent">
+                      {selectedTier.credits} Photo Credit{selectedTier.credits > 1 ? 's' : ''} - {selectedTier.price}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {selectedTier.perPhoto}
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardHeader>
 
             <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                {/* First Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">
-                    First Name <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="firstName"
-                    {...register("firstName")}
-                    className={errors.firstName ? "border-destructive" : ""}
-                  />
-                  {errors.firstName && (
-                    <p className="text-sm text-destructive">{errors.firstName.message}</p>
-                  )}
-                </div>
+              {currentStep === 1 && (
+                <Step1Contact
+                  initialData={contactData || undefined}
+                  onNext={handleStep1Complete}
+                />
+              )}
 
-                {/* Last Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">
-                    Last Name <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="lastName"
-                    {...register("lastName")}
-                    className={errors.lastName ? "border-destructive" : ""}
-                  />
-                  {errors.lastName && (
-                    <p className="text-sm text-destructive">{errors.lastName.message}</p>
-                  )}
-                </div>
+              {currentStep === 2 && (
+                <Step2Upload
+                  initialPhotos={uploadedPhotos}
+                  onNext={handleStep2Complete}
+                  onBack={() => setCurrentStep(1)}
+                  userId={user.id}
+                />
+              )}
 
-                {/* Email Address */}
-                <div className="space-y-2">
-                  <Label htmlFor="email">
-                    Email Address <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...register("email")}
-                    className={errors.email ? "border-destructive" : ""}
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email.message}</p>
-                  )}
-                </div>
-
-                {/* Phone Number */}
-                <div className="space-y-2">
-                  <Label htmlFor="phoneNumber">
-                    Phone Number <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="phoneNumber"
-                    type="tel"
-                    {...register("phoneNumber")}
-                    className={errors.phoneNumber ? "border-destructive" : ""}
-                  />
-                  {errors.phoneNumber && (
-                    <p className="text-sm text-destructive">{errors.phoneNumber.message}</p>
-                  )}
-                </div>
-
-                {/* Property Address */}
-                <div className="space-y-2">
-                  <Label htmlFor="propertyAddress">
-                    Address of Property to Be Staged <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="propertyAddress"
-                    type="text"
-                    placeholder="123 Main St, City, State ZIP"
-                    {...register("propertyAddress")}
-                    className={errors.propertyAddress ? "border-destructive" : ""}
-                  />
-                  {errors.propertyAddress && (
-                    <p className="text-sm text-destructive">{errors.propertyAddress.message}</p>
-                  )}
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-accent hover:bg-accent/90"
-                  size="lg"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Saving..." : "Continue to Upload Photos"}
-                </Button>
-              </form>
+              {currentStep === 3 && contactData && (
+                <Step3Payment
+                  creditsRequired={selectedCredits}
+                  userCredits={userCredits}
+                  onBack={() => setCurrentStep(2)}
+                  onComplete={handleOrderComplete}
+                  orderData={{
+                    contact: contactData,
+                    photos: uploadedPhotos,
+                  }}
+                />
+              )}
             </CardContent>
           </Card>
         </div>

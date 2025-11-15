@@ -41,9 +41,9 @@ const Pricing = () => {
     });
   }, []);
 
-  const handleSelectPlan = (checkoutUrl: string) => {
-    // Redirect directly to Stripe checkout
-    window.location.href = checkoutUrl;
+  const handleSelectPlan = (credits: number) => {
+    // Navigate to place-order page with credits as query param
+    navigate(`/place-order?credits=${credits}`);
   };
 
   const pricingTiers = PRICING_TIERS;
@@ -120,9 +120,9 @@ const Pricing = () => {
                     <Button
                       className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
-                      onClick={() => handleSelectPlan(tier.checkoutUrl)}
+                      onClick={() => handleSelectPlan(tier.credits)}
                     >
-                      Purchase
+                      Buy {tier.credits} Photo Credit{tier.credits > 1 ? 's' : ''}
                     </Button>
                   </CardContent>
                 </Card>

@@ -11,6 +11,7 @@ interface Order {
   id: string;
   status: string;
   created_at: string;
+  completed_at: string | null;
   original_url: string | null;
   staged_url: string | null;
   style: string | null;
@@ -96,19 +97,28 @@ export default function OrdersPage() {
                         Order #{order.id.slice(0, 8)}
                       </h2>
                       <p className="text-sm text-gray-500">
-                        {new Date(order.created_at).toLocaleDateString("en-US", {
+                        Created: {new Date(order.created_at).toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "long",
                           day: "numeric"
                         })}
                       </p>
+                      {order.completed_at && (
+                        <p className="text-sm text-green-600 font-medium">
+                          Completed: {new Date(order.completed_at).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric"
+                          })}
+                        </p>
+                      )}
                     </div>
                     {getStatusBadge(order.status)}
                   </div>
 
                   {order.style && (
                     <p className="text-sm text-gray-600 mb-4">
-                      Style: <span className="font-medium">{order.style}</span>
+                      Style: <span className="font-medium capitalize">{order.style}</span>
                     </p>
                   )}
 
