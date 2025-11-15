@@ -353,7 +353,7 @@ export default function PlaceOrderBundle() {
                   )}
                 </button>
 
-                <div id="turnstile-container" className="mt-4 flex justify-center items-center" style={{ display: 'none' }}></div>
+                <div id="turnstile-container" className="mt-4 flex justify-center" style={{ display: 'none' }}></div>
 
                 <p className="text-xs text-center text-gray-500">
                   You will be redirected to Stripe to complete your purchase securely.
