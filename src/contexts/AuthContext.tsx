@@ -38,15 +38,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refresh = async () => {
     const result = await getCurrentUser();
-    if (!result.ok || !result.data) {
-      return;
+    if (result.ok) {
+      setState({
+        user: result.data,
+        loading: false,
+        isAdmin: result.data?.isAdmin || false,
+        error: undefined
+      });
+    } else {
+      setState({ user: null, loading: false, isAdmin: false, error: result.error });
     }
-    setState({
-      user: result.data,
-      loading: false,
-      isAdmin: result.data?.isAdmin || false,
-      error: undefined
-    });
   };
 
   const signup = async (email: string, password: string, name: string): Promise<ApiResult<AuthUser>> => {
@@ -115,14 +116,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!alive) return;
 
-      if (event === "SIGNED_IN" && session?.user) {
-        setTimeout(() => {
-          refresh();
-        }, 150);
-      } else if (event === "SIGNED_OUT") {
+      if (session?.user) {
+        refresh();
+      } else {
         setState({ user: null, loading: false, isAdmin: false, error: undefined });
       }
     });

@@ -48,8 +48,6 @@ export default function AuthPage() {
     if (!result.ok) {
       setLocalError(result.error || "Login failed");
       setIsSubmitting(false);
-    } else {
-      setIsSubmitting(false);
     }
   };
 
