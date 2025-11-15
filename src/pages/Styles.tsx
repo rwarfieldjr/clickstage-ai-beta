@@ -115,7 +115,7 @@ const Styles = () => {
               Select your preferred style during the upload process and watch your empty rooms
               come to life with professional staging
             </p>
-            <Link to="/pricing">
+            <Link to="/place-order">
               <Button size="lg" className="text-lg px-8">
                 Place Staging Order
               </Button>

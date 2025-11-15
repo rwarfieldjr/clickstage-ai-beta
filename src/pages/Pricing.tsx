@@ -41,15 +41,9 @@ const Pricing = () => {
     });
   }, []);
 
-  const handleSelectPlan = async (tierId: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) {
-      navigate('/auth');
-      return;
-    }
-
-    navigate(`/place-order/contact?bundle=${tierId}`);
+  const handleSelectPlan = (checkoutUrl: string) => {
+    // Redirect directly to Stripe checkout
+    window.location.href = checkoutUrl;
   };
 
   const pricingTiers = PRICING_TIERS;
@@ -126,9 +120,9 @@ const Pricing = () => {
                     <Button
                       className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
-                      onClick={() => handleSelectPlan(tier.id)}
+                      onClick={() => handleSelectPlan(tier.checkoutUrl)}
                     >
-                      Buy {tier.credits} Photo Credit{tier.credits > 1 ? 's' : ''}
+                      Purchase
                     </Button>
                   </CardContent>
                 </Card>

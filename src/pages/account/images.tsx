@@ -15,9 +15,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Download, Trash2, Loader2, Upload, Edit2, X, Check, PackageOpen } from "lucide-react";
+import { Download, Trash2, Loader2, Upload, Edit2, X, Check } from "lucide-react";
 import { toast } from "sonner";
-import JSZip from "jszip";
 
 interface ImageFile {
   name: string;
@@ -37,7 +36,6 @@ export default function ImagesPage() {
   const [editingName, setEditingName] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<ImageFile | null>(null);
-  const [downloadingZip, setDownloadingZip] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -220,58 +218,6 @@ export default function ImagesPage() {
     }
   };
 
-  const handleDownloadAllAsZip = async (images: ImageFile[], zipName: string) => {
-    if (images.length === 0) {
-      toast.error("No images to download");
-      return;
-    }
-
-    setDownloadingZip(true);
-    toast.info(`Preparing ${images.length} images for download...`);
-
-    try {
-      const zip = new JSZip();
-
-      for (let i = 0; i < images.length; i++) {
-        const image = images[i];
-        try {
-          const response = await fetch(image.url);
-          const blob = await response.blob();
-          zip.file(image.name, blob);
-
-          if ((i + 1) % 5 === 0 || i === images.length - 1) {
-            toast.info(`Processing ${i + 1}/${images.length} images...`);
-          }
-        } catch (error) {
-          console.error(`Failed to fetch image ${image.name}:`, error);
-        }
-      }
-
-      toast.info("Creating ZIP file...");
-      const zipBlob = await zip.generateAsync({
-        type: "blob",
-        compression: "DEFLATE",
-        compressionOptions: { level: 6 }
-      });
-
-      const url = window.URL.createObjectURL(zipBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = zipName;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      toast.success(`Downloaded ${images.length} images as ${zipName}`);
-    } catch (error) {
-      console.error("ZIP download error:", error);
-      toast.error("Failed to create ZIP file");
-    } finally {
-      setDownloadingZip(false);
-    }
-  };
-
   const confirmDelete = async () => {
     if (!userId || !deleteConfirm) return;
 
@@ -357,37 +303,12 @@ export default function ImagesPage() {
     description: string,
     images: ImageFile[],
     bucket: 'uploads' | 'staged',
-    inputId: string,
-    showDownloadAll: boolean = false
+    inputId: string
   ) => (
     <Card className="border-gray-200 h-full bg-gray-50">
       <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-gray-900">{title}</CardTitle>
-            <CardDescription className="text-gray-600">{description}</CardDescription>
-          </div>
-          {showDownloadAll && images.length > 0 && (
-            <Button
-              onClick={() => handleDownloadAllAsZip(images, `staged-photos-${Date.now()}.zip`)}
-              disabled={downloadingZip}
-              className="bg-green-600 hover:bg-green-700 text-white"
-              size="sm"
-            >
-              {downloadingZip ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating ZIP...
-                </>
-              ) : (
-                <>
-                  <PackageOpen className="w-4 h-4 mr-2" />
-                  Download All as ZIP
-                </>
-              )}
-            </Button>
-          )}
-        </div>
+        <CardTitle className="text-gray-900">{title}</CardTitle>
+        <CardDescription className="text-gray-600">{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <div
@@ -547,16 +468,14 @@ export default function ImagesPage() {
           "Upload your original listing photos here",
           originalImages,
           'uploads',
-          'original-upload',
-          false
+          'original-upload'
         )}
         {renderDropZone(
           "Staged Photos",
           "Upload your AI-staged photos here",
           stagedImages,
           'staged',
-          'staged-upload',
-          true
+          'staged-upload'
         )}
       </div>
 

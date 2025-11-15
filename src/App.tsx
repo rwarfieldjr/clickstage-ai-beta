@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import ScrollToTop from "./components/ScrollToTop";
 import DevNavigator from "./components/DevNavigator";
@@ -24,12 +24,9 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const SMSPolicy = lazy(() => import("./pages/SMSPolicy"));
 const Styles = lazy(() => import("./pages/Styles"));
 const PlaceOrder = lazy(() => import("./pages/PlaceOrder"));
-const PlaceOrderContact = lazy(() => import("./pages/place-order/Contact"));
-const PlaceOrderStyle = lazy(() => import("./pages/place-order/Style"));
-const PlaceOrderUpload = lazy(() => import("./pages/place-order/Upload"));
-const PlaceOrderBundle = lazy(() => import("./pages/place-order/Bundle"));
 const About = lazy(() => import("./pages/About"));
 const AccountSettings = lazy(() => import("./pages/AccountSettings"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboardControl"));
 const AdminDashboardNew = lazy(() => import("./pages/admin/AdminDashboardNew"));
@@ -60,7 +57,6 @@ const AccountProfile = lazy(() => import("./pages/account/profile"));
 const AccountOrders = lazy(() => import("./pages/account/orders"));
 const AccountCredits = lazy(() => import("./pages/account/credits"));
 const AccountImages = lazy(() => import("./pages/account/images"));
-const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
 
 const queryClient = new QueryClient();
 
@@ -90,11 +86,6 @@ const App = () => (
           <Route path="/sms-policy" element={<SMSPolicy />} />
           <Route path="/styles" element={<Styles />} />
           <Route path="/place-order" element={<PlaceOrder />} />
-          <Route path="/place-order/contact" element={<PlaceOrderContact />} />
-          <Route path="/place-order/style" element={<PlaceOrderStyle />} />
-          <Route path="/place-order/upload" element={<PlaceOrderUpload />} />
-          <Route path="/place-order/bundle" element={<PlaceOrderBundle />} />
-          <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/about" element={<About />} />
           <Route path="/account-portal" element={<AccountPortal />} />
           <Route path="/account" element={<AccountDashboard />} />
@@ -128,7 +119,7 @@ const App = () => (
           <Route path="/bucket-test" element={<BucketTest />} />
           <Route path="/gallery/:token" element={<ClientGallery />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
           </ErrorBoundary>

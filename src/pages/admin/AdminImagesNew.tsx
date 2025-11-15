@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useRequireAdmin } from "@/hooks/useRequireAdmin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -23,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Download, Trash2, Loader2, Upload, Edit2, X, Check, Bell, ArrowLeft } from "lucide-react";
+import { Download, Trash2, Loader2, Upload, Edit2, X, Check, Bell } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -43,16 +41,8 @@ interface UserProfile {
   name: string | null;
 }
 
-interface OrderStatus {
-  id: string;
-  status: string;
-  completed_at: string | null;
-  created_at: string;
-}
-
 export default function AdminImagesNew() {
   const { isAdmin, isLoading } = useRequireAdmin();
-  const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -65,8 +55,6 @@ export default function AdminImagesNew() {
   const [deleteConfirm, setDeleteConfirm] = useState<ImageFile | null>(null);
   const [showNotifyDialog, setShowNotifyDialog] = useState(false);
   const [sending, setSending] = useState(false);
-  const [orderStatus, setOrderStatus] = useState<OrderStatus | null>(null);
-  const [isResend, setIsResend] = useState(false);
 
   useEffect(() => {
     if (!isLoading && isAdmin) {
@@ -102,17 +90,6 @@ export default function AdminImagesNew() {
 
       const user = users.find(u => u.id === userId);
       setSelectedUser(user || null);
-
-      // Load order status
-      const { data: orderData } = await supabase
-        .from('orders')
-        .select('id, status, completed_at, created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      setOrderStatus(orderData);
 
       const [uploadsData, stagedData] = await Promise.all([
         supabase.storage.from('uploads').list(`${userId}/`, { sortBy: { column: 'created_at', order: 'desc' } }),
@@ -375,8 +352,6 @@ export default function AdminImagesNew() {
           userId: selectedUser.id,
           email: selectedUser.email,
           name: selectedUser.name || 'Customer',
-          orderId: orderStatus?.id,
-          isResend: isResend,
         }),
       });
 
@@ -388,12 +363,8 @@ export default function AdminImagesNew() {
       const result = await response.json();
       console.log('Notification sent successfully:', result);
 
-      toast.success(`${isResend ? 'Resend' : 'Notification'} sent to ${selectedUser.email}`);
+      toast.success(`Notification sent to ${selectedUser.email}`);
       setShowNotifyDialog(false);
-      setIsResend(false);
-
-      // Reload order status to reflect changes
-      await loadUserImages(selectedUser.id);
     } catch (error: any) {
       console.error("Notify error:", error);
       toast.error(error.message || "Failed to send notification");
@@ -569,13 +540,6 @@ export default function AdminImagesNew() {
       <main className="flex-1 py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-6">
-              <Button variant="ghost" onClick={() => navigate("/admin/dashboard")}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Dashboard
-              </Button>
-            </div>
-
             <div className="mb-8">
               <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                 Admin Image Portal
@@ -604,51 +568,13 @@ export default function AdminImagesNew() {
                     </Select>
                   </div>
                   {selectedUser && (
-                    <div className="flex items-center gap-3">
-                      {orderStatus && (
-                        <div className="text-right mr-2">
-                          <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Order Status:</div>
-                          <Badge
-                            variant={
-                              orderStatus.status === "completed" ? "default" :
-                              orderStatus.status === "processing" ? "secondary" :
-                              "outline"
-                            }
-                            className={
-                              orderStatus.status === "completed" ? "bg-green-500 hover:bg-green-600" :
-                              orderStatus.status === "processing" ? "bg-blue-500 hover:bg-blue-600" :
-                              "bg-yellow-500 hover:bg-yellow-600 text-slate-900"
-                            }
-                          >
-                            {orderStatus.status}
-                          </Badge>
-                        </div>
-                      )}
-                      {orderStatus?.status === "completed" ? (
-                        <Button
-                          onClick={() => {
-                            setIsResend(true);
-                            setShowNotifyDialog(true);
-                          }}
-                          variant="outline"
-                          className="border-green-600 text-green-600 hover:bg-green-50"
-                        >
-                          <Bell className="w-4 h-4 mr-2" />
-                          Resend Completion Notice
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={() => {
-                            setIsResend(false);
-                            setShowNotifyDialog(true);
-                          }}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <Bell className="w-4 h-4 mr-2" />
-                          Alert Customer of Completed Order
-                        </Button>
-                      )}
-                    </div>
+                    <Button
+                      onClick={() => setShowNotifyDialog(true)}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Bell className="w-4 h-4 mr-2" />
+                      Alert Customer of Completed Order
+                    </Button>
                   )}
                 </div>
               </CardHeader>
@@ -698,21 +624,10 @@ export default function AdminImagesNew() {
       <AlertDialog open={showNotifyDialog} onOpenChange={setShowNotifyDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {isResend ? "Resend Completion Notice?" : "Send Completion Notice?"}
-            </AlertDialogTitle>
+            <AlertDialogTitle>Send Completion Notice?</AlertDialogTitle>
             <AlertDialogDescription>
-              {isResend ? (
-                <>
-                  Are you sure you want to <strong>resend</strong> the completion notice to <strong>{selectedUser?.email}</strong>?
-                  This will NOT change the order status. They will receive another email with a link to view their photos.
-                </>
-              ) : (
-                <>
-                  Are you sure you want to alert <strong>{selectedUser?.email}</strong> that their staging order is complete?
-                  This will mark the order as completed and they will receive an email with a link to view their photos.
-                </>
-              )}
+              Are you sure you want to alert <strong>{selectedUser?.email}</strong> that their staging order is complete?
+              They will receive an email with a link to view their photos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
