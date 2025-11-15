@@ -24,7 +24,6 @@ export default function PlaceOrderBundle() {
   const [processing, setProcessing] = useState(false);
   const [turnstileReady, setTurnstileReady] = useState(false);
   const turnstileRendered = useRef(false);
-  const turnstileRef = useRef<any>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -125,19 +124,13 @@ export default function PlaceOrderBundle() {
     setTurnstileReady(true);
     setProcessing(true);
 
-    const wrapper = document.getElementById('turnstile-wrapper');
-    if (wrapper) {
-      wrapper.style.display = 'flex';
-    }
-
     setTimeout(() => {
       if (!turnstileRendered.current && (window as any).turnstile) {
         const container = document.getElementById('turnstile-container');
         if (container) {
-          turnstileRef.current = (window as any).turnstile.render('#turnstile-container', {
+          container.style.display = 'block';
+          (window as any).turnstile.render('#turnstile-container', {
             sitekey: '0x4AAAAAAB9xdhqE9Qyud_D6',
-            theme: 'light',
-            size: 'normal',
             callback: (token: string) => {
               handleTurnstileSuccess(token);
             },
@@ -363,9 +356,7 @@ export default function PlaceOrderBundle() {
                   )}
                 </button>
 
-                <div id="turnstile-wrapper" className="w-full flex justify-center mt-4" style={{ display: 'none' }}>
-                  <div id="turnstile-container" className="mx-auto"></div>
-                </div>
+                <div id="turnstile-container" className="mt-4 flex justify-center items-center" style={{ display: 'none' }}></div>
 
                 <p className="text-xs text-center text-gray-500">
                   You will be redirected to Stripe to complete your purchase securely.
