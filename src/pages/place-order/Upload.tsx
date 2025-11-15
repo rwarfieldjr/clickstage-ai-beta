@@ -321,23 +321,21 @@ export default function PlaceOrderUpload() {
                     disabled={uploading}
                   />
                   <label htmlFor="file-upload">
-                    <button
-                      type="button"
-                      disabled={uploading}
-                      className="inline-flex items-center justify-center bg-[#2F74FF] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[#1F5BD4] transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                    >
-                      {uploading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <UploadIcon className="w-4 h-4 mr-2" />
-                          Choose Files
-                        </>
-                      )}
-                    </button>
+                    <Button asChild disabled={uploading} className="cursor-pointer">
+                      <span>
+                        {uploading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <UploadIcon className="w-4 h-4 mr-2" />
+                            Choose Files
+                          </>
+                        )}
+                      </span>
+                    </Button>
                   </label>
                   <p className="text-xs text-gray-500 mt-4">
                     Accepts JPEG and PNG files up to 20MB each
@@ -383,13 +381,14 @@ export default function PlaceOrderUpload() {
                   </div>
                 )}
 
-                <button
+                <Button
                   onClick={handleSubmit}
-                  className="w-full bg-[#2F74FF] text-white font-semibold py-4 rounded-xl hover:bg-[#1F5BD4] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`w-full ${isOverLimit ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#003A70] hover:bg-[#002850] text-white'}`}
+                  size="lg"
                   disabled={uploadedFiles.length === 0 || isOverLimit}
                 >
                   Continue to Bundle Selection
-                </button>
+                </Button>
 
                 {isOverLimit && (
                   <p className="text-sm text-red-600 text-center">

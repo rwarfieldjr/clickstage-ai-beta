@@ -34,7 +34,7 @@ All colors MUST be HSL.
 
     --border: 210 20% 90%;
     --input: 210 20% 90%;
-    --ring: 211 100% 50%;
+    --ring: 210 20% 70%;
 
     --radius: 1rem;
     
@@ -98,7 +98,7 @@ All colors MUST be HSL.
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 211 100% 50%;
+    --ring: 210 20% 70%;
     
     /* Dark mode gradients */
     --gradient-card: linear-gradient(180deg, hsl(0, 0%, 12%) 0%, hsl(0, 0%, 14%) 100%);

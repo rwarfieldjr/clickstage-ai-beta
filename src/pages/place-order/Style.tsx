@@ -174,7 +174,6 @@ export default function PlaceOrderStyle() {
                         <SelectItem
                           key={style.id}
                           value={style.id}
-                          className="cursor-pointer"
                         >
                           {style.name}
                         </SelectItem>
@@ -200,13 +199,14 @@ export default function PlaceOrderStyle() {
                   )}
                 </div>
 
-                <button
+                <Button
                   type="submit"
-                  className="w-full bg-[#2F74FF] text-white font-semibold py-4 rounded-xl hover:bg-[#1F5BD4] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-[#003A70] hover:bg-[#002850] text-white"
+                  size="lg"
                   disabled={!selectedStyle}
                 >
                   Continue to Upload Photos
-                </button>
+                </Button>
               </form>
             </CardContent>
           </Card>

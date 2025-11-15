@@ -23,7 +23,6 @@ export default function PlaceOrderBundle() {
   const [smsConsent, setSmsConsent] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string>("");
   const [processing, setProcessing] = useState(false);
-  const [turnstileReady, setTurnstileReady] = useState(false);
   const turnstileRef = useRef<any>(null);
 
   useEffect(() => {
@@ -80,9 +79,7 @@ export default function PlaceOrderBundle() {
     sessionStorage.setItem('orderBundle', bundleId);
   };
 
-  const handleProceedToCheckout = async (e: React.MouseEvent) => {
-    e.preventDefault();
-
+  const handleProceedToCheckout = async () => {
     if (!selectedBundle) {
       toast.error("Please select a bundle");
       return;
@@ -108,8 +105,17 @@ export default function PlaceOrderBundle() {
       }
     }
 
-    setTurnstileReady(true);
     setProcessing(true);
+
+    try {
+      if (turnstileRef.current) {
+        turnstileRef.current.execute();
+      }
+    } catch (error) {
+      console.error("Turnstile error:", error);
+      toast.error("Security verification failed. Please refresh and try again.");
+      setProcessing(false);
+    }
   };
 
   const handleTurnstileSuccess = async (token: string) => {
@@ -297,39 +303,37 @@ export default function PlaceOrderBundle() {
                   </label>
                 </div>
 
-                <button
+                <div className="hidden">
+                  <Turnstile
+                    ref={turnstileRef}
+                    siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || ''}
+                    onSuccess={handleTurnstileSuccess}
+                    onError={() => {
+                      toast.error("Security verification failed");
+                      setProcessing(false);
+                    }}
+                    options={{
+                      size: 'invisible',
+                      execution: 'execute',
+                    }}
+                  />
+                </div>
+
+                <Button
                   onClick={handleProceedToCheckout}
-                  className="w-full bg-[#2F74FF] text-white font-semibold py-4 rounded-xl hover:bg-[#1F5BD4] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-[#003A70] hover:bg-[#002850] text-white"
+                  size="lg"
                   disabled={!selectedBundle || !smsConsent || processing}
                 >
                   {processing ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin inline" />
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Processing...
                     </>
                   ) : (
                     'Proceed to Checkout'
                   )}
-                </button>
-
-                {turnstileReady && (
-                  <div className="mt-4 flex justify-center">
-                    <Turnstile
-                      ref={turnstileRef}
-                      siteKey="0x4AAAAAAB9xdhqE9Qyud_D6"
-                      onSuccess={handleTurnstileSuccess}
-                      onError={() => {
-                        toast.error("Security verification failed");
-                        setProcessing(false);
-                        setTurnstileReady(false);
-                      }}
-                      options={{
-                        theme: 'light',
-                        size: 'normal',
-                      }}
-                    />
-                  </div>
-                )}
+                </Button>
 
                 <p className="text-xs text-center text-gray-500">
                   You will be redirected to Stripe to complete your purchase securely.
