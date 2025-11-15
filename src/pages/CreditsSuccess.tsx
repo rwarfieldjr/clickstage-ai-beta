@@ -12,8 +12,11 @@ export default function CreditsSuccess() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    toast.success("Credits successfully added to your account!");
-  }, []);
+    toast.success("Your credits have been added!");
+    setTimeout(() => {
+      navigate("/account/credits");
+    }, 2000);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -36,13 +39,13 @@ export default function CreditsSuccess() {
             </p>
             
             <div className="space-y-3">
-              <Button 
-                onClick={() => navigate("/dashboard")}
+              <Button
+                onClick={() => navigate("/account/credits")}
                 className="w-full"
               >
-                Go to Dashboard
+                View My Credits
               </Button>
-              <Button 
+              <Button
                 onClick={() => navigate("/upload")}
                 variant="outline"
                 className="w-full"

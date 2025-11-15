@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useRequireAdmin } from "@/hooks/useRequireAdmin";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,8 @@ import {
   Upload,
   Shield,
   Activity,
-  Zap
+  Zap,
+  ArrowLeft
 } from "lucide-react";
 
 interface TestResult {
@@ -30,6 +32,7 @@ interface TestResult {
 
 export default function AdminTests() {
   const { isAdmin, isLoading } = useRequireAdmin();
+  const navigate = useNavigate();
   const [tests, setTests] = useState<TestResult[]>([]);
   const [runningAll, setRunningAll] = useState(false);
 
@@ -328,6 +331,13 @@ export default function AdminTests() {
       <Navbar />
 
       <main className="flex-1 container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Button variant="ghost" onClick={() => navigate("/admin/dashboard")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        </div>
+
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">System Tests</h1>
           <p className="text-muted-foreground">
