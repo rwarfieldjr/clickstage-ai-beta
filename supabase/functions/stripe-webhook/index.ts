@@ -185,6 +185,48 @@ async function handleEvent(event: Stripe.Event) {
           console.error('Error sending order confirmation email:', emailError);
           // Don't fail the webhook if email fails
         }
+
+        // Send order data to GHL webhook
+        try {
+          const session = stripeData as Stripe.Checkout.Session;
+          const metadata = session.metadata || {};
+
+          if (metadata.orderId) {
+            const imageUrls = JSON.parse(metadata.imageUrlsJson || '[]');
+
+            const ghlPayload = {
+              orderId: metadata.orderId,
+              customerName: metadata.customerName || session.customer_details?.name || 'Customer',
+              customerEmail: metadata.customerEmail || session.customer_details?.email || '',
+              propertyAddress: metadata.propertyAddress || '',
+              selectedStyle: metadata.selectedStyle || '',
+              selectedBundle: metadata.selectedBundle || '',
+              imageUrls: imageUrls,
+            };
+
+            const supabaseUrl = Deno.env.get('SUPABASE_URL');
+            const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+
+            const ghlResponse = await fetch(`${supabaseUrl}/functions/v1/send-to-ghl`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${supabaseAnonKey}`,
+              },
+              body: JSON.stringify(ghlPayload),
+            });
+
+            if (!ghlResponse.ok) {
+              const errorText = await ghlResponse.text();
+              console.error(`Failed to send data to GHL webhook: ${errorText}`);
+            } else {
+              console.info(`Successfully sent order data to GHL webhook for order ${metadata.orderId}`);
+            }
+          }
+        } catch (ghlError) {
+          console.error('Error sending data to GHL webhook:', ghlError);
+          // Don't fail the webhook if GHL forwarding fails
+        }
       } catch (error) {
         console.error('Error processing one-time payment:', error);
       }
