@@ -58,6 +58,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AccountDashboard = lazy(() => import("./pages/account/index"));
 const AccountProfile = lazy(() => import("./pages/account/profile"));
 const AccountOrders = lazy(() => import("./pages/account/orders"));
+const AccountOrderDetail = lazy(() => import("./pages/account/order-detail"));
 const AccountCredits = lazy(() => import("./pages/account/credits"));
 const AccountImages = lazy(() => import("./pages/account/images"));
 const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
@@ -100,6 +101,7 @@ const App = () => (
           <Route path="/account" element={<AccountDashboard />} />
           <Route path="/account/profile" element={<AccountProfile />} />
           <Route path="/account/orders" element={<AccountOrders />} />
+          <Route path="/account/orders/:orderId" element={<AccountOrderDetail />} />
           <Route path="/account/credits" element={<AccountCredits />} />
           <Route path="/account/images" element={<AccountImages />} />
           <Route path="/account-settings" element={<AccountSettings />} />

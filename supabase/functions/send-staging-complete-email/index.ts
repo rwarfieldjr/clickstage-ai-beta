@@ -7,8 +7,8 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  orderId: string;
-  shareToken: string;
+  order_id: string;
+  user_id: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -22,30 +22,37 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { orderId, shareToken }: EmailRequest = await req.json();
+    const { order_id, user_id }: EmailRequest = await req.json();
 
-    // Get order and user details
+    // Fetch order from staging_orders by order_id
     const { data: order, error: orderError } = await supabaseClient
-      .from("orders")
-      .select(`
-        *,
-        profiles (
-          name,
-          email
-        )
-      `)
-      .eq("id", orderId)
+      .from("staging_orders")
+      .select("id, address_of_property, status")
+      .eq("id", order_id)
       .single();
 
     if (orderError || !order) {
+      console.error("Order fetch error:", orderError);
       throw new Error("Order not found");
     }
 
-    const clientUrl = `${Deno.env.get("SITE_URL")}/gallery/${shareToken}`;
+    // Fetch user from profiles by user_id
+    const { data: user, error: userError } = await supabaseClient
+      .from("profiles")
+      .select("email, name")
+      .eq("id", user_id)
+      .single();
 
-    // Using Resend API directly via fetch
+    if (userError || !user) {
+      console.error("User fetch error:", userError);
+      throw new Error("User not found");
+    }
+
+    // Build URL: https://clickstagepro.com/account/orders/${order.id}
+    const clientUrl = `https://clickstagepro.com/account/orders/${order.id}`;
+
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    
+
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -53,26 +60,29 @@ const handler = async (req: Request): Promise<Response> => {
         "Authorization": `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: "Virtual Staging <onboarding@resend.dev>",
-        to: [order.profiles.email],
-        subject: "Your Staged Images Are Ready! 🎉",
+        from: "ClickStage Pro <orders@clickstagepro.com>",
+        to: [user.email],
+        subject: "Your Staged Photos Are Ready!",
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #333;">Your Virtual Staging is Complete!</h1>
-            <p>Hi ${order.profiles.name},</p>
-            <p>Great news! Your virtually staged images are now ready for viewing and download.</p>
-            <p>Order: <strong>${order.order_number}</strong></p>
-            <p style="margin: 30px 0;">
-              <a href="${clientUrl}" 
-                 style="background-color: #0066cc; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                View Your Staged Images
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <p style="font-size:16px;color:#222;">
+              Hi ${user.name?.split(' ')[0] || user.name},
+            </p>
+
+            <p style="font-size:16px;color:#222;">
+              Your staged photos for <strong>${order.address_of_property}</strong> are now ready.
+            </p>
+
+            <p style="margin:24px 0;">
+              <a href="${clientUrl}"
+                 style="background:#1D4ED8;color:white;padding:12px 20px;
+                        border-radius:8px;font-size:16px;text-decoration:none;display:inline-block;">
+                View Your Staged Photos
               </a>
             </p>
-            <p style="color: #666; font-size: 14px;">
-              This link will remain active for 30 days. You can download your images at any time during this period.
-            </p>
-            <p style="color: #666; font-size: 12px; margin-top: 40px;">
-              If you have any questions, please don't hesitate to reach out to us.
+
+            <p style="font-size:14px;color:#555;">
+              Thank you for using ClickStage Pro.
             </p>
           </div>
         `,
