@@ -63,6 +63,7 @@ const AccountOrderDetail = lazy(() => import("./pages/account/order-detail"));
 const AccountCredits = lazy(() => import("./pages/account/credits"));
 const AccountImages = lazy(() => import("./pages/account/images"));
 const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
+const TestOrder = lazy(() => import("./pages/TestOrder"));
 
 const queryClient = new QueryClient();
 
@@ -130,6 +131,7 @@ const App = () => (
           <Route path="/stability-test" element={<StabilityTest />} />
           <Route path="/diagnostics" element={<CheckoutDiagnostics />} />
           <Route path="/bucket-test" element={<BucketTest />} />
+          <Route path="/test-order" element={<TestOrder />} />
           <Route path="/gallery/:token" element={<ClientGallery />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<Navigate to="/" replace />} />
