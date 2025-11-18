@@ -93,19 +93,17 @@ export async function logout(): Promise<ApiResult<null>> {
 
 export async function getCurrentUser(): Promise<ApiResult<AuthUser | null>> {
   return safeApiCall<AuthUser | null>(async () => {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
 
-    if (sessionError || !sessionData?.session?.user) {
-      return null;
-    }
+    if (!data?.user) return null;
 
-    const user = sessionData.session.user;
     let isAdmin = false;
 
     const { data: roles, error: rolesError } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
+      .eq("user_id", data.user.id)
       .maybeSingle();
 
     if (!rolesError && roles?.role === "admin") {
@@ -113,8 +111,8 @@ export async function getCurrentUser(): Promise<ApiResult<AuthUser | null>> {
     }
 
     return {
-      id: user.id,
-      email: user.email,
+      id: data.user.id,
+      email: data.user.email,
       isAdmin,
     };
   });

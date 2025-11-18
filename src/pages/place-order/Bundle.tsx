@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { PRICING_TIERS } from "@/config/pricing";
 import { Loader2, ArrowLeft, Check } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 export default function PlaceOrderBundle() {
   const navigate = useNavigate();
@@ -22,8 +23,6 @@ export default function PlaceOrderBundle() {
   const [smsConsent, setSmsConsent] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string>("");
   const [processing, setProcessing] = useState(false);
-  const [turnstileReady, setTurnstileReady] = useState(false);
-  const turnstileRendered = useRef(false);
   const turnstileRef = useRef<any>(null);
 
   useEffect(() => {
@@ -75,28 +74,12 @@ export default function PlaceOrderBundle() {
     checkAuth();
   }, [navigate]);
 
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-
-    return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-    };
-  }, []);
-
   const handleBundleSelect = (bundleId: string) => {
     setSelectedBundle(bundleId);
     sessionStorage.setItem('orderBundle', bundleId);
   };
 
-  const handleProceedToCheckout = async (e: React.MouseEvent) => {
-    e.preventDefault();
-
+  const handleProceedToCheckout = async () => {
     if (!selectedBundle) {
       toast.error("Please select a bundle");
       return;
@@ -122,45 +105,20 @@ export default function PlaceOrderBundle() {
       }
     }
 
-    setTurnstileReady(true);
     setProcessing(true);
 
-    const wrapper = document.getElementById('turnstile-wrapper');
-    if (wrapper) {
-      wrapper.style.display = 'flex';
-    }
-
-    setTimeout(() => {
-      if (!turnstileRendered.current && (window as any).turnstile) {
-        const container = document.getElementById('turnstile-container');
-        if (container) {
-          turnstileRef.current = (window as any).turnstile.render('#turnstile-container', {
-            sitekey: '0x4AAAAAAB9xdhqE9Qyud_D6',
-            theme: 'light',
-            size: 'normal',
-            callback: (token: string) => {
-              handleTurnstileSuccess(token);
-            },
-            'error-callback': () => {
-              toast.error('Security verification failed');
-              setProcessing(false);
-              setTurnstileReady(false);
-              turnstileRendered.current = false;
-            }
-          });
-          turnstileRendered.current = true;
-        }
+    try {
+      if (turnstileRef.current) {
+        turnstileRef.current.execute();
       }
-    }, 100);
+    } catch (error) {
+      console.error("Turnstile error:", error);
+      toast.error("Security verification failed. Please refresh and try again.");
+      setProcessing(false);
+    }
   };
 
   const handleTurnstileSuccess = async (token: string) => {
-    if (!token) {
-      toast.error('Security verification failed');
-      setProcessing(false);
-      return;
-    }
-
     setTurnstileToken(token);
 
     try {
@@ -338,14 +296,27 @@ export default function PlaceOrderBundle() {
                   />
                   <label
                     htmlFor="sms-consent"
-                    className="text-sm leading-relaxed cursor-pointer text-gray-700"
+                    className="text-sm leading-relaxed cursor-pointer"
                   >
-                    By checking this box, you agree to receive text messages from <span className="font-semibold">ClickStagePro</span> related to your order, account updates, and occasional offers. Message & data rates may apply. Reply <span className="font-bold">STOP</span> to opt out or <span className="font-bold">HELP</span> for help. See our{' '}
-                    <a href="/sms-policy" className="text-[#2F74FF] hover:underline">
-                      SMS Messaging Policy
-                    </a>
-                    .
+                    I consent to receive SMS notifications about my order status and updates from ClickStage Pro.
+                    Message and data rates may apply. You can opt out at any time.
                   </label>
+                </div>
+
+                <div className="hidden">
+                  <Turnstile
+                    ref={turnstileRef}
+                    siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || ''}
+                    onSuccess={handleTurnstileSuccess}
+                    onError={() => {
+                      toast.error("Security verification failed");
+                      setProcessing(false);
+                    }}
+                    options={{
+                      size: 'invisible',
+                      execution: 'execute',
+                    }}
+                  />
                 </div>
 
                 <button
@@ -362,10 +333,6 @@ export default function PlaceOrderBundle() {
                     'Proceed to Checkout'
                   )}
                 </button>
-
-                <div id="turnstile-wrapper" className="w-full flex justify-center mt-4" style={{ display: 'none' }}>
-                  <div id="turnstile-container" className="mx-auto"></div>
-                </div>
 
                 <p className="text-xs text-center text-gray-500">
                   You will be redirected to Stripe to complete your purchase securely.
