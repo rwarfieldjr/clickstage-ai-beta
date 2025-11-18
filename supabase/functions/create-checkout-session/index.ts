@@ -58,8 +58,7 @@ Deno.serve(async (req: Request) => {
       throw new Error("Missing required fields");
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const publicUrl = supabaseUrl?.replace("https://", "https://www.") || "https://clickstagepro.com";
+    const publicUrl = Deno.env.get("PUBLIC_URL") || "https://clickstagepro.com";
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
