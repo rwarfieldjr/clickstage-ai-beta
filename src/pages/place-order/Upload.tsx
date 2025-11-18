@@ -138,35 +138,44 @@ export default function PlaceOrderUpload() {
     toast.info(`Uploading ${validFiles.length} image(s)...`);
 
     try {
-      const newFiles: UploadedFile[] = [];
+      const formData = new FormData();
+      formData.append("orderId", orderId.toString());
+      formData.append("fileCount", validFiles.length.toString());
 
-      for (const file of validFiles) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `originals/${user.id}/${orderId}/${fileName}`;
+      validFiles.forEach((file, index) => {
+        formData.append(`file_${index}`, file);
+      });
 
-        const { error: uploadError } = await supabase.storage
-          .from('uploads')
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
+      const response = await fetch("/api/upload-images", {
+        method: "POST",
+        body: formData,
+      });
 
-        if (uploadError) {
-          console.error("Upload error:", uploadError);
-          throw uploadError;
-        }
+      const result = await response.json();
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('uploads')
-          .getPublicUrl(filePath);
+      if (!response.ok) {
+        throw new Error(result.error || "Upload failed");
+      }
+
+      const urls = result.urls;
+
+      const newFiles: UploadedFile[] = validFiles.map((file, index) => ({
+        path: `${orderId}/${file.name}`,
+        url: urls[index],
+        name: file.name,
+        size: file.size
+      }));
+
+      for (let i = 0; i < validFiles.length; i++) {
+        const file = validFiles[i];
+        const url = urls[i];
 
         const { error: dbError } = await supabase
           .from('staging_original_photos')
           .insert({
             user_id: user.id,
             order_id: orderId,
-            file_path: filePath,
+            file_path: `${orderId}/${file.name}`,
             file_name: file.name
           });
 
@@ -174,13 +183,6 @@ export default function PlaceOrderUpload() {
           console.error("Database error:", dbError);
           throw dbError;
         }
-
-        newFiles.push({
-          path: filePath,
-          url: publicUrl,
-          name: file.name,
-          size: file.size
-        });
       }
 
       const updatedFiles = [...uploadedFiles, ...newFiles];
