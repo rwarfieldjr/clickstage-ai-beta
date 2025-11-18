@@ -3,8 +3,17 @@ export async function uploadToServer(files: File[], orderId: string) {
   console.log("[UPLOAD-TO-SERVER] Order ID:", orderId);
   console.log("[UPLOAD-TO-SERVER] Files to upload:", files.length);
 
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("[UPLOAD-TO-SERVER] ❌ Missing Supabase credentials");
+    throw new Error("Supabase configuration missing");
+  }
+
   const form = new FormData();
   form.append("orderId", orderId);
+  form.append("fileCount", files.length.toString());
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
@@ -13,12 +22,17 @@ export async function uploadToServer(files: File[], orderId: string) {
       size: file.size,
       type: file.type
     });
-    form.append("files", file);
+    form.append(`file_${i}`, file);
   }
 
-  console.log("[UPLOAD-TO-SERVER] Sending upload request to /api/upload-images...");
-  const res = await fetch("/api/upload-images", {
+  const uploadUrl = `${supabaseUrl}/functions/v1/upload-images`;
+  console.log("[UPLOAD-TO-SERVER] Sending upload request to:", uploadUrl);
+
+  const res = await fetch(uploadUrl, {
     method: "POST",
+    headers: {
+      'Authorization': `Bearer ${supabaseAnonKey}`,
+    },
     body: form,
   });
 
@@ -31,6 +45,8 @@ export async function uploadToServer(files: File[], orderId: string) {
   }
 
   const data = await res.json();
-  console.log("[UPLOAD-TO-SERVER] ✓ Upload successful. URLs received:", data.urls);
+  console.log("[UPLOAD-TO-SERVER] ✓ Upload successful. Response:", data);
+
+  // The upload-images function returns { urls: [...] }
   return data.urls as string[];
 }
