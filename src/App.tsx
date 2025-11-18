@@ -9,6 +9,7 @@ import DevNavigator from "./components/DevNavigator";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import RequireAdmin from "./components/RequireAdmin";
+import { TestUploader } from "./components/TestUploader";
 
 // Lazy load all route components for better performance
 const Home = lazy(() => import("./pages/Home"));
@@ -75,6 +76,7 @@ const App = () => (
           <ErrorBoundary>
             <ScrollToTop />
             <DevNavigator />
+            <TestUploader />
             <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
             <Routes>
           <Route path="/" element={<Home />} />
