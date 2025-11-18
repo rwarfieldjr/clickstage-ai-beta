@@ -146,8 +146,12 @@ export default function PlaceOrderUpload() {
         formData.append(`file_${index}`, file);
       });
 
-      const response = await fetch("/api/upload-images", {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/upload-images`, {
         method: "POST",
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
         body: formData,
       });
 
