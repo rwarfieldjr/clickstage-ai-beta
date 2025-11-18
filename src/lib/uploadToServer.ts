@@ -16,8 +16,8 @@ export async function uploadToServer(files: File[], orderId: string) {
     form.append("files", file);
   }
 
-  console.log("[UPLOAD-TO-SERVER] Sending upload request to /api/upload...");
-  const res = await fetch("/api/upload", {
+  console.log("[UPLOAD-TO-SERVER] Sending upload request to /api/upload-images...");
+  const res = await fetch("/api/upload-images", {
     method: "POST",
     body: form,
   });
