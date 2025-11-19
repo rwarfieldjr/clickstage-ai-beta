@@ -8,6 +8,7 @@ import { Upload as UploadIcon, X } from "lucide-react";
 import Layout from "@/components/Layout";
 import { SEO } from "@/components/SEO";
 import { createOrderAndCheckout } from "@/lib/createOrder";
+import uploadToServer from "@/lib/uploadToServer";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
 import coastal from "@/assets/style-coastal.jpg";
 import scandinavian from "@/assets/style-scandinavian.jpg";
@@ -125,7 +126,7 @@ const TestOrder = () => {
     console.log("[TEST-ORDER] Calling createOrderAndCheckout...");
 
     try {
-      await createOrderAndCheckout(formData, Array.from(files));
+      const orderId = crypto.randomUUID();  // Upload images FIRST console.log("[TEST-ORDER] Uploading files to Supabase..."); await uploadToServer(Array.from(files), orderId); console.log("[TEST-ORDER] Files uploaded successfully");  // Then create the order + Stripe checkout session console.log("[TEST-ORDER] Creating order + checkout session..."); await createOrderAndCheckout({ ...formData, orderId });
       console.log("[TEST-ORDER] ✓ createOrderAndCheckout completed successfully");
     } catch (error) {
       console.error("[TEST-ORDER] ❌ Error in createOrderAndCheckout:", error);
