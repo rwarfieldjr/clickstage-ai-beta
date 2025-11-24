@@ -20,7 +20,7 @@ interface CreditOrderRequest {
   photosCount: number;
   sessionId: string;
   stagingNotes?: string;
-  turnstileToken: string;
+  turnstileToken?: string; // Made optional - Turnstile removed
   propertyAddress?: string;
 }
 
@@ -64,26 +64,31 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { files, stagingStyle, photosCount, sessionId, stagingNotes, turnstileToken, propertyAddress }: CreditOrderRequest = await req.json();
 
-    // Verify Turnstile CAPTCHA token
-    console.log('[process-credit-order] Verifying Turnstile token...');
-    const isTurnstileValid = await verifyTurnstile(turnstileToken);
-    if (!isTurnstileValid) {
-      await sendSupportAlert("Credit Order Blocked – Turnstile Failed", {
-        hostname,
-        path,
-        code: 400,
-        reason: "turnstile_failed",
-      });
-      return new Response(
-        JSON.stringify({
-          error: "Security verification failed. Please try again.",
-          code: "CAPTCHA_VERIFICATION_FAILED"
-        }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
+    // Verify Turnstile CAPTCHA token (optional - skip if not provided)
+    if (turnstileToken) {
+      console.log('[process-credit-order] Verifying Turnstile token...');
+      const isTurnstileValid = await verifyTurnstile(turnstileToken);
+      if (!isTurnstileValid) {
+        await sendSupportAlert("Credit Order Blocked – Turnstile Failed", {
+          hostname,
+          path,
+          code: 400,
+          reason: "turnstile_failed",
+        });
+        return new Response(
+          JSON.stringify({
+            error: "Security verification failed. Please try again.",
+            code: "CAPTCHA_VERIFICATION_FAILED"
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+      console.log('[process-credit-order] Turnstile verification successful');
+    } else {
+      console.log('[process-credit-order] Turnstile verification skipped (not provided)');
     }
 
     console.log(`Processing credit order for user ${user.id}: ${photosCount} photos`);
