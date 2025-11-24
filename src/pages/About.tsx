@@ -97,7 +97,7 @@ const About = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
               <Link to="/pricing">
                 <Button size="lg" className="bg-accent hover:bg-accent/90">
-                  View Pricing Plans
+                  Start My Order
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
