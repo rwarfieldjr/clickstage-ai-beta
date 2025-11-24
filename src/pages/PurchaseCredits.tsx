@@ -15,11 +15,9 @@ interface CreditBundle {
   stripeUrl: string;
 }
 
+// Only show the $10 single photo credit option
 const bundles: CreditBundle[] = [
-  { id: "5-credits", credits: 5, price: 45, stripeUrl: "https://buy.stripe.com/XXXXX5" },
-  { id: "10-credits", credits: 10, price: 85, stripeUrl: "https://buy.stripe.com/XXXXX10" },
-  { id: "20-credits", credits: 20, price: 160, stripeUrl: "https://buy.stripe.com/XXXXX20" },
-  { id: "50-credits", credits: 50, price: 375, stripeUrl: "https://buy.stripe.com/XXXXX50" },
+  { id: "single", credits: 1, price: 10, stripeUrl: "https://buy.stripe.com/7sY9AU3eU0tn4DkcHCdZ601" },
 ];
 
 export default function PurchaseCredits() {
@@ -72,13 +70,12 @@ export default function PurchaseCredits() {
           </div>
 
           {/* Credit Bundle Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {bundles.map((bundle) => (
+          <div className="grid grid-cols-1 gap-6 mb-8 max-w-md mx-auto">{bundles.map((bundle) => (
               <div key={bundle.id} className="flex flex-col">
                 <Card className="hover:shadow-lg transition-shadow flex-1">
                   <CardHeader className="relative">
                     <CreditCard className="absolute top-4 right-4 h-5 w-5 text-primary opacity-50" />
-                    <CardTitle className="text-2xl">{bundle.credits} Photo Credits</CardTitle>
+                    <CardTitle className="text-2xl">1 Photo</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="text-3xl font-bold text-primary">
@@ -89,7 +86,7 @@ export default function PurchaseCredits() {
                       className="w-full"
                       disabled={selectedBundle === bundle.id}
                     >
-                      {selectedBundle === bundle.id ? "Verifying..." : "Purchase"}
+                      {selectedBundle === bundle.id ? "Verifying..." : "Buy Photo Credits"}
                     </Button>
                   </CardContent>
                 </Card>
