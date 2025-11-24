@@ -472,23 +472,31 @@ const Upload = () => {
 
                 {/* File Previews */}
                 {previews.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {previews.map((preview, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={preview}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-xl"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="absolute top-2 right-2 bg-destructive text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-smooth"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-semibold">Uploaded Photos</Label>
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-accent/10 text-accent rounded-full">
+                        <span className="text-sm font-medium">{files.length} photo{files.length !== 1 ? 's' : ''} uploaded</span>
                       </div>
-                    ))}
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {previews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-xl"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="absolute top-2 right-2 bg-destructive text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-smooth"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
