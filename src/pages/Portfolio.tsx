@@ -158,7 +158,7 @@ const Portfolio = () => {
                 </p>
                 <Link to="/place-order">
                   <Button size="lg" className="bg-accent hover:bg-accent/90">
-                    Place Staging Order
+                    Start My Order
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
