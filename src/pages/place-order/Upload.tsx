@@ -150,7 +150,7 @@ export default function PlaceOrderUpload() {
       const response = await fetch(`${supabaseUrl}/functions/v1/upload-images`, {
         method: "POST",
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: formData,
       });

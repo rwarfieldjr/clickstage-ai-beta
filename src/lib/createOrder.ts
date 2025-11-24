@@ -26,7 +26,7 @@ export async function createOrderAndCheckout(formData: any, files: File[]) {
     console.log("[CREATE-ORDER] Payload prepared:", payload);
 
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
     console.log("[CREATE-ORDER] Calling create-checkout-session edge function...");
     const res = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {

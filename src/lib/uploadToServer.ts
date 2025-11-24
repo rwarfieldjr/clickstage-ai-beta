@@ -4,7 +4,7 @@ export async function uploadToServer(files: File[], orderId: string) {
   console.log("[UPLOAD-TO-SERVER] Files to upload:", files.length);
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error("[UPLOAD-TO-SERVER] ❌ Missing Supabase credentials");

@@ -67,7 +67,7 @@ export default function BucketTest() {
       const envInfo = {
         supabaseUrl: import.meta.env.VITE_SUPABASE_URL || "NOT SET",
         projectId: import.meta.env.VITE_SUPABASE_PROJECT_ID || "NOT SET",
-        hasAnonKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY
+        hasAnonKey: !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
       };
 
       setResults({
