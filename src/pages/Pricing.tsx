@@ -77,7 +77,7 @@ const Pricing = () => {
                 Simple, Affordable Virtual Staging Pricing
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-                Fast, photorealistic, and MLS-compliant results delivered in 24 hours. Choose the plan that fits your needs.
+                Fast, photorealistic, and MLS-compliant results delivered in 24 hours.
               </p>
             </div>
 
