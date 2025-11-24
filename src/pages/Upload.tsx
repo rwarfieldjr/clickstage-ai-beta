@@ -122,6 +122,13 @@ const Upload = () => {
     });
   }, []);
 
+  // Auto-sync photo quantity with uploaded files count
+  useEffect(() => {
+    if (files.length > 0) {
+      setPhotoQuantity(files.length);
+    }
+  }, [files.length]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     const validFiles = selectedFiles.filter(
