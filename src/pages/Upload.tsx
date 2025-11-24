@@ -721,11 +721,20 @@ const Upload = () => {
                       })}
                     </div>
                    </RadioGroup>
-                   {selectedBundle && files.length > 0 && photoQuantity && files.length > photoQuantity && (
+                   {selectedBundle && files.length > 0 && photoQuantity && files.length !== photoQuantity && (
                      <div className="p-4 border-2 border-destructive/50 bg-destructive/10 rounded-xl">
                        <p className="text-sm text-destructive font-medium">
-                         ⚠️ You have uploaded {files.length} photo{files.length > 1 ? 's' : ''} but selected {photoQuantity} photo{photoQuantity > 1 ? 's' : ''}. 
-                         Please remove {files.length - photoQuantity} photo{files.length - photoQuantity > 1 ? 's' : ''} or increase the quantity.
+                         {files.length > photoQuantity ? (
+                           <>
+                             ⚠️ You have uploaded {files.length} photo{files.length > 1 ? 's' : ''} but selected {photoQuantity} photo{photoQuantity > 1 ? 's' : ''}. 
+                             Please remove {files.length - photoQuantity} photo{files.length - photoQuantity > 1 ? 's' : ''} or increase the quantity.
+                           </>
+                         ) : (
+                           <>
+                             ⚠️ You have selected {photoQuantity} photo{photoQuantity > 1 ? 's' : ''} but only uploaded {files.length} photo{files.length > 1 ? 's' : ''}. 
+                             Please upload {photoQuantity - files.length} more photo{photoQuantity - files.length > 1 ? 's' : ''} or decrease the quantity.
+                           </>
+                         )}
                        </p>
                      </div>
                    )}
@@ -801,6 +810,16 @@ const Upload = () => {
                     try {
                       if (files.length === 0) {
                         setError("Please upload at least one photo before continuing.");
+                        return;
+                      }
+                      
+                      if (files.length !== photoQuantity) {
+                        if (files.length > photoQuantity) {
+                          setError(`You have uploaded ${files.length} photo${files.length > 1 ? 's' : ''} but selected ${photoQuantity} photo${photoQuantity > 1 ? 's' : ''}. Please remove ${files.length - photoQuantity} photo${files.length - photoQuantity > 1 ? 's' : ''} or increase the quantity.`);
+                        } else {
+                          setError(`You have selected ${photoQuantity} photo${photoQuantity > 1 ? 's' : ''} but only uploaded ${files.length} photo${files.length > 1 ? 's' : ''}. Please upload ${photoQuantity - files.length} more photo${photoQuantity - files.length > 1 ? 's' : ''} or decrease the quantity.`);
+                        }
+                        toast.error("Photo count mismatch. Please adjust your uploads or quantity.");
                         return;
                       }
                       
