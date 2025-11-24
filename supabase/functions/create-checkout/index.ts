@@ -49,8 +49,8 @@ const CreateCheckoutSchema = z.object({
   photosCount: z.number().int().positive().max(1000),
   sessionId: z.string().uuid().optional(),
   turnstileToken: z.string().min(1).optional(), // Made optional - Turnstile removed
-  twilightPhoto: z.boolean().optional(),
-  declutterRoom: z.boolean().optional(),
+  twilightPhotoCount: z.number().int().min(0).max(1000).optional(),
+  declutterRoomCount: z.number().int().min(0).max(1000).optional(),
   rushOrder: z.boolean().optional(),
 });
 
@@ -163,7 +163,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { priceId, contactInfo, files, stagingStyle, photosCount, sessionId, turnstileToken, twilightPhoto, declutterRoom, rushOrder } = validation.data;
+    const { priceId, contactInfo, files, stagingStyle, photosCount, sessionId, turnstileToken, twilightPhotoCount, declutterRoomCount, rushOrder } = validation.data;
 
     // Verify Turnstile CAPTCHA token (optional - skip if not provided)
     if (turnstileToken) {
@@ -290,18 +290,19 @@ const handler = async (req: Request): Promise<Response> => {
       logger.info("Checkout data stored in database", { sessionId, fileCount: files?.length || 0 });
     }
 
-    // Calculate total amount: $10 per photo + $5 per add-on per photo
+    // Calculate total amount: $10 per photo + add-ons
     const baseAmount = photosCount * 1000; // $10 per photo in cents
-    let addOnsCount = 0;
-    if (twilightPhoto) addOnsCount++;
-    if (declutterRoom) addOnsCount++;
-    if (rushOrder) addOnsCount++;
-    const addOnAmount = addOnsCount * photosCount * 500; // $5 per add-on per photo in cents
+    const twilightCost = (twilightPhotoCount || 0) * 500; // $5 per twilight photo in cents
+    const declutterCost = (declutterRoomCount || 0) * 500; // $5 per declutter room in cents
+    const rushCost = rushOrder ? photosCount * 500 : 0; // $5 per photo if rush order in cents
+    const addOnAmount = twilightCost + declutterCost + rushCost;
     const totalAmount = baseAmount + addOnAmount;
     
     logger.info("Creating Stripe checkout session", { 
       photosCount, 
-      addOnsCount,
+      twilightPhotoCount: twilightPhotoCount || 0,
+      declutterRoomCount: declutterRoomCount || 0,
+      rushOrder: rushOrder || false,
       baseAmount: baseAmount / 100,
       addOnAmount: addOnAmount / 100,
       totalAmount: totalAmount / 100,
@@ -324,7 +325,7 @@ const handler = async (req: Request): Promise<Response> => {
     ];
 
     // Add optional add-ons as separate line items
-    if (twilightPhoto) {
+    if (twilightPhotoCount && twilightPhotoCount > 0) {
       lineItems.push({
         price_data: {
           currency: 'usd',
@@ -334,21 +335,21 @@ const handler = async (req: Request): Promise<Response> => {
           },
           unit_amount: 500, // $5 per photo in cents
         },
-        quantity: photosCount,
+        quantity: twilightPhotoCount,
       });
     }
 
-    if (declutterRoom) {
+    if (declutterRoomCount && declutterRoomCount > 0) {
       lineItems.push({
         price_data: {
           currency: 'usd',
           product_data: {
             name: 'Declutter Room',
-            description: 'Add-on: $5 per photo',
+            description: 'Add-on: $5 per room',
           },
-          unit_amount: 500, // $5 per photo in cents
+          unit_amount: 500, // $5 per room in cents
         },
-        quantity: photosCount,
+        quantity: declutterRoomCount,
       });
     }
 
