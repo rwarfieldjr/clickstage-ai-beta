@@ -854,7 +854,7 @@ const Upload = () => {
                                   </span>
                                 </>
                               )}
-                              <span className="text-xs text-muted-foreground mt-2">{bundle.expiration}</span>
+                              <span className="text-xs text-muted-foreground mt-2"></span>
                             </label>
                           </div>
                         );
