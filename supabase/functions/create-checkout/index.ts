@@ -34,21 +34,9 @@ function okJSON(data: unknown) {
   });
 }
 
-// Parse credits safely from Stripe price metadata
-function parseCreditsFromPrice(price: Stripe.Price): number {
-  const fromPrice = Number((price.metadata?.bundle_size as string) ?? "");
-  if (!Number.isNaN(fromPrice) && fromPrice > 0) return fromPrice;
-
-  const product = price.product as Stripe.Product;
-  const fromProduct = Number((product?.metadata?.bundle_size as string) ?? "");
-  if (!Number.isNaN(fromProduct) && fromProduct > 0) return fromProduct;
-
-  return 1; // safe default
-}
-
 // Input validation schema
 const CreateCheckoutSchema = z.object({
-  priceId: z.string().startsWith('price_').max(100),
+  priceId: z.string().startsWith('price_').max(100).optional(), // Made optional for dynamic pricing
   contactInfo: z.object({
     email: z.string().email().max(255),
     firstName: z.string().max(100),
@@ -237,42 +225,6 @@ const handler = async (req: Request): Promise<Response> => {
     });
     logger.info("Stripe initialized");
 
-    // Validate Stripe price before creating session
-    let price: Stripe.Price;
-    try {
-      price = await stripe.prices.retrieve(priceId, { expand: ['product'] });
-      logger.info("Price retrieved", { priceId, active: price.active });
-    } catch (err: any) {
-      logger.error("Invalid price ID", { priceId, error: err.message });
-      await sendSupportAlert("Checkout Error – Invalid Price ID", {
-        hostname,
-        path,
-        priceId,
-        error: err.message,
-      });
-      return okJSON({ 
-        success: false,
-        error: "Invalid or unknown pricing option. Please try again or contact support." 
-      });
-    }
-
-    if (!price?.active) {
-      logger.error("Inactive price", { priceId });
-      await sendSupportAlert("Checkout Error – Inactive Price", {
-        hostname,
-        path,
-        priceId,
-      });
-      return okJSON({ 
-        success: false,
-        error: "This pricing option is currently unavailable. Please contact support." 
-      });
-    }
-
-    // Parse credits from price metadata
-    const credits = parseCreditsFromPrice(price);
-    logger.info("Credits parsed from price", { credits, priceId });
-
     // Check if a Stripe customer record exists
     const customers = await stripe.customers.list({ email: customerEmail, limit: 1 });
     let customerId;
@@ -306,10 +258,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (photosCount) {
       metadata.photos_count = photosCount.toString();
-    }
-
-    if (credits) {
-      metadata.credits = credits.toString();
+      metadata.credits = photosCount.toString(); // Credits equal to photos count
     }
 
     if (sessionId) {
@@ -334,14 +283,30 @@ const handler = async (req: Request): Promise<Response> => {
       logger.info("Checkout data stored in database", { sessionId, fileCount: files?.length || 0 });
     }
 
-    // Create a one-time payment session
+    // Calculate total amount: $10 per photo
+    const totalAmount = photosCount * 1000; // Amount in cents ($10 = 1000 cents)
+    
+    logger.info("Creating Stripe checkout session", { 
+      photosCount, 
+      totalAmount: totalAmount / 100,
+      currency: 'usd'
+    });
+
+    // Create a one-time payment session with dynamic pricing
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : customerEmail,
       line_items: [
         {
-          price: priceId,
-          quantity: 1,
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `${photosCount} Photo Credit${photosCount > 1 ? 's' : ''}`,
+              description: 'Virtual Staging Photo Credits - $10 per photo',
+            },
+            unit_amount: 1000, // $10 per photo in cents
+          },
+          quantity: photosCount,
         },
       ],
       mode: "payment",
@@ -357,7 +322,7 @@ const handler = async (req: Request): Promise<Response> => {
       await sendSupportAlert("Checkout Error – Session Missing URL", {
         hostname,
         path,
-        priceId,
+        photosCount,
         sessionData: JSON.stringify(session, null, 2),
       });
       return okJSON({
@@ -366,7 +331,11 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    logger.info("Checkout session created successfully", { sessionId: session.id });
+    logger.info("Checkout session created successfully", { 
+      sessionId: session.id,
+      amount: totalAmount / 100,
+      photosCount 
+    });
 
     return okJSON({ 
       success: true,
