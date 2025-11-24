@@ -53,8 +53,6 @@ const Upload = () => {
   const { credits, creditSummary, loading: creditsLoading, refetchCredits } = useCredits(user);
   const { theme } = useTheme();
   const [userCreditsBalance, setUserCreditsBalance] = useState<number>(0);
-  const [turnstileToken, setTurnstileToken] = useState<string>("");
-  const turnstileRef = useRef<HTMLDivElement>(null);
   const [propertyAddress, setPropertyAddress] = useState<string>("");
   const [photoQuantity, setPhotoQuantity] = useState<number>(1);
   const [twilightPhoto, setTwilightPhoto] = useState(false);
@@ -136,169 +134,6 @@ const Upload = () => {
       }
     });
   }, []);
-
-  // ✅ Added Turnstile expiration + toast — stable patch (2025-11-04)
-  // Manual expiration timer (4.5 min preemptive warning before Cloudflare's 5-min expiration)
-  useEffect(() => {
-    if (!turnstileToken) return;
-
-    console.log("[TURNSTILE] Starting 4.5-minute expiration timer");
-    const expirationTimer = setTimeout(() => {
-      console.warn('[TURNSTILE] ⚠ Token expired (4.5-min timer), clearing...');
-      setTurnstileToken('');
-      toast.error("Verification expired — please click the box again.", {
-        duration: 5000,
-        style: {
-          background: '#B71C1C',
-          color: '#FFFFFF',
-          border: '1px solid #FFCDD2',
-        },
-      });
-    }, 270000); // 4.5 minutes
-
-    return () => {
-      clearTimeout(expirationTimer);
-      console.log("[TURNSTILE] Expiration timer cleared");
-    };
-  }, [turnstileToken]);
-
-  /**
-   * ⚠️ PRODUCTION STABLE - DO NOT MODIFY WITHOUT REVIEW
-   * @version 1.0.0-stable
-   * @last-updated 2025-11-10
-   * 
-   * Turnstile widget initialization with full lifecycle management:
-   * - Manual checkbox with appearance: 'always' (NEVER auto-verifies)
-   * - Only renders after bundle selection
-   * - Auto-refresh on token expiration (5-minute lifetime)
-   * - Error handling with automatic retry
-   * - Timeout detection
-   * - Theme-aware rendering
-   * - Proper cleanup on unmount
-   * 
-   * DO NOT REMOVE: expired-callback, error-callback, timeout-callback
-   */
-  // Initialize Turnstile widget with stability checks (only after bundle selection)
-  useEffect(() => {
-    // Only render Turnstile after a bundle has been selected
-    if (!selectedBundle) {
-      console.log("[STABILITY-CHECK] Waiting for bundle selection before rendering Turnstile");
-      return;
-    }
-
-    console.log("[STABILITY-CHECK] Bundle selected, initializing Turnstile widget");
-    
-    // Prevent multiple widget renders
-    let widgetId: string | null = null;
-    
-    // Set up global callback for Turnstile
-    (window as any).onTurnstileSuccess = (token: string) => {
-      setTurnstileToken(token);
-      console.log('[STABILITY-CHECK] ✓ Turnstile verification successful');
-    };
-
-    // Render Turnstile widget once the script is loaded
-    const initTurnstile = () => {
-      if ((window as any).turnstile && turnstileRef.current) {
-        // Check if widget already exists
-        const existingWidget = turnstileRef.current.querySelector('.cf-turnstile');
-        if (existingWidget && existingWidget.hasChildNodes()) {
-          console.log('[STABILITY-CHECK] ⚠ Turnstile widget already rendered, skipping');
-          return;
-        }
-
-        // Clear any existing content
-        turnstileRef.current.innerHTML = '';
-        
-        // Render new widget with manual verification (appearance: 'always')
-        widgetId = (window as any).turnstile.render(turnstileRef.current, {
-          sitekey: ENV.turnstile.siteKey,
-          theme: theme === 'dark' ? 'dark' : 'light',
-          appearance: 'always', // 👈 Force manual checkbox every time (NEVER auto-verify)
-          callback: (token: string) => {
-            setTurnstileToken(token);
-            console.log('[STABILITY-CHECK] ✓ Turnstile token received', { tokenLength: token.length });
-          },
-          'error-callback': (error: string) => {
-            console.error('[STABILITY-CHECK] ✗ Turnstile error:', error);
-            setTurnstileToken(''); // Clear expired/invalid token
-            toast.error("Security verification failed. Please try again or refresh the page.", {
-              duration: 5000,
-            });
-            // Auto-refresh the widget on error
-            if (widgetId && (window as any).turnstile) {
-              (window as any).turnstile.reset(widgetId);
-            }
-          },
-          'expired-callback': () => {
-            console.warn('[STABILITY-CHECK] ⚠ Turnstile token expired (Cloudflare callback)');
-            setTurnstileToken(''); // Clear expired token
-            toast.error("Verification expired — please click the box again.", {
-              duration: 5000,
-              style: {
-                background: '#B71C1C',
-                color: '#FFFFFF',
-                border: '1px solid #FFCDD2',
-              },
-            });
-            // Auto-refresh the widget on expiration
-            if (widgetId && (window as any).turnstile) {
-              (window as any).turnstile.reset(widgetId);
-            }
-          },
-          'timeout-callback': () => {
-            console.error('[STABILITY-CHECK] ✗ Turnstile timeout');
-            setTurnstileToken('');
-            toast.error("Verification timed out. Please refresh the page and try again.", {
-              duration: 5000,
-            });
-            // Auto-refresh the widget on timeout
-            if (widgetId && (window as any).turnstile) {
-              (window as any).turnstile.reset(widgetId);
-            }
-          },
-        });
-        
-        console.log('[STABILITY-CHECK] ✓ Turnstile widget rendered with manual verification (appearance: always)', { widgetId });
-      }
-    };
-
-    // Wait for Turnstile script to load
-    if ((window as any).turnstile) {
-      initTurnstile();
-    } else {
-      console.log('[STABILITY-CHECK] Waiting for Turnstile script to load...');
-      const checkTurnstile = setInterval(() => {
-        if ((window as any).turnstile) {
-          console.log('[STABILITY-CHECK] ✓ Turnstile script loaded');
-          clearInterval(checkTurnstile);
-          initTurnstile();
-        }
-      }, 100);
-
-      // Timeout after 10 seconds
-      setTimeout(() => {
-        if (!(window as any).turnstile) {
-          console.error('[STABILITY-CHECK] ✗ Turnstile script failed to load within 10s');
-          clearInterval(checkTurnstile);
-        }
-      }, 10000);
-
-      return () => clearInterval(checkTurnstile);
-    }
-
-    // Cleanup function
-    return () => {
-      if (widgetId && (window as any).turnstile) {
-        try {
-          (window as any).turnstile.remove(widgetId);
-          console.log('[STABILITY-CHECK] Turnstile widget cleaned up');
-        } catch (e) {
-          // Widget may already be removed
-        }
-      }
-    };
-  }, [theme, selectedBundle]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -392,41 +227,6 @@ const Upload = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Stability check: Verify Turnstile token exists
-    console.log("[STABILITY-CHECK] Checkout initiated");
-    console.log("[STABILITY-CHECK] Turnstile token present:", !!turnstileToken);
-    
-    if (!turnstileToken) {
-      console.error("[STABILITY-CHECK] ✗ Missing Turnstile token");
-      toast.error("Security verification required. Please wait for the verification to complete or refresh the page.");
-      
-      // Try to reset the widget if it exists
-      if ((window as any).turnstile && turnstileRef.current) {
-        const widget = turnstileRef.current.querySelector('.cf-turnstile');
-        if (widget) {
-          console.log("[STABILITY-CHECK] Attempting to reset Turnstile widget");
-          (window as any).turnstile.reset();
-        }
-      }
-      return;
-    }
-    
-    // Store the current token and clear it immediately to prevent reuse
-    const currentToken = turnstileToken;
-    setTurnstileToken('');
-    
-    // Reset the widget for next use
-    if ((window as any).turnstile && turnstileRef.current) {
-      try {
-        (window as any).turnstile.reset();
-        console.log("[STABILITY-CHECK] Turnstile widget reset for next use");
-      } catch (e) {
-        console.warn("[STABILITY-CHECK] Could not reset Turnstile widget:", e);
-      }
-    }
-    
-    console.log("[STABILITY-CHECK] ✓ All pre-flight checks passed");
-
     // Log checkout event
     logEvent("checkout_clicked", { 
       time: Date.now(),
@@ -496,20 +296,10 @@ const Upload = () => {
         navigate,
         refetchCredits,
         setLoading,
-        turnstileToken: currentToken, // Use the stored token
         propertyAddress,
         photoQuantity, // Pass the quantity
       });
     } catch (error) {
-      // If checkout fails, generate a new token
-      console.error("[STABILITY-CHECK] Checkout failed, resetting Turnstile");
-      if ((window as any).turnstile && turnstileRef.current) {
-        try {
-          (window as any).turnstile.reset();
-        } catch (e) {
-          console.warn("[STABILITY-CHECK] Could not reset Turnstile after error:", e);
-        }
-      }
       throw error; // Re-throw to let handleCheckout's error handling work
     }
   };
@@ -973,14 +763,6 @@ const Upload = () => {
                   </div>
                 </div>
 
-                {/* CAPTCHA Verification - Only shows after bundle selection */}
-                {selectedBundle && (
-                  <div className="mb-4">
-                    <Label className="text-base font-semibold mb-3 block">Security Verification <span className="text-destructive">*</span></Label>
-                    <div ref={turnstileRef} className="flex justify-center mb-2"></div>
-                  </div>
-                )}
-
                 {/* Status feedback */}
                 <div className="min-h-[24px] mb-2">
                   {loading && (
@@ -1002,33 +784,12 @@ const Upload = () => {
                     setError("");
                     
                     try {
-                      // Validate Turnstile token
-                      if (!turnstileToken) {
-                        setError("Please check the security verification box before continuing.");
-                        setLoading(false);
-                        return;
-                      }
-
                       if (files.length === 0) {
                         setError("Please upload at least one photo before continuing.");
                         return;
                       }
                       
                       const photoCount = files.length;
-                      
-                      // Store the current token and clear it to prevent reuse
-                      const currentToken = turnstileToken;
-                      setTurnstileToken('');
-                      
-                      // Reset the widget for next use
-                      if ((window as any).turnstile && turnstileRef.current) {
-                        try {
-                          (window as any).turnstile.reset();
-                          console.log("[STABILITY-CHECK] Turnstile widget reset for next use");
-                        } catch (e) {
-                          console.warn("[STABILITY-CHECK] Could not reset Turnstile widget:", e);
-                        }
-                      }
                       
                       // Check if user wants to use credits
                       if (user?.email) {
@@ -1059,7 +820,6 @@ const Upload = () => {
                         navigate,
                         refetchCredits,
                         setLoading,
-                        turnstileToken: currentToken, // Use the stored token
                         propertyAddress,
                         photoQuantity, // Pass the quantity
                       });
@@ -1071,24 +831,14 @@ const Upload = () => {
                         : err.message || "Something went wrong during checkout. Please try again.";
                       setError(errorMessage);
                       toast.error(errorMessage);
-                      
-                      // Reset Turnstile widget after error
-                      console.error("[STABILITY-CHECK] Checkout failed, resetting Turnstile");
-                      if ((window as any).turnstile && turnstileRef.current) {
-                        try {
-                          (window as any).turnstile.reset();
-                        } catch (e) {
-                          console.warn("[STABILITY-CHECK] Could not reset Turnstile after error:", e);
-                        }
-                      }
                     } finally {
                       setLoading(false);
                     }
                   }}
-                  disabled={loading || !turnstileToken}
+                  disabled={loading}
                   className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? "Processing..." : !turnstileToken ? "Complete Security Verification" : "Proceed to Checkout"}
+                  {loading ? "Processing..." : "Proceed to Checkout"}
                 </button>
               </form>
             </CardContent>
