@@ -64,6 +64,7 @@ interface CheckoutParams {
   setLoading: (loading: boolean) => void;
   turnstileToken: string;
   propertyAddress: string;
+  photoQuantity: number;
 }
 
 export async function handleCheckout(params: CheckoutParams): Promise<void> {
@@ -84,6 +85,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     setLoading,
     turnstileToken,
     propertyAddress,
+    photoQuantity,
   } = params;
 
   // Check SMS consent first
@@ -107,10 +109,9 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     return;
   }
 
-  // Check if uploaded photos exceed selected bundle limit
-  const bundle = bundles.find(b => b.id === selectedBundle);
-  if (bundle && files.length > bundle.photos) {
-    toast.error(`You have uploaded ${files.length} photos but selected the ${bundle.name} package. Please remove ${files.length - bundle.photos} photo${files.length - bundle.photos > 1 ? 's' : ''} or select a larger package.`);
+  // Check if uploaded photos exceed selected quantity
+  if (files.length > photoQuantity) {
+    toast.error(`You have uploaded ${files.length} photos but selected ${photoQuantity} photo${photoQuantity > 1 ? 's' : ''}. Please remove ${files.length - photoQuantity} photo${files.length - photoQuantity > 1 ? 's' : ''} or increase the quantity.`);
     return;
   }
 
@@ -239,8 +240,8 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     // Handle credit payment
     if (paymentMethod === "credits" && user) {
       // Check if user has enough credits
-      if (credits < files.length) {
-        toast.error(`Insufficient credits. You need ${files.length} credits but only have ${credits}.`);
+      if (credits < photoQuantity) {
+        toast.error(`Insufficient credits. You need ${photoQuantity} credits but only have ${credits}.`);
         setLoading(false);
         return;
       }
@@ -268,19 +269,13 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
       const uploadedFiles = await Promise.all(uploadPromises);
       toast.dismiss();
 
-      // Find the selected bundle to get the correct credit amount
-      const bundle = bundles.find(b => b.id === selectedBundle);
-      if (!bundle) {
-        throw new Error("Selected bundle not found");
-      }
-
-      // Process order with credits - deduct the bundle's photo count as credits
+      // Process order with credits - use photoQuantity for credit deduction
       console.log("[STABILITY-CHECK] Processing credit order with Turnstile token");
       const { data, error } = await retryEdgeFunction('process-credit-order', {
         body: {
           files: uploadedFiles,
           stagingStyle: stagingStyle,
-          photosCount: bundle.photos,
+          photosCount: photoQuantity,
           sessionId: sessionId,
           stagingNotes: stagingNotes,
           turnstileToken: turnstileToken,
@@ -375,6 +370,9 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
       };
     }
 
+    // Calculate total amount for Stripe checkout
+    const totalAmount = photoQuantity * 10; // $10 per photo
+    
     // Create checkout session with all metadata
     console.log("[STABILITY-CHECK] Creating Stripe checkout with Turnstile token");
     toast.loading("Creating checkout session...");
@@ -386,7 +384,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
           contactInfo: contactInfo,
           files: uploadedFiles,
           stagingStyle: stagingStyle,
-          photosCount: bundle.photos, // Use bundle.photos for correct credit amount
+          photosCount: photoQuantity, // Use photoQuantity for correct credit amount
           sessionId: sessionId,
           turnstileToken: turnstileToken,
         },
