@@ -55,7 +55,8 @@ const Pricing = () => {
     navigate("/place-order");
   };
 
-  const pricingTiers = PRICING_TIERS;
+  // Only show the $10 single photo option
+  const pricingTiers = PRICING_TIERS.filter(tier => tier.id === "single");
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -82,56 +83,37 @@ const Pricing = () => {
 
             {/* Pricing Tiers */}
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-6 max-w-md mx-auto">
               {pricingTiers.map((tier) => (
                 <Card
                   key={tier.name}
-                  className={`shadow-custom-lg border-2 transition-smooth hover:scale-105 h-full flex flex-col ${
-                    tier.popular ? "border-accent" : "border-border"
-                  }`}
+                  className="shadow-custom-lg border-2 border-border transition-smooth hover:scale-105 h-full flex flex-col"
                 >
-                  {tier.popular && (
-                    <div className="bg-accent text-white text-center py-2 rounded-t-xl font-medium">
-                      Most Popular
-                    </div>
-                  )}
                   <CardHeader>
-                    <CardTitle className="text-2xl">{tier.name}</CardTitle>
+                    <CardTitle className="text-2xl">1 Photo</CardTitle>
                     <CardDescription className="text-3xl font-bold text-primary mt-2">
                       {tier.price}
                     </CardDescription>
                     <div className="min-h-[5.5rem]">
-                      <p className="text-sm text-muted-foreground">{tier.perPhoto}</p>
+                      <p className="text-sm text-muted-foreground">$10 per photo</p>
                       {tier.competitive && (
                         <p className="text-sm font-medium text-green-600 dark:text-green-400">
                           {tier.competitive}
-                        </p>
-                      )}
-                      {tier.savings && (
-                        <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                          {tier.savings}
                         </p>
                       )}
                     </div>
                   </CardHeader>
                   <CardContent className="flex-grow flex flex-col">
                     <p className="text-sm text-muted-foreground mt-auto mb-4">{tier.description}</p>
-                    {tier.credits <= 10 && (
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Credits expire 6 months after purchase.
-                      </p>
-                    )}
-                    {tier.credits >= 20 && (
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Credits expire 12 months after purchase.
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Credits expire 6 months after purchase.
+                    </p>
                     <Button
                       className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
                       onClick={() => handleSelectPlan(tier.name, tier.priceId, tier.credits)}
                     >
-                      Buy {tier.name}
+                      Buy Photo Credits
                     </Button>
                   </CardContent>
                 </Card>
