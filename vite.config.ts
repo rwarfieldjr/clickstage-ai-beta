@@ -10,6 +10,10 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     historyApiFallback: true,
   },
+  define: {
+    // Alias VITE_SUPABASE_ANON_KEY to VITE_SUPABASE_PUBLISHABLE_KEY for compatibility
+    'import.meta.env.VITE_SUPABASE_ANON_KEY': 'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY',
+  },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
