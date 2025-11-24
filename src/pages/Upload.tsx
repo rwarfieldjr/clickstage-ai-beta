@@ -56,6 +56,7 @@ const Upload = () => {
   const [turnstileToken, setTurnstileToken] = useState<string>("");
   const turnstileRef = useRef<HTMLDivElement>(null);
   const [propertyAddress, setPropertyAddress] = useState<string>("");
+  const [photoQuantity, setPhotoQuantity] = useState<number>(1);
 
   const styles = [
     { id: "modern-farmhouse", name: "Modern Farmhouse", image: modernFarmhouse, description: "Blend rustic charm with modern comfort" },
@@ -458,18 +459,17 @@ const Upload = () => {
       return;
     }
 
-    // Check if uploaded photos exceed selected bundle limit
-    const bundle = bundles.find(b => b.id === selectedBundle);
-    if (bundle && files.length > bundle.photos) {
-      alert(`You have uploaded ${files.length} photos but selected the ${bundle.name} package. Please remove ${files.length - bundle.photos} photo${files.length - bundle.photos > 1 ? 's' : ''} or select a larger package.`);
+    // Check if uploaded photos exceed selected quantity
+    if (files.length > photoQuantity) {
+      alert(`You have uploaded ${files.length} photos but selected ${photoQuantity} photo${photoQuantity > 1 ? 's' : ''}. Please remove ${files.length - photoQuantity} photo${files.length - photoQuantity > 1 ? 's' : ''} or increase the quantity.`);
       return;
     }
 
     // Check credits before processing if using credit payment
     if (paymentMethod === "credits" && user?.email) {
-      const canProceed = await hasEnoughCredits(user.email, files.length);
+      const canProceed = await hasEnoughCredits(user.email, photoQuantity);
       if (!canProceed) {
-        alert("You do not have enough credits. Please purchase more photo packs.");
+        alert("You do not have enough credits. Please purchase more photo credits.");
         return;
       }
 
@@ -495,6 +495,7 @@ const Upload = () => {
         setLoading,
         turnstileToken: currentToken, // Use the stored token
         propertyAddress,
+        photoQuantity, // Pass the quantity
       });
     } catch (error) {
       // If checkout fails, generate a new token
@@ -749,9 +750,11 @@ const Upload = () => {
                     {user && credits > 0 ? "Step 4:" : "Step 3:"} Select Bundle <span className="text-destructive">*</span>
                   </Label>
                   <RadioGroup value={selectedBundle} onValueChange={setSelectedBundle}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-4 max-w-xl">
                       {bundles.map((bundle) => {
-                        const canAffordWithCredits = paymentMethod === "credits" && credits >= bundle.photos;
+                        const totalCost = 10 * photoQuantity;
+                        const totalCredits = photoQuantity;
+                        const canAffordWithCredits = paymentMethod === "credits" && credits >= totalCredits;
                         const isDisabled = paymentMethod === "credits" && !canAffordWithCredits;
                         
                         return (
@@ -764,7 +767,7 @@ const Upload = () => {
                             />
                             <label
                               htmlFor={bundle.id}
-                              className={`flex flex-col p-4 border-2 rounded-xl transition-smooth ${
+                              className={`flex flex-col p-6 border-2 rounded-xl transition-smooth ${
                                 isDisabled 
                                   ? 'opacity-50 cursor-not-allowed' 
                                   : 'cursor-pointer hover:border-accent'
@@ -774,29 +777,81 @@ const Upload = () => {
                                   : 'border-border'
                               }`}
                             >
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="font-semibold text-lg">{bundle.name}</span>
-                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-smooth ${
+                              <div className="flex items-center justify-between mb-4">
+                                <span className="font-semibold text-xl">Single Photo</span>
+                                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-smooth ${
                                   selectedBundle === bundle.id
                                     ? 'border-accent bg-accent'
                                     : 'border-border'
                                 }`}>
                                   {selectedBundle === bundle.id && (
-                                    <div className="w-2 h-2 rounded-full bg-white" />
+                                    <div className="w-3 h-3 rounded-full bg-white" />
                                   )}
                                 </div>
                               </div>
+                              
+                              {/* Quantity Selector */}
+                              <div className="mb-4 space-y-2">
+                                <Label className="text-sm font-medium">Number of Photos</Label>
+                                <div className="flex items-center gap-3">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-10 w-10"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setPhotoQuantity(Math.max(1, photoQuantity - 1));
+                                    }}
+                                    disabled={photoQuantity <= 1}
+                                  >
+                                    -
+                                  </Button>
+                                  <Input
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    value={photoQuantity}
+                                    onChange={(e) => {
+                                      const val = parseInt(e.target.value);
+                                      if (!isNaN(val) && val >= 1 && val <= 100) {
+                                        setPhotoQuantity(val);
+                                      }
+                                    }}
+                                    className="text-center h-10 w-20"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-10 w-10"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setPhotoQuantity(Math.min(100, photoQuantity + 1));
+                                    }}
+                                    disabled={photoQuantity >= 100}
+                                  >
+                                    +
+                                  </Button>
+                                  <span className="text-sm text-muted-foreground ml-2">
+                                    photos × $10 each
+                                  </span>
+                                </div>
+                              </div>
+
                               {paymentMethod === "credits" ? (
                                 <>
-                                  <span className="text-2xl font-bold text-accent mb-1">{bundle.photos} Credits</span>
+                                  <span className="text-3xl font-bold text-accent mb-1">{totalCredits} Credits</span>
                                   {!canAffordWithCredits && (
-                                    <span className="text-xs text-destructive">Insufficient credits</span>
+                                    <span className="text-xs text-destructive">Insufficient credits (You have {credits})</span>
                                   )}
                                 </>
                               ) : (
                                 <>
-                                  <span className="text-2xl font-bold text-accent mb-1">{bundle.price}</span>
-                                  <span className="text-sm text-muted-foreground block mb-2">{bundle.description}</span>
+                                  <span className="text-3xl font-bold text-accent mb-1">${totalCost}</span>
+                                  <span className="text-sm text-muted-foreground block mb-2">
+                                    ${totalCost} for {photoQuantity} photo{photoQuantity > 1 ? 's' : ''}
+                                  </span>
                                 </>
                               )}
                               <span className="text-xs text-muted-foreground mt-2">{bundle.expiration}</span>
@@ -806,20 +861,14 @@ const Upload = () => {
                       })}
                     </div>
                    </RadioGroup>
-                   {selectedBundle && files.length > 0 && (() => {
-                     const bundle = bundles.find(b => b.id === selectedBundle);
-                     if (bundle && files.length > bundle.photos) {
-                       return (
-                         <div className="p-4 border-2 border-destructive/50 bg-destructive/10 rounded-xl">
-                           <p className="text-sm text-destructive font-medium">
-                             ⚠️ You have uploaded {files.length} photo{files.length > 1 ? 's' : ''} but selected the {bundle.name} package which allows only {bundle.photos} photo{bundle.photos > 1 ? 's' : ''}. 
-                             Please remove {files.length - bundle.photos} photo{files.length - bundle.photos > 1 ? 's' : ''} or select a larger package.
-                           </p>
-                         </div>
-                       );
-                     }
-                     return null;
-                   })()}
+                   {selectedBundle && files.length > 0 && photoQuantity && files.length > photoQuantity && (
+                     <div className="p-4 border-2 border-destructive/50 bg-destructive/10 rounded-xl">
+                       <p className="text-sm text-destructive font-medium">
+                         ⚠️ You have uploaded {files.length} photo{files.length > 1 ? 's' : ''} but selected {photoQuantity} photo{photoQuantity > 1 ? 's' : ''}. 
+                         Please remove {files.length - photoQuantity} photo{files.length - photoQuantity > 1 ? 's' : ''} or increase the quantity.
+                       </p>
+                     </div>
+                   )}
                 </div>
 
                 {/* Notes for Staging Team */}
@@ -957,6 +1006,7 @@ const Upload = () => {
                         setLoading,
                         turnstileToken: currentToken, // Use the stored token
                         propertyAddress,
+                        photoQuantity, // Pass the quantity
                       });
                       
                     } catch (err: any) {
