@@ -39,7 +39,7 @@ export const PRICING_TIERS: readonly PricingTier[] = [
     perPhoto: "$10 per photo credit",
     perPhotoAmount: 10,
     competitive: "Save 70% vs. our competition ($30 to $40 per photo)",
-    description: "Perfect for testing our service",
+    description: "",
     expiration: "",
     checkoutUrl: "https://buy.stripe.com/7sY9AU3eU0tn4DkcHCdZ601",
   },
