@@ -62,7 +62,7 @@ interface CheckoutParams {
   navigate: NavigateFunction;
   refetchCredits: () => Promise<void>;
   setLoading: (loading: boolean) => void;
-  turnstileToken: string;
+  turnstileToken?: string; // Optional for backward compatibility
   propertyAddress: string;
   photoQuantity: number;
 }
@@ -270,7 +270,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
       toast.dismiss();
 
       // Process order with credits - use photoQuantity for credit deduction
-      console.log("[STABILITY-CHECK] Processing credit order with Turnstile token");
+      console.log("[STABILITY-CHECK] Processing credit order");
       const { data, error } = await retryEdgeFunction('process-credit-order', {
         body: {
           files: uploadedFiles,
@@ -278,7 +278,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
           photosCount: photoQuantity,
           sessionId: sessionId,
           stagingNotes: stagingNotes,
-          turnstileToken: turnstileToken,
+          ...(turnstileToken && { turnstileToken }), // Only include if provided
           propertyAddress: propertyAddress,
         },
       });
@@ -374,7 +374,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     const totalAmount = photoQuantity * 10; // $10 per photo
     
     // Create checkout session with all metadata
-    console.log("[STABILITY-CHECK] Creating Stripe checkout with Turnstile token");
+    console.log("[STABILITY-CHECK] Creating Stripe checkout");
     toast.loading("Creating checkout session...");
     
     try {
@@ -386,7 +386,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
           stagingStyle: stagingStyle,
           photosCount: photoQuantity, // Use photoQuantity for correct credit amount
           sessionId: sessionId,
-          turnstileToken: turnstileToken,
+          ...(turnstileToken && { turnstileToken }), // Only include if provided
         },
       });
 
@@ -421,7 +421,7 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
       const { data: fallbackData, error: fallbackError } = await retryEdgeFunction('create-simple-checkout', {
         body: { 
           priceId: bundle.priceId,
-          turnstileToken: turnstileToken 
+          ...(turnstileToken && { turnstileToken }) // Only include if provided
         },
       });
       
