@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CheckCircle, RefreshCw, HelpCircle } from "lucide-react";
 import {
   Accordion,
@@ -19,6 +20,8 @@ import { PRICING_TIERS } from "@/config/pricing";
 const Pricing = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [twilightPhoto, setTwilightPhoto] = useState(false);
+  const [declutterRoom, setDeclutterRoom] = useState(false);
 
   const schema = {
     "@context": "https://schema.org",
@@ -105,12 +108,44 @@ const Pricing = () => {
                   </CardHeader>
                   <CardContent className="flex-grow flex flex-col">
                     <p className="text-sm text-muted-foreground mt-auto mb-4">{tier.description}</p>
+                    
+                    {/* Add-on Options */}
+                    <div className="space-y-3 mb-6 p-4 bg-muted/30 rounded-lg border border-border">
+                      <p className="text-sm font-medium mb-2">Optional Add-ons:</p>
+                      <div className="flex items-start space-x-3">
+                        <Checkbox 
+                          id="twilight" 
+                          checked={twilightPhoto}
+                          onCheckedChange={(checked) => setTwilightPhoto(checked as boolean)}
+                        />
+                        <label
+                          htmlFor="twilight"
+                          className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          Twilight Photo (front of property)
+                        </label>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <Checkbox 
+                          id="declutter" 
+                          checked={declutterRoom}
+                          onCheckedChange={(checked) => setDeclutterRoom(checked as boolean)}
+                        />
+                        <label
+                          htmlFor="declutter"
+                          className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          Declutter Room (specify room in Notes to Staging Team)
+                        </label>
+                      </div>
+                    </div>
+
                     <Button
                       className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
                       onClick={() => handleSelectPlan(tier.name, tier.priceId, tier.credits)}
                     >
-                      Buy Photo Credits
+                      I'm Ready to Start My Order!
                     </Button>
                   </CardContent>
                 </Card>
