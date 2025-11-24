@@ -236,45 +236,32 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
 
     console.log("[STABILITY-CHECK] ✓ File validation passed:", validationData);
 
-    // Handle credit payment (anonymous users allowed)
-    if (paymentMethod === "credits") {
-      // For authenticated users, check if they have enough credits
-      if (user && credits < files.length) {
+    // Handle credit payment
+    if (paymentMethod === "credits" && user) {
+      // Check if user has enough credits
+      if (credits < files.length) {
         toast.error(`Insufficient credits. You need ${files.length} credits but only have ${credits}.`);
         setLoading(false);
         return;
       }
 
-      // Upload files to storage (works for both authenticated and anonymous users)
+      // Upload files to storage
       toast.loading("Uploading photos...");
       const sessionId = crypto.randomUUID();
-
+      
       // Get client name for filename with secure sanitization
-      const clientName = userProfile?.name || 'guest';
+      const clientName = userProfile?.name || 'client';
       const sanitizedName = sanitizeName(clientName);
-
+      
       const uploadPromises = files.map(async (file, index) => {
         const fileExt = sanitizeFilename(file.name).split(".").pop();
-        // Use user ID if logged in, otherwise use 'anonymous' folder
-        const userFolder = user?.id || 'anonymous';
-        const fileName = `${userFolder}/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`;
+        const fileName = `${user.id}/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`;
 
-        console.log(`[CHECKOUT] Uploading file ${index + 1} to uploads bucket (${user ? 'authenticated' : 'anonymous'}):`, fileName);
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("uploads")
+        const { error: uploadError } = await supabase.storage
+          .from("original-images")
           .upload(fileName, file);
 
-        if (uploadError) {
-          console.error(`[CHECKOUT] Upload failed for file ${index + 1}:`, {
-            error: uploadError,
-            message: uploadError.message,
-            fileName,
-            bucketName: 'uploads'
-          });
-          throw new Error(`Upload failed: ${uploadError.message}`);
-        }
-
-        console.log(`[CHECKOUT] ✓ File ${index + 1} uploaded successfully:`, uploadData?.path);
+        if (uploadError) throw uploadError;
         return fileName;
       });
 
@@ -348,29 +335,20 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
         ? `${user.id}/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`
         : `guest/${sessionId}/${sanitizedName}_photo${index + 1}.${fileExt}`;
 
-      console.log(`[CHECKOUT] Uploading file ${index + 1} to uploads bucket:`, fileName);
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("uploads")
+      const { error: uploadError } = await supabase.storage
+        .from("original-images")
         .upload(fileName, file);
 
-      if (uploadError) {
-        console.error(`[CHECKOUT] Upload failed for file ${index + 1}:`, {
-          error: uploadError,
-          message: uploadError.message,
-          fileName,
-          bucketName: 'uploads'
-        });
-        throw new Error(`Upload failed: ${uploadError.message}`);
-      }
+      if (uploadError) throw uploadError;
 
-      console.log(`[CHECKOUT] ✓ File ${index + 1} uploaded successfully:`, uploadData?.path);
+      // Get a signed URL with 24-hour expiration for security
+      const { data, error: signedUrlError } = await supabase.storage
+        .from("original-images")
+        .createSignedUrl(fileName, 86400); // 24 hours in seconds
 
-      // Get public URL (bucket is public, no auth needed)
-      const { data: publicUrlData } = supabase.storage
-        .from("uploads")
-        .getPublicUrl(fileName);
-
-      return publicUrlData.publicUrl;
+      if (signedUrlError) throw signedUrlError;
+      
+      return data.signedUrl;
     });
 
     const uploadedFiles = await Promise.all(uploadPromises);

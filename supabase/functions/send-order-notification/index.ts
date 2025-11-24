@@ -77,7 +77,7 @@ serve(async (req) => {
     // Generate signed URLs for the uploaded images (valid for 7 days)
     const imageUrlPromises = files.map(async (file) => {
       const { data, error } = await supabase.storage
-        .from('uploads')
+        .from('original-images')
         .createSignedUrl(file, 604800); // 7 days in seconds
       
       if (error) {

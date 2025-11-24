@@ -2,14 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import ScrollToTop from "./components/ScrollToTop";
-import DevNavigator from "./components/DevNavigator";
-import { AuthProvider } from "./contexts/AuthContext";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import RequireAdmin from "./components/RequireAdmin";
-import { TestUploader } from "./components/TestUploader";
 
 // Lazy load all route components for better performance
 const Home = lazy(() => import("./pages/Home"));
@@ -25,26 +20,18 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const SMSPolicy = lazy(() => import("./pages/SMSPolicy"));
 const Styles = lazy(() => import("./pages/Styles"));
 const PlaceOrder = lazy(() => import("./pages/PlaceOrder"));
-const PlaceOrderContact = lazy(() => import("./pages/place-order/Contact"));
-const PlaceOrderStyle = lazy(() => import("./pages/place-order/Style"));
-const PlaceOrderUpload = lazy(() => import("./pages/place-order/Upload"));
-const PlaceOrderBundle = lazy(() => import("./pages/place-order/Bundle"));
 const About = lazy(() => import("./pages/About"));
 const AccountSettings = lazy(() => import("./pages/AccountSettings"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboardControl"));
-const AdminDashboardNew = lazy(() => import("./pages/admin/AdminDashboardNew"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminUserDetail = lazy(() => import("./pages/admin/AdminUserDetail"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminOrderDetail = lazy(() => import("./pages/admin/AdminOrderDetail"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminImages = lazy(() => import("./pages/admin/AdminImages"));
-const AdminImagesNew = lazy(() => import("./pages/admin/AdminImagesNew"));
 const AdminBulkUpload = lazy(() => import("./pages/admin/AdminBulkUpload"));
-const AdminTests = lazy(() => import("./pages/admin/AdminTests"));
-const AdminCredits = lazy(() => import("./pages/admin/AdminCredits"));
-const AdminStorageCleanup = lazy(() => import("./pages/admin/AdminStorageCleanup"));
 const Blog = lazy(() => import("./pages/Blog"));
 const VirtualStagingGuide = lazy(() => import("./pages/blog/VirtualStagingGuide"));
 const Success = lazy(() => import("./pages/Success"));
@@ -53,17 +40,6 @@ const CreditsSuccess = lazy(() => import("./pages/CreditsSuccess"));
 const StabilityTest = lazy(() => import("./pages/StabilityTest"));
 const CheckoutDiagnostics = lazy(() => import("./pages/CheckoutDiagnostics"));
 const ClientGallery = lazy(() => import("./pages/ClientGallery"));
-const BucketTest = lazy(() => import("./pages/BucketTest"));
-const AccountPortal = lazy(() => import("./pages/AccountPortal"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const AccountDashboard = lazy(() => import("./pages/account/index"));
-const AccountProfile = lazy(() => import("./pages/account/profile"));
-const AccountOrders = lazy(() => import("./pages/account/orders"));
-const AccountOrderDetail = lazy(() => import("./pages/account/order-detail"));
-const AccountCredits = lazy(() => import("./pages/account/credits"));
-const AccountImages = lazy(() => import("./pages/account/images"));
-const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
-const TestOrder = lazy(() => import("./pages/TestOrder"));
 
 const queryClient = new QueryClient();
 
@@ -73,19 +49,14 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <ErrorBoundary>
-            <ScrollToTop />
-            <DevNavigator />
-            <TestUploader />
-            <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
-            <Routes>
+        <ScrollToTop />
+        <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
+          <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/contact" element={<Contact />} />
@@ -94,35 +65,17 @@ const App = () => (
           <Route path="/sms-policy" element={<SMSPolicy />} />
           <Route path="/styles" element={<Styles />} />
           <Route path="/place-order" element={<PlaceOrder />} />
-          <Route path="/place-order/contact" element={<PlaceOrderContact />} />
-          <Route path="/place-order/style" element={<PlaceOrderStyle />} />
-          <Route path="/place-order/upload" element={<PlaceOrderUpload />} />
-          <Route path="/place-order/bundle" element={<PlaceOrderBundle />} />
-          <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/about" element={<About />} />
-          <Route path="/account-portal" element={<AccountPortal />} />
-          <Route path="/account" element={<AccountDashboard />} />
-          <Route path="/account/profile" element={<AccountProfile />} />
-          <Route path="/account/orders" element={<AccountOrders />} />
-          <Route path="/account/orders/:orderId" element={<AccountOrderDetail />} />
-          <Route path="/account/credits" element={<AccountCredits />} />
-          <Route path="/account/images" element={<AccountImages />} />
-          <Route path="/account-settings" element={<AccountSettings />} />
-          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/account" element={<AccountSettings />} />
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboardNew /></RequireAdmin>} />
-          <Route path="/admin/dashboard-control" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-          <Route path="/admin/users" element={<RequireAdmin><AdminUsers /></RequireAdmin>} />
-          <Route path="/admin/users/:id" element={<RequireAdmin><AdminUserDetail /></RequireAdmin>} />
-          <Route path="/admin/orders" element={<RequireAdmin><AdminOrders /></RequireAdmin>} />
-          <Route path="/admin/orders/:id" element={<RequireAdmin><AdminOrderDetail /></RequireAdmin>} />
-          <Route path="/admin/settings" element={<RequireAdmin><AdminSettings /></RequireAdmin>} />
-          <Route path="/admin/images" element={<RequireAdmin><AdminImagesNew /></RequireAdmin>} />
-          <Route path="/admin/images-old" element={<RequireAdmin><AdminImages /></RequireAdmin>} />
-          <Route path="/admin/bulk-upload" element={<RequireAdmin><AdminBulkUpload /></RequireAdmin>} />
-          <Route path="/admin/tests" element={<RequireAdmin><AdminTests /></RequireAdmin>} />
-          <Route path="/admin/credits" element={<RequireAdmin><AdminCredits /></RequireAdmin>} />
-          <Route path="/admin/storage-cleanup" element={<RequireAdmin><AdminStorageCleanup /></RequireAdmin>} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/users/:id" element={<AdminUserDetail />} />
+          <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/images" element={<AdminImages />} />
+          <Route path="/admin/bulk-upload" element={<AdminBulkUpload />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/virtual-staging-complete-guide" element={<VirtualStagingGuide />} />
           <Route path="/success" element={<Success />} />
@@ -130,15 +83,11 @@ const App = () => (
           <Route path="/credits-success" element={<CreditsSuccess />} />
           <Route path="/stability-test" element={<StabilityTest />} />
           <Route path="/diagnostics" element={<CheckoutDiagnostics />} />
-          <Route path="/bucket-test" element={<BucketTest />} />
-          <Route path="/test-order" element={<TestOrder />} />
           <Route path="/gallery/:token" element={<ClientGallery />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-          </ErrorBoundary>
-        </AuthProvider>
+          <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

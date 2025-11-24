@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,25 +17,12 @@ export default function AdminLogin() {
   const [turnstileToken, setTurnstileToken] = useState<string>("");
   const [turnstileVerified, setTurnstileVerified] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
-
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login: authLogin } = useAuth();
   const turnstileRef = useRef<any>(null);
 
   // Check if both email and password are filled to show Turnstile
   const shouldShowTurnstile = email.trim().length > 0 && password.trim().length > 0;
-
-  // Debug logging for Rob
-  useEffect(() => {
-    console.log("[ADMIN TURNSTILE DEBUG] Token state:", {
-      hasToken: !!turnstileToken,
-      tokenLength: turnstileToken.length,
-      isVerified: turnstileVerified,
-      shouldShowTurnstile,
-      timestamp: new Date().toISOString()
-    });
-  }, [turnstileToken, turnstileVerified, shouldShowTurnstile]);
 
   // Reset Turnstile when fields are cleared
   useEffect(() => {
@@ -49,77 +36,78 @@ export default function AdminLogin() {
     }
   }, [shouldShowTurnstile]);
 
-  const { user } = useAuth();
-
   useEffect(() => {
-    if (user?.isAdmin) {
-      navigate("/admin/dashboard");
-    }
-  }, [user, navigate]);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        
+        if (data) {
+          navigate("/admin/dashboard");
+        }
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    console.log("[ADMIN TURNSTILE] Form submit - checking validation", {
-      shouldShowTurnstile,
-      hasTurnstileToken: !!turnstileToken,
-      isVerified: turnstileVerified,
-      turnstileToken: turnstileToken.substring(0, 20) + '...'
-    });
-
+    
     // Check if Turnstile is verified when fields are filled
     if (shouldShowTurnstile && !turnstileVerified) {
-      console.error("[ADMIN TURNSTILE] Validation failed - not verified");
       setShowWarning(true);
-      toast({
-        title: "Security Verification Required",
-        description: "⚠️ Please complete the security verification by clicking the checkbox.",
-        variant: "destructive",
-      });
       setTimeout(() => setShowWarning(false), 4000);
       return;
     }
-
-    console.log("[ADMIN TURNSTILE] Validation passed, proceeding with login");
+    
     setLoading(true);
 
     try {
-      const result = await authLogin(email, password);
-
-      if (!result.ok) {
-        toast({
-          title: "Login Failed",
-          description: result.error,
-          variant: "destructive",
-        });
-        setTurnstileVerified(false);
-        setTurnstileToken("");
-        if (turnstileRef.current) {
-          turnstileRef.current.reset();
-        }
-        return;
-      }
-
-      if (!result.data.isAdmin) {
-        toast({
-          title: "Access Denied",
-          description: "You do not have admin privileges.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      navigate("/admin/dashboard");
-      toast({
-        title: "Login Successful",
-        description: "Welcome to the admin dashboard.",
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+
+        if (!roleData) {
+          await supabase.auth.signOut();
+          toast({
+            title: "Access Denied",
+            description: "You do not have admin privileges.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        navigate("/admin/dashboard");
+        toast({
+          title: "Login Successful",
+          description: "Welcome to the admin dashboard.",
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Login Failed",
-        description: error.message || "An error occurred",
+        description: error.message,
         variant: "destructive",
       });
+      // Reset Turnstile on error
       setTurnstileVerified(false);
       setTurnstileToken("");
       if (turnstileRef.current) {
@@ -173,7 +161,6 @@ export default function AdminLogin() {
             {shouldShowTurnstile && (
               <div className="space-y-2">
                 <Label className="text-base font-semibold">Security Verification <span className="text-destructive">*</span></Label>
-                <p className="text-xs text-muted-foreground">Click the checkbox below to verify you're human</p>
                 <div className="flex justify-center py-2">
                   <Turnstile
                     ref={turnstileRef}
@@ -181,51 +168,29 @@ export default function AdminLogin() {
                     options={{
                       theme: "light",
                       size: "normal",
-                      execution: "render",
-                      appearance: "always",
+                      appearance: "always", // Force manual checkbox verification
                     }}
                     onSuccess={(token) => {
-                      console.log("[ADMIN TURNSTILE] ✓ Verification successful", {
-                        tokenLength: token.length,
-                        timestamp: new Date().toISOString()
-                      });
                       setTurnstileToken(token);
                       setTurnstileVerified(true);
                       setShowWarning(false);
                     }}
                     onError={() => {
-                      console.error("[ADMIN TURNSTILE] ✗ Verification error");
                       setTurnstileVerified(false);
                       setTurnstileToken("");
-                      toast({
-                        title: "Verification Failed",
-                        description: "Security verification failed. Please try again.",
-                        variant: "destructive",
-                      });
                       if (turnstileRef.current) {
                         turnstileRef.current.reset();
                       }
                     }}
                     onExpire={() => {
-                      console.warn("[ADMIN TURNSTILE] ⏰ Token expired");
                       setTurnstileVerified(false);
                       setTurnstileToken("");
-                      toast({
-                        title: "Verification Expired",
-                        description: "Security verification expired. Please verify again.",
-                        variant: "destructive",
-                      });
                       if (turnstileRef.current) {
                         turnstileRef.current.reset();
                       }
                     }}
                   />
                 </div>
-                {!turnstileVerified && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
-                    ⚠️ You must complete verification before logging in
-                  </p>
-                )}
               </div>
             )}
 

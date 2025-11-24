@@ -272,50 +272,6 @@ export type Database = {
         }
         Relationships: []
       }
-      order_images: {
-        Row: {
-          created_at: string | null
-          file_name: string
-          file_size: number | null
-          id: string
-          image_type: string
-          image_url: string
-          order_id: string
-          upload_date: string | null
-          uploaded_by: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          file_name: string
-          file_size?: number | null
-          id?: string
-          image_type: string
-          image_url: string
-          order_id: string
-          upload_date?: string | null
-          uploaded_by?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          file_name?: string
-          file_size?: number | null
-          id?: string
-          image_type?: string
-          image_url?: string
-          order_id?: string
-          upload_date?: string | null
-          uploaded_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "order_images_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       orders: {
         Row: {
           archived: boolean
@@ -466,44 +422,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      shareable_links: {
-        Row: {
-          accessed_count: number | null
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          last_accessed: string | null
-          order_id: string
-          token: string
-        }
-        Insert: {
-          accessed_count?: number | null
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          last_accessed?: string | null
-          order_id: string
-          token: string
-        }
-        Update: {
-          accessed_count?: number | null
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          last_accessed?: string | null
-          order_id?: string
-          token?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "shareable_links_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       stripe_event_log: {
         Row: {

@@ -1,308 +1,443 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { Turnstile } from "@marsidev/react-turnstile";
+import { useTheme } from "@/hooks/use-theme";
+import { ENV } from "@/config/environment";
 
-export default function AuthPage() {
+const Auth = () => {
   const navigate = useNavigate();
-  const { user, loading, login, signup } = useAuth();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [searchParams] = useSearchParams();
+  const { theme } = useTheme();
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState(searchParams.get("type") === "signup" || searchParams.get("mode") === "signup" ? "signup" : "login");
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string>("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const turnstileRef = useRef<any>(null);
 
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
+  // Show Turnstile only after both email and password are filled
+  const shouldShowTurnstile = email.trim().length > 0 && password.trim().length > 0;
 
-  const [signupName, setSignupName] = useState("");
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
-
-  const [localError, setLocalError] = useState<string | undefined>();
-  const [successMessage, setSuccessMessage] = useState<string | undefined>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  // Reset Turnstile when fields are cleared
   useEffect(() => {
-    if (user) {
-      if (user.isAdmin) {
-        navigate("/admin/dashboard", { replace: true });
-      } else {
-        navigate("/account", { replace: true });
+    if (!shouldShowTurnstile) {
+      setTurnstileToken("");
+      if (turnstileRef.current) {
+        turnstileRef.current.reset();
       }
     }
-  }, [user, navigate]);
+  }, [shouldShowTurnstile]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLocalError(undefined);
-    setSuccessMessage(undefined);
-    setIsSubmitting(true);
-
-    const result = await login(loginEmail, loginPassword);
-
-    if (!result.ok) {
-      setLocalError(result.error || "Login failed");
-      setIsSubmitting(false);
-    } else {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLocalError(undefined);
-    setSuccessMessage(undefined);
-
-    if (signupPassword.length < 10) {
-      setLocalError("Password must be at least 10 characters");
+  useEffect(() => {
+    // Check if user is already logged in or if this is a password recovery
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const isRecovery = hashParams.get('type') === 'recovery';
+    
+    if (isRecovery) {
+      setIsPasswordReset(true);
       return;
     }
+    
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate("/dashboard");
+      }
+    });
+  }, [navigate]);
 
-    if (signupPassword !== signupConfirmPassword) {
-      setLocalError("Passwords do not match");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    const result = await signup(signupEmail, signupPassword, signupName);
-
-    if (!result.ok) {
-      setLocalError(result.error || "Sign up failed");
-      setIsSubmitting(false);
-    } else {
-      setSuccessMessage("Account created! Check your email to confirm.");
-      toast.success("Account created successfully!");
-    }
-  };
-
-  const handleForgotPassword = async (e: React.MouseEvent) => {
+  const handleSubmit = async (e: React.FormEvent, isSignUp: boolean) => {
     e.preventDefault();
-    setLocalError(undefined);
-    setSuccessMessage(undefined);
-
-    if (!loginEmail) {
-      setLocalError("Please enter your email address");
+    
+    // Validate password match on signup
+    if (isSignUp && password !== confirmPassword) {
+      toast.error("Passwords do not match. Please try again.");
       return;
     }
-
-    setIsSubmitting(true);
+    
+    setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(loginEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
+      if (isPasswordReset) {
+        if (password !== confirmPassword) {
+          toast.error("Passwords do not match. Please try again.");
+          return;
+        }
 
-      if (error) throw error;
+        const { error } = await supabase.auth.updateUser({
+          password: password
+        });
 
-      setSuccessMessage("Password reset link sent to your email.");
-      toast.success("Check your email for the password reset link");
+        if (error) throw error;
+
+        toast.success("✅ Password updated successfully!");
+        navigate("/dashboard");
+      } else if (isForgotPassword) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth`,
+        });
+
+        if (error) throw error;
+
+        toast.success("✅ Password reset email sent! Check your inbox.");
+        setIsForgotPassword(false);
+        setEmail("");
+      } else if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: {
+              name: name,
+            },
+          },
+        });
+
+        if (error) throw error;
+
+        // Send welcome email
+        try {
+          await supabase.functions.invoke('send-welcome-email', {
+            body: { email, name }
+          });
+        } catch (emailError) {
+          console.error("Failed to send welcome email:", emailError);
+          // Don't block signup if email fails
+        }
+
+        toast.success("✅ Account created successfully! Check your email for confirmation.");
+        setActiveTab("login");
+        setPassword("");
+        setConfirmPassword("");
+        setName("");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        toast.success("Logged in successfully!");
+        navigate("/dashboard");
+      }
     } catch (error: any) {
-      setLocalError(error.message || "Failed to send reset email");
-      toast.error("Failed to send reset email");
+      toast.error(error.message || "An error occurred");
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div style={{ padding: 40, textAlign: "center" }}>
-        <p>Loading…</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <Card className="w-full max-w-lg shadow-xl">
-        <CardHeader className="text-center space-y-2 pb-8">
-          <CardTitle className="text-3xl font-bold text-slate-800 dark:text-slate-100">
-            Welcome to ClickStage Pro
-          </CardTitle>
-          <CardDescription className="text-base text-slate-600 dark:text-slate-400">
-            Sign in to your account or create a new one
-          </CardDescription>
-        </CardHeader>
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
 
-        <CardContent>
-          <Tabs value={mode} onValueChange={(v) => setMode(v as "login" | "signup")} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8 h-14 p-1">
-              <TabsTrigger value="login" className="text-lg font-semibold h-full data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
-                Login
-              </TabsTrigger>
-              <TabsTrigger value="signup" className="text-lg font-semibold h-full data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
-                Sign Up
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login" className="space-y-6">
-              {localError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{localError}</AlertDescription>
-                </Alert>
-              )}
-
-              {successMessage && (
-                <Alert className="bg-green-50 text-green-900 border-green-200">
-                  <AlertDescription>{successMessage}</AlertDescription>
-                </Alert>
-              )}
-
-              <form onSubmit={handleLogin} className="space-y-6">
-                <div className="space-y-3">
-                  <Label htmlFor="login-email" className="text-base font-bold text-slate-700 dark:text-slate-200">
-                    Email
-                  </Label>
-                  <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                    className="h-12 text-base"
-                  />
+      <main className="flex-1 flex items-center justify-center py-20 bg-secondary/30">
+        <div className="container mx-auto px-4">
+          {isPasswordReset ? (
+            <Card className="max-w-md mx-auto shadow-custom-lg">
+              <div className="text-center pt-6 pb-6 px-6">
+                <h1 className="text-3xl font-bold mb-3">Welcome to ClickStage Pro</h1>
+                <p className="text-muted-foreground text-base">Sign in to your account or create a new one</p>
+              </div>
+              <CardContent className="px-6 pb-6">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold mb-2">Set New Password</h2>
+                  <p className="text-muted-foreground">Enter your new password below.</p>
                 </div>
-
-                <div className="space-y-3">
-                  <Label htmlFor="login-password" className="text-base font-bold text-slate-700 dark:text-slate-200">
-                    Password
-                  </Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                    className="h-12 text-base"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  {isSubmitting ? "Logging in..." : "Log In"}
-                </Button>
-
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={handleForgotPassword}
-                    disabled={isSubmitting}
-                    className="text-blue-600 hover:text-blue-700 font-medium"
+                <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={10}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                    <Input
+                      id="confirm-new-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={10}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Password must be at least 10 characters long
+                    </p>
+                    {confirmPassword && password !== confirmPassword && (
+                      <p className="text-sm text-destructive">
+                        Passwords do not match. Please try again.
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-accent hover:bg-accent/90"
+                    disabled={loading || password !== confirmPassword}
                   >
-                    Forgot Password?
-                  </button>
-                </div>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup" className="space-y-6">
-              {localError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{localError}</AlertDescription>
-                </Alert>
-              )}
-
-              {successMessage && (
-                <Alert className="bg-green-50 text-green-900 border-green-200">
-                  <AlertDescription>{successMessage}</AlertDescription>
-                </Alert>
-              )}
-
-              <form onSubmit={handleSignup} className="space-y-6">
-                <div className="space-y-3">
-                  <Label htmlFor="signup-name" className="text-base font-bold text-slate-700 dark:text-slate-200">
-                    Name
-                  </Label>
-                  <Input
-                    id="signup-name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={signupName}
-                    onChange={(e) => setSignupName(e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                    className="h-12 text-base"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <Label htmlFor="signup-email" className="text-base font-bold text-slate-700 dark:text-slate-200">
-                    Email
-                  </Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={signupEmail}
-                    onChange={(e) => setSignupEmail(e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                    className="h-12 text-base"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <Label htmlFor="signup-password" className="text-base font-bold text-slate-700 dark:text-slate-200">
-                    Password
-                  </Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={signupPassword}
-                    onChange={(e) => setSignupPassword(e.target.value)}
-                    required
-                    minLength={10}
-                    disabled={isSubmitting}
-                    className="h-12 text-base"
-                  />
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Password must be at least 10 characters
+                    {loading ? "Loading..." : "Update Password"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          ) : isForgotPassword ? (
+            <Card className="max-w-md mx-auto shadow-custom-lg">
+              <CardContent className="pt-6">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold mb-2">Reset Password</h2>
+                  <p className="text-muted-foreground">
+                    Enter your email to receive a password reset link
                   </p>
                 </div>
-
-                <div className="space-y-3">
-                  <Label htmlFor="signup-confirm-password" className="text-base font-bold text-slate-700 dark:text-slate-200">
-                    Confirm Password
-                  </Label>
-                  <Input
-                    id="signup-confirm-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={signupConfirmPassword}
-                    onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                    required
-                    minLength={10}
-                    disabled={isSubmitting}
-                    className="h-12 text-base"
-                  />
+                <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-accent hover:bg-accent/90"
+                    disabled={loading}
+                  >
+                    {loading ? "Loading..." : "Send Reset Link"}
+                  </Button>
+                </form>
+                <div className="mt-4 text-center text-sm">
+                  <p>
+                    Remember your password?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotPassword(false)}
+                      className="text-accent hover:underline"
+                    >
+                      Log in
+                    </button>
+                  </p>
                 </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="max-w-md mx-auto shadow-custom-lg">
+              <div className="text-center pt-6 pb-6 px-6">
+                <h1 className="text-3xl font-bold mb-3">Welcome to ClickStage Pro</h1>
+                <p className="text-muted-foreground text-base">Sign in to your account or create a new one</p>
+              </div>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full px-6">
+                <TabsList className="grid w-full grid-cols-2 h-12 mb-6">
+                  <TabsTrigger value="login" className="text-base font-semibold">
+                    Login
+                  </TabsTrigger>
+                  <TabsTrigger value="signup" className="text-base font-semibold">
+                    Sign Up
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="login" className="px-6 pb-6">
+                  <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email">Email</Label>
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password">Password</Label>
+                      <Input
+                        id="login-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={10}
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full bg-accent hover:bg-accent/90"
+                      disabled={loading || (shouldShowTurnstile && !turnstileToken)}
+                    >
+                      {loading ? "Loading..." : "Log In"}
+                    </Button>
+                    
+                    {/* Turnstile - Only shows after email and password are filled */}
+                    {shouldShowTurnstile && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Security Verification <span className="text-destructive">*</span></Label>
+                        <div className="flex justify-center">
+                          <Turnstile
+                            ref={turnstileRef}
+                            siteKey={ENV.turnstile.siteKey}
+                            onSuccess={setTurnstileToken}
+                            onError={() => {
+                              setTurnstileToken("");
+                              if (turnstileRef.current) {
+                                turnstileRef.current.reset();
+                              }
+                            }}
+                            onExpire={() => {
+                              setTurnstileToken("");
+                              if (turnstileRef.current) {
+                                turnstileRef.current.reset();
+                              }
+                            }}
+                            options={{
+                              theme: theme === 'dark' ? 'dark' : 'light',
+                              appearance: 'always', // Force manual checkbox
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </form>
+                  <div className="text-center mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotPassword(true)}
+                      className="text-sm text-accent hover:underline"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                </TabsContent>
 
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  {isSubmitting ? "Creating account..." : "Sign Up"}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+                <TabsContent value="signup" className="px-6 pb-6">
+                  <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-name">Name</Label>
+                      <Input
+                        id="signup-name"
+                        type="text"
+                        placeholder="John Doe"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email</Label>
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Password</Label>
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={10}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Password must be at least 10 characters
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-confirm">Confirm Password</Label>
+                      <Input
+                        id="signup-confirm"
+                        type="password"
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        minLength={10}
+                      />
+                      {confirmPassword && password !== confirmPassword && (
+                        <p className="text-sm text-destructive">
+                          Passwords do not match. Please try again.
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full bg-accent hover:bg-accent/90"
+                      disabled={loading || password !== confirmPassword || (shouldShowTurnstile && !turnstileToken)}
+                    >
+                      {loading ? "Loading..." : "Sign Up"}
+                    </Button>
+                    
+                    {/* Turnstile - Only shows after email and password are filled */}
+                    {shouldShowTurnstile && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Security Verification <span className="text-destructive">*</span></Label>
+                        <div className="flex justify-center">
+                          <Turnstile
+                            ref={turnstileRef}
+                            siteKey={ENV.turnstile.siteKey}
+                            onSuccess={setTurnstileToken}
+                            onError={() => {
+                              setTurnstileToken("");
+                              if (turnstileRef.current) {
+                                turnstileRef.current.reset();
+                              }
+                            }}
+                            onExpire={() => {
+                              setTurnstileToken("");
+                              if (turnstileRef.current) {
+                                turnstileRef.current.reset();
+                              }
+                            }}
+                            options={{
+                              theme: theme === 'dark' ? 'dark' : 'light',
+                              appearance: 'always', // Force manual checkbox
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </form>
+                </TabsContent>
+              </Tabs>
+            </Card>
+          )}
+        </div>
+      </main>
+
+      <Footer />
     </div>
   );
-}
+};
+
+export default Auth;

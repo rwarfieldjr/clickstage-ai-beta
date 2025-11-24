@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload as UploadIcon, X, ZoomIn, Coins, CreditCard, ArrowLeft } from "lucide-react";
+import { Upload as UploadIcon, X, ZoomIn, Coins, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Layout from "@/components/Layout";
@@ -173,17 +173,15 @@ const Upload = () => {
    * 
    * DO NOT REMOVE: expired-callback, error-callback, timeout-callback
    */
-  // Initialize Turnstile widget with stability checks (only after ALL selections are made)
+  // Initialize Turnstile widget with stability checks (only after bundle selection)
   useEffect(() => {
-    // Only render Turnstile after user has made all required selections
-    const allSelectionsComplete = files.length > 0 && stagingStyle && selectedBundle;
-
-    if (!allSelectionsComplete) {
-      console.log("[STABILITY-CHECK] Waiting for all selections (files, style, bundle) before rendering Turnstile");
+    // Only render Turnstile after a bundle has been selected
+    if (!selectedBundle) {
+      console.log("[STABILITY-CHECK] Waiting for bundle selection before rendering Turnstile");
       return;
     }
 
-    console.log("[STABILITY-CHECK] All selections complete, initializing Turnstile widget");
+    console.log("[STABILITY-CHECK] Bundle selected, initializing Turnstile widget");
     
     // Prevent multiple widget renders
     let widgetId: string | null = null;
@@ -295,7 +293,7 @@ const Upload = () => {
         }
       }
     };
-  }, [theme, selectedBundle, files.length, stagingStyle]);
+  }, [theme, selectedBundle]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -522,16 +520,6 @@ const Upload = () => {
 
       <main className="flex-1 py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto mb-4">
-            <Button
-              variant="ghost"
-              onClick={() => navigate(-1)}
-              className="gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </Button>
-          </div>
           <Card className="max-w-3xl mx-auto shadow-custom-lg">
             <CardHeader>
               {/* Progress Steps */}
@@ -880,8 +868,8 @@ const Upload = () => {
                   </div>
                 </div>
 
-                {/* CAPTCHA Verification - Only shows after all selections are made */}
-                {files.length > 0 && stagingStyle && selectedBundle && (
+                {/* CAPTCHA Verification - Only shows after bundle selection */}
+                {selectedBundle && (
                   <div className="mb-4">
                     <Label className="text-base font-semibold mb-3 block">Security Verification <span className="text-destructive">*</span></Label>
                     <div ref={turnstileRef} className="flex justify-center mb-2"></div>
@@ -994,17 +982,7 @@ const Upload = () => {
                   disabled={loading || !turnstileToken}
                   className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading
-                    ? "Processing..."
-                    : files.length === 0
-                      ? "Upload Photos to Continue"
-                      : !stagingStyle
-                        ? "Select a Style to Continue"
-                        : !selectedBundle
-                          ? "Select a Bundle to Continue"
-                          : !turnstileToken
-                            ? "Complete Security Verification"
-                            : "Proceed to Checkout"}
+                  {loading ? "Processing..." : !turnstileToken ? "Complete Security Verification" : "Proceed to Checkout"}
                 </button>
               </form>
             </CardContent>

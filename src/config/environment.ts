@@ -7,7 +7,7 @@
 interface EnvironmentConfig {
   supabase: {
     url: string;
-    anonKey: string;
+    publishableKey: string;
     projectId: string;
   };
   turnstile: {
@@ -26,7 +26,6 @@ export function getEnvironmentConfig(): EnvironmentConfig {
     VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
     VITE_SUPABASE_PUBLISHABLE_KEY: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
     VITE_SUPABASE_PROJECT_ID: import.meta.env.VITE_SUPABASE_PROJECT_ID,
-    VITE_TURNSTILE_SITE_KEY: import.meta.env.VITE_TURNSTILE_SITE_KEY,
   };
 
   // Validate all required variables are present
@@ -47,14 +46,17 @@ export function getEnvironmentConfig(): EnvironmentConfig {
   const isProduction = import.meta.env.PROD;
   const isDevelopment = import.meta.env.DEV;
 
+  // Cloudflare Turnstile public site key (safe to store in code)
+  const TURNSTILE_SITE_KEY = '0x4AAAAAAB9xdhqE9Qyud_D6';
+
   return {
     supabase: {
       url: requiredVars.VITE_SUPABASE_URL,
-      anonKey: requiredVars.VITE_SUPABASE_PUBLISHABLE_KEY,
+      publishableKey: requiredVars.VITE_SUPABASE_PUBLISHABLE_KEY,
       projectId: requiredVars.VITE_SUPABASE_PROJECT_ID,
     },
     turnstile: {
-      siteKey: requiredVars.VITE_TURNSTILE_SITE_KEY,
+      siteKey: TURNSTILE_SITE_KEY,
     },
     isProduction,
     isDevelopment,

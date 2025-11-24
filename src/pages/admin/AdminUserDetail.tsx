@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
-import { useRequireAdmin } from "@/hooks/useRequireAdmin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +39,6 @@ interface Transaction {
 }
 
 export default function AdminUserDetail() {
-  useRequireAdmin();
   const { id } = useParams();
   const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
   const [profile, setProfile] = useState<UserProfile | null>(null);

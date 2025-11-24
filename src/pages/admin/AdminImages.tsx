@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
-import { useRequireAdmin } from "@/hooks/useRequireAdmin";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, ExternalLink } from "lucide-react";
@@ -26,7 +25,6 @@ interface OrderInfo {
 }
 
 const AdminImages = () => {
-  useRequireAdmin();
   const { isAdmin, loading: adminLoading, requireAdmin, shouldRenderAdmin } = useAdmin();
   const [files, setFiles] = useState<StorageFile[]>([]);
   const [orders, setOrders] = useState<Record<string, OrderInfo>>({});
@@ -48,7 +46,7 @@ const AdminImages = () => {
     try {
       const { data: storageFiles, error: storageError } = await supabase
         .storage
-        .from("uploads")
+        .from("original-images")
         .list("", {
           sortBy: { column: "created_at", order: "desc" },
         });
@@ -61,7 +59,7 @@ const AdminImages = () => {
       const fetchFolderContents = async (path: string = "") => {
         const { data, error } = await supabase
           .storage
-          .from("uploads")
+          .from("original-images")
           .list(path, {
             sortBy: { column: "created_at", order: "desc" },
           });
@@ -118,7 +116,7 @@ const AdminImages = () => {
         allFiles.map(async (file) => {
           const { data } = await supabase
             .storage
-            .from("uploads")
+            .from("original-images")
             .createSignedUrl(file.name, 3600);
           if (data?.signedUrl) {
             urlsMap[file.name] = data.signedUrl;
@@ -137,7 +135,7 @@ const AdminImages = () => {
     try {
       const { data, error } = await supabase
         .storage
-        .from("uploads")
+        .from("original-images")
         .download(filePath);
 
       if (error) throw error;
@@ -162,7 +160,7 @@ const AdminImages = () => {
     try {
       const { data, error } = await supabase
         .storage
-        .from("uploads")
+        .from("original-images")
         .createSignedUrl(filePath, 3600); // 1 hour expiry
 
       if (error) throw error;
