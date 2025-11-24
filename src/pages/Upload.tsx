@@ -67,7 +67,8 @@ const Upload = () => {
     { id: "japandi", name: "Japandi", image: japandi, description: "Japanese and Scandinavian fusion" },
   ];
 
-  const bundles = PRICING_TIERS.map(tier => ({
+  // Only show the $10 single photo credit option
+  const bundles = PRICING_TIERS.filter(tier => tier.id === "single").map(tier => ({
     id: tier.id,
     name: tier.displayName,
     price: tier.price,
