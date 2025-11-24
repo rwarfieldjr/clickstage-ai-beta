@@ -824,7 +824,7 @@ const Upload = () => {
                     
                     try {
                       if (files.length === 0) {
-                        setError("Please upload at least one photo before continuing.");
+                        setError(`Please upload at least ${photoQuantity} photo${photoQuantity > 1 ? 's' : ''} before continuing.`);
                         return;
                       }
                       
