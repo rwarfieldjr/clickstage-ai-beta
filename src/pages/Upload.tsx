@@ -298,6 +298,9 @@ const Upload = () => {
         setLoading,
         propertyAddress,
         photoQuantity, // Pass the quantity
+        twilightPhoto,
+        declutterRoom,
+        rushOrder,
       });
     } catch (error) {
       throw error; // Re-throw to let handleCheckout's error handling work
@@ -822,6 +825,9 @@ const Upload = () => {
                         setLoading,
                         propertyAddress,
                         photoQuantity, // Pass the quantity
+                        twilightPhoto,
+                        declutterRoom,
+                        rushOrder,
                       });
                       
                     } catch (err: any) {
