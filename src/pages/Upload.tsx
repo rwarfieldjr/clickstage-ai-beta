@@ -331,7 +331,7 @@ const Upload = () => {
                   <li><strong>Receive Images:</strong> Get professionally staged photos within 24 hours, ready for MLS or marketing.</li>
                 </ol>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Not sure which bundle to choose? <Link to="/pricing" className="text-accent hover:underline font-medium">View pricing details</Link>.
+                  Not sure which bundle to choose? <Link to="/pricing" className="text-accent hover:underline font-medium">Start my order</Link>.
                 </p>
               </div>
             </CardHeader>

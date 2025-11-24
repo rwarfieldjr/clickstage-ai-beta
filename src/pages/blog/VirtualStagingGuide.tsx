@@ -75,7 +75,7 @@ export default function VirtualStagingGuide() {
                 Get professional virtual staging for your listings with fast turnaround and affordable pricing.
               </p>
               <Link to="/pricing">
-                <Button>View Pricing</Button>
+                <Button>Start My Order</Button>
               </Link>
             </div>
 
@@ -193,7 +193,7 @@ export default function VirtualStagingGuide() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/pricing">
-                  <Button size="lg">View Pricing</Button>
+                  <Button size="lg">Start My Order</Button>
                 </Link>
                 <Link to="/portfolio">
                   <Button size="lg" variant="outline">See Examples</Button>
