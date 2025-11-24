@@ -25,7 +25,7 @@ const Home = () => {
     <div className="min-h-screen flex flex-col">
       <SEO 
         title="AI Virtual Staging for Real Estate"
-        description="ClickStagePro offers fast, affordable AI virtual staging for real estate agents, photographers, and teams. Get photorealistic, MLS-compliant images in 24 hours for as low as $7 per photo."
+        description="ClickStagePro offers fast, affordable AI virtual staging for real estate agents, photographers, and teams. Get photorealistic, MLS-compliant images in 24 hours for only $10 per photo."
         canonical="/"
         keywords="AI virtual staging, virtual staging real estate, virtual staging photography, MLS compliant virtual staging, real estate photo staging, ClickStagePro"
         schema={schema}
@@ -72,7 +72,7 @@ const Home = () => {
               AI Virtual Staging for Real Estate Professionals
             </h1>
             <p className="text-2xl md:text-3xl mb-6 text-white/90">
-              Photorealistic, MLS-compliant staging delivered in 24 hours — as low as $7 per photo.
+              Photorealistic, MLS-compliant staging delivered in 24 hours — only $10 per photo!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/pricing">
@@ -163,10 +163,10 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Affordable Pricing — As Low as $7 Per Photo
+              Affordable Pricing — Only $10 Per Photo!
             </h2>
             <p className="text-xl md:text-2xl text-muted-foreground mb-10">
-              Professional virtual staging starting at $7.00 per photo with bulk packages available.
+              Full Service Professional virtual staging for $10.00 per photo (our competitors charge as much as $40 per photo)
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/pricing">
