@@ -57,6 +57,9 @@ const Upload = () => {
   const turnstileRef = useRef<HTMLDivElement>(null);
   const [propertyAddress, setPropertyAddress] = useState<string>("");
   const [photoQuantity, setPhotoQuantity] = useState<number>(1);
+  const [twilightPhoto, setTwilightPhoto] = useState(false);
+  const [declutterRoom, setDeclutterRoom] = useState(false);
+  const [rushOrder, setRushOrder] = useState(false);
 
   const styles = [
     { id: "modern-farmhouse", name: "Modern Farmhouse", image: modernFarmhouse, description: "Blend rustic charm with modern comfort" },
@@ -752,8 +755,10 @@ const Upload = () => {
                   <RadioGroup value={selectedBundle} onValueChange={setSelectedBundle}>
                     <div className="grid grid-cols-1 gap-4 max-w-xl">
                       {bundles.map((bundle) => {
-                        const totalCost = 10 * photoQuantity;
-                        const totalCredits = photoQuantity;
+                        const addOnCount = (twilightPhoto ? 1 : 0) + (declutterRoom ? 1 : 0) + (rushOrder ? 1 : 0);
+                        const addOnCost = addOnCount * photoQuantity * 5;
+                        const totalCost = (10 * photoQuantity) + addOnCost;
+                        const totalCredits = photoQuantity + (addOnCount * photoQuantity);
                         const canAffordWithCredits = paymentMethod === "credits" && credits >= totalCredits;
                         const isDisabled = paymentMethod === "credits" && !canAffordWithCredits;
                         
@@ -850,11 +855,61 @@ const Upload = () => {
                                 <>
                                   <span className="text-3xl font-bold text-accent mb-1">${totalCost}</span>
                                   <span className="text-sm text-muted-foreground block mb-2">
-                                    ${totalCost} for {photoQuantity} photo{photoQuantity > 1 ? 's' : ''}
+                                    ${10 * photoQuantity} for {photoQuantity} photo{photoQuantity > 1 ? 's' : ''}
+                                    {addOnCost > 0 && <span> + ${addOnCost} add-ons</span>}
                                   </span>
                                 </>
                               )}
-                              <span className="text-xs text-muted-foreground mt-2"></span>
+                              
+                              {/* Add-on Options */}
+                              <div className="mt-4 pt-4 border-t border-border space-y-3">
+                                <p className="text-sm font-medium mb-2">Optional Add-ons ($5 each per photo):</p>
+                                <div className="flex items-start space-x-3">
+                                  <Checkbox 
+                                    id={`twilight-${bundle.id}`}
+                                    checked={twilightPhoto}
+                                    onCheckedChange={(checked) => setTwilightPhoto(checked as boolean)}
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                  <label
+                                    htmlFor={`twilight-${bundle.id}`}
+                                    className="text-sm leading-tight cursor-pointer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    Twilight Photo (front of property) - $5 per photo
+                                  </label>
+                                </div>
+                                <div className="flex items-start space-x-3">
+                                  <Checkbox 
+                                    id={`declutter-${bundle.id}`}
+                                    checked={declutterRoom}
+                                    onCheckedChange={(checked) => setDeclutterRoom(checked as boolean)}
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                  <label
+                                    htmlFor={`declutter-${bundle.id}`}
+                                    className="text-sm leading-tight cursor-pointer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    Declutter Room - $5 per photo (specify room in Notes to Staging Team)
+                                  </label>
+                                </div>
+                                <div className="flex items-start space-x-3">
+                                  <Checkbox 
+                                    id={`rush-${bundle.id}`}
+                                    checked={rushOrder}
+                                    onCheckedChange={(checked) => setRushOrder(checked as boolean)}
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                  <label
+                                    htmlFor={`rush-${bundle.id}`}
+                                    className="text-sm leading-tight cursor-pointer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    Rush Order (need in less than 24hrs - specify return time needed in Notes to Staging Team - 2hrs minimum lead time) - $5 per photo
+                                  </label>
+                                </div>
+                              </div>
                             </label>
                           </div>
                         );
