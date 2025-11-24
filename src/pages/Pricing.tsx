@@ -110,7 +110,7 @@ const Pricing = () => {
                       size="lg"
                       onClick={() => handleSelectPlan(tier.name, tier.priceId, tier.credits)}
                     >
-                      I'm Ready to Start My Order!
+                      Let's Do This!
                     </Button>
                   </CardContent>
                 </Card>
