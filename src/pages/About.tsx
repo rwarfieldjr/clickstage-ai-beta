@@ -38,7 +38,7 @@ const About = () => {
     {
       icon: MapPin,
       title: "Affordable",
-      description: "Flexible bundles starting at $7 per photo",
+      description: "Only $10 per photo",
     },
   ];
 
@@ -83,7 +83,7 @@ const About = () => {
               <li><strong>AI Precision:</strong> Every photo is staged using advanced AI trained on real design principles.</li>
               <li><strong>MLS-Compliant Results:</strong> We never alter structural elements — only furniture and décor.</li>
               <li><strong>Fast Turnaround:</strong> Receive finished, high-resolution staged images within 24 hours.</li>
-              <li><strong>Affordable Pricing:</strong> Flexible bundles with prices as low as $7 per photo.</li>
+              <li><strong>Affordable Pricing:</strong> Only $10 per photo.</li>
               <li><strong>Professional Support:</strong> Real humans available when you need help or design guidance.</li>
             </ul>
 
