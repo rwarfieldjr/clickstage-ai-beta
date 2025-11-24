@@ -109,39 +109,27 @@ serve(async (req: Request): Promise<Response> => {
     const body = await req.json();
     const { priceId, turnstileToken } = body;
 
-    // Validate Turnstile token
-    if (!turnstileToken || typeof turnstileToken !== 'string') {
-      logger.warn("Missing or invalid turnstileToken");
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Security verification required" 
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+    // Verify Turnstile CAPTCHA (optional - skip if not provided)
+    if (turnstileToken && typeof turnstileToken === 'string') {
+      logger.info("Verifying Turnstile token");
+      const isTurnstileValid = await verifyTurnstile(turnstileToken);
+      if (!isTurnstileValid) {
+        logger.warn("Turnstile verification failed");
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: "Security verification failed. Please try again." 
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+      logger.info("Turnstile verification successful");
+    } else {
+      logger.info("Turnstile verification skipped (not provided)");
     }
-
-    // Verify Turnstile CAPTCHA
-    logger.info("Verifying Turnstile token");
-    const isTurnstileValid = await verifyTurnstile(turnstileToken);
-    if (!isTurnstileValid) {
-      logger.warn("Turnstile verification failed");
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Security verification failed. Please try again." 
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    logger.info("Turnstile verification successful");
 
     // Validate required input
     if (!priceId || typeof priceId !== 'string') {

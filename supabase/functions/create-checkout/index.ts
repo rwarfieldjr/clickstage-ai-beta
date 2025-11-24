@@ -48,7 +48,7 @@ const CreateCheckoutSchema = z.object({
   stagingStyle: z.string().max(50).optional(),
   photosCount: z.number().int().positive().max(1000),
   sessionId: z.string().uuid().optional(),
-  turnstileToken: z.string().min(1),
+  turnstileToken: z.string().min(1).optional(), // Made optional - Turnstile removed
 });
 
 const handler = async (req: Request): Promise<Response> => {
@@ -162,25 +162,29 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { priceId, contactInfo, files, stagingStyle, photosCount, sessionId, turnstileToken } = validation.data;
 
-    // Verify Turnstile CAPTCHA token
-    logger.info("Verifying Turnstile token");
-    const isTurnstileValid = await verifyTurnstile(turnstileToken);
-    if (!isTurnstileValid) {
-      logger.warn("Turnstile verification failed");
-      await sendSupportAlert("Checkout Blocked – Turnstile Failed", {
-        hostname,
-        path,
-        code: 400,
-        reason: "turnstile_failed",
-      });
-      return okJSON({
-        success: false,
-        error: "Security verification failed. Please try again.",
-        code: "CAPTCHA_VERIFICATION_FAILED"
-      });
+    // Verify Turnstile CAPTCHA token (optional - skip if not provided)
+    if (turnstileToken) {
+      logger.info("Verifying Turnstile token");
+      const isTurnstileValid = await verifyTurnstile(turnstileToken);
+      if (!isTurnstileValid) {
+        logger.warn("Turnstile verification failed");
+        await sendSupportAlert("Checkout Blocked – Turnstile Failed", {
+          hostname,
+          path,
+          code: 400,
+          reason: "turnstile_failed",
+        });
+        return okJSON({
+          success: false,
+          error: "Security verification failed. Please try again.",
+          code: "CAPTCHA_VERIFICATION_FAILED"
+        });
+      }
+      logger.info("Turnstile verification successful");
+    } else {
+      logger.info("Turnstile verification skipped (not provided)");
     }
-
-    logger.info("Turnstile verification successful");
+    
     logger.info("Request validated", { priceId, fileCount: files?.length, photosCount });
 
     // Support both authenticated and guest checkout
