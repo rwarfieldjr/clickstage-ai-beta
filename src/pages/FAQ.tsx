@@ -177,7 +177,7 @@ const FAQ = () => {
                 Find quick answers about ClickStagePro's AI virtual staging — how it works, what it costs, and what makes it different.
               </p>
               <p className="text-muted-foreground">
-                Ready to get started? <Link to="/pricing" className="text-accent hover:underline font-medium">View pricing details</Link>.
+                Ready to get started? <Link to="/pricing" className="text-accent hover:underline font-medium">Start my order</Link>.
               </p>
             </div>
           </div>
