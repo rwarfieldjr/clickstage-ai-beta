@@ -110,7 +110,7 @@ const Pricing = () => {
                   className="shadow-custom-lg border-2 border-border transition-smooth hover:scale-105 h-full flex flex-col"
                 >
                   <CardHeader>
-                    <CardTitle className="text-2xl">Get Started</CardTitle>
+                    <CardTitle className="text-2xl">Start My Order</CardTitle>
                     <CardDescription className="text-3xl font-bold text-primary mt-2">
                       {tier.price}
                     </CardDescription>
@@ -245,7 +245,7 @@ const Pricing = () => {
                   </p>
                   <Link to="/contact">
                     <Button size="lg" className="bg-accent hover:bg-accent/90">
-                      Get Started
+                      Start My Order
                     </Button>
                   </Link>
                 </div>
