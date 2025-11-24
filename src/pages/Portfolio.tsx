@@ -388,7 +388,7 @@ const Portfolio = () => {
               <div className="flex justify-center">
                 <Link to="/pricing">
                   <Button size="lg" className="bg-accent hover:bg-accent/90">
-                    Get Started Today
+                    Start My Order
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </Link>
