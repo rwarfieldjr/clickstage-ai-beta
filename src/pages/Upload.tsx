@@ -55,8 +55,8 @@ const Upload = () => {
   const [userCreditsBalance, setUserCreditsBalance] = useState<number>(0);
   const [propertyAddress, setPropertyAddress] = useState<string>("");
   const [photoQuantity, setPhotoQuantity] = useState<number>(1);
-  const [twilightPhoto, setTwilightPhoto] = useState(false);
-  const [declutterRoom, setDeclutterRoom] = useState(false);
+  const [twilightPhotoCount, setTwilightPhotoCount] = useState<number>(0);
+  const [declutterRoomCount, setDeclutterRoomCount] = useState<number>(0);
   const [rushOrder, setRushOrder] = useState(false);
 
   const styles = [
@@ -298,8 +298,8 @@ const Upload = () => {
         setLoading,
         propertyAddress,
         photoQuantity, // Pass the quantity
-        twilightPhoto,
-        declutterRoom,
+        twilightPhotoCount,
+        declutterRoomCount,
         rushOrder,
       });
     } catch (error) {
@@ -548,10 +548,12 @@ const Upload = () => {
                   <RadioGroup value={selectedBundle} onValueChange={setSelectedBundle}>
                     <div className="grid grid-cols-1 gap-4 max-w-xl">
                       {bundles.map((bundle) => {
-                        const addOnCount = (twilightPhoto ? 1 : 0) + (declutterRoom ? 1 : 0) + (rushOrder ? 1 : 0);
-                        const addOnCost = addOnCount * photoQuantity * 5;
+                        const twilightCost = twilightPhotoCount * 5;
+                        const declutterCost = declutterRoomCount * 5;
+                        const rushCost = rushOrder ? photoQuantity * 5 : 0;
+                        const addOnCost = twilightCost + declutterCost + rushCost;
                         const totalCost = (10 * photoQuantity) + addOnCost;
-                        const totalCredits = photoQuantity + (addOnCount * photoQuantity);
+                        const totalCredits = photoQuantity + (twilightPhotoCount + declutterRoomCount + (rushOrder ? photoQuantity : 0));
                         const canAffordWithCredits = paymentMethod === "credits" && credits >= totalCredits;
                         const isDisabled = paymentMethod === "credits" && !canAffordWithCredits;
                         
@@ -655,38 +657,122 @@ const Upload = () => {
                               )}
                               
                               {/* Add-on Options */}
-                              <div className="mt-4 pt-4 border-t border-border space-y-3">
-                                <p className="text-sm font-medium mb-2">Optional Add-ons ($5 each per photo):</p>
-                                <div className="flex items-start space-x-3">
-                                  <Checkbox 
-                                    id={`twilight-${bundle.id}`}
-                                    checked={twilightPhoto}
-                                    onCheckedChange={(checked) => setTwilightPhoto(checked as boolean)}
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                  <label
-                                    htmlFor={`twilight-${bundle.id}`}
-                                    className="text-sm leading-tight cursor-pointer"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    Twilight Photo (front of property) - $5 per photo
-                                  </label>
+                              <div className="mt-4 pt-4 border-t border-border space-y-4">
+                                <p className="text-sm font-medium mb-2">Optional Add-ons:</p>
+                                
+                                {/* Twilight Photo with Quantity */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium">
+                                      Twilight Photo (front of property) - $5 per photo
+                                    </label>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setTwilightPhotoCount(Math.max(0, twilightPhotoCount - 1));
+                                      }}
+                                      disabled={twilightPhotoCount <= 0}
+                                    >
+                                      -
+                                    </Button>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max={photoQuantity}
+                                      value={twilightPhotoCount}
+                                      onChange={(e) => {
+                                        const val = parseInt(e.target.value);
+                                        if (!isNaN(val) && val >= 0 && val <= photoQuantity) {
+                                          setTwilightPhotoCount(val);
+                                        }
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="text-center h-8 w-16"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setTwilightPhotoCount(Math.min(photoQuantity, twilightPhotoCount + 1));
+                                      }}
+                                      disabled={twilightPhotoCount >= photoQuantity}
+                                    >
+                                      +
+                                    </Button>
+                                    <span className="text-xs text-muted-foreground">
+                                      {twilightPhotoCount > 0 ? `${twilightPhotoCount} photo${twilightPhotoCount > 1 ? 's' : ''} × $5 = $${twilightPhotoCount * 5}` : 'None selected'}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="flex items-start space-x-3">
-                                  <Checkbox 
-                                    id={`declutter-${bundle.id}`}
-                                    checked={declutterRoom}
-                                    onCheckedChange={(checked) => setDeclutterRoom(checked as boolean)}
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                  <label
-                                    htmlFor={`declutter-${bundle.id}`}
-                                    className="text-sm leading-tight cursor-pointer"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    Declutter Room - $5 per photo (specify room in Notes to Staging Team)
-                                  </label>
+
+                                {/* Declutter Room with Quantity */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium">
+                                      Declutter Room - $5 per room (specify rooms in Notes to Staging Team)
+                                    </label>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setDeclutterRoomCount(Math.max(0, declutterRoomCount - 1));
+                                      }}
+                                      disabled={declutterRoomCount <= 0}
+                                    >
+                                      -
+                                    </Button>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max={photoQuantity}
+                                      value={declutterRoomCount}
+                                      onChange={(e) => {
+                                        const val = parseInt(e.target.value);
+                                        if (!isNaN(val) && val >= 0 && val <= photoQuantity) {
+                                          setDeclutterRoomCount(val);
+                                        }
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="text-center h-8 w-16"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setDeclutterRoomCount(Math.min(photoQuantity, declutterRoomCount + 1));
+                                      }}
+                                      disabled={declutterRoomCount >= photoQuantity}
+                                    >
+                                      +
+                                    </Button>
+                                    <span className="text-xs text-muted-foreground">
+                                      {declutterRoomCount > 0 ? `${declutterRoomCount} room${declutterRoomCount > 1 ? 's' : ''} × $5 = $${declutterRoomCount * 5}` : 'None selected'}
+                                    </span>
+                                  </div>
                                 </div>
+
+                                {/* Rush Order Checkbox */}
                                 <div className="flex items-start space-x-3">
                                   <Checkbox 
                                     id={`rush-${bundle.id}`}
@@ -825,8 +911,8 @@ const Upload = () => {
                         setLoading,
                         propertyAddress,
                         photoQuantity, // Pass the quantity
-                        twilightPhoto,
-                        declutterRoom,
+                        twilightPhotoCount,
+                        declutterRoomCount,
                         rushOrder,
                       });
                       

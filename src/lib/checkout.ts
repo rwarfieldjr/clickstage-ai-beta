@@ -65,8 +65,8 @@ interface CheckoutParams {
   turnstileToken?: string; // Optional for backward compatibility
   propertyAddress: string;
   photoQuantity: number;
-  twilightPhoto: boolean;
-  declutterRoom: boolean;
+  twilightPhotoCount: number;
+  declutterRoomCount: number;
   rushOrder: boolean;
 }
 
@@ -89,8 +89,8 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     turnstileToken,
     propertyAddress,
     photoQuantity,
-    twilightPhoto,
-    declutterRoom,
+    twilightPhotoCount,
+    declutterRoomCount,
     rushOrder,
   } = params;
 
@@ -377,11 +377,11 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     }
 
     // Calculate total amount including add-ons
-    let addOnsCount = 0;
-    if (twilightPhoto) addOnsCount++;
-    if (declutterRoom) addOnsCount++;
-    if (rushOrder) addOnsCount++;
-    const totalAmount = (photoQuantity * 10) + (addOnsCount * photoQuantity * 5); // $10 per photo + $5 per add-on per photo
+    const twilightCost = twilightPhotoCount * 5;
+    const declutterCost = declutterRoomCount * 5;
+    const rushCost = rushOrder ? photoQuantity * 5 : 0;
+    const addOnAmount = (twilightCost + declutterCost + rushCost) * 100; // Convert to cents
+    const totalAmount = (photoQuantity * 1000) + addOnAmount; // $10 per photo in cents + add-ons
     
     // Create checkout session with all metadata
     console.log("[STABILITY-CHECK] Creating Stripe checkout");
@@ -396,8 +396,8 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
           stagingStyle: stagingStyle,
           photosCount: photoQuantity, // Use photoQuantity for correct credit amount
           sessionId: sessionId,
-          twilightPhoto: twilightPhoto,
-          declutterRoom: declutterRoom,
+          twilightPhotoCount: twilightPhotoCount,
+          declutterRoomCount: declutterRoomCount,
           rushOrder: rushOrder,
           ...(turnstileToken && { turnstileToken }), // Only include if provided
         },
