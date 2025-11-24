@@ -24,7 +24,7 @@ interface EnvironmentConfig {
 export function getEnvironmentConfig(): EnvironmentConfig {
   const requiredVars = {
     VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
-    VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+    VITE_SUPABASE_PUBLISHABLE_KEY: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
     VITE_SUPABASE_PROJECT_ID: import.meta.env.VITE_SUPABASE_PROJECT_ID,
     VITE_TURNSTILE_SITE_KEY: import.meta.env.VITE_TURNSTILE_SITE_KEY,
   };
@@ -50,7 +50,7 @@ export function getEnvironmentConfig(): EnvironmentConfig {
   return {
     supabase: {
       url: requiredVars.VITE_SUPABASE_URL,
-      anonKey: requiredVars.VITE_SUPABASE_ANON_KEY,
+      anonKey: requiredVars.VITE_SUPABASE_PUBLISHABLE_KEY,
       projectId: requiredVars.VITE_SUPABASE_PROJECT_ID,
     },
     turnstile: {
