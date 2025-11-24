@@ -65,6 +65,9 @@ interface CheckoutParams {
   turnstileToken?: string; // Optional for backward compatibility
   propertyAddress: string;
   photoQuantity: number;
+  twilightPhoto: boolean;
+  declutterRoom: boolean;
+  rushOrder: boolean;
 }
 
 export async function handleCheckout(params: CheckoutParams): Promise<void> {
@@ -86,6 +89,9 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
     turnstileToken,
     propertyAddress,
     photoQuantity,
+    twilightPhoto,
+    declutterRoom,
+    rushOrder,
   } = params;
 
   // Check SMS consent first
@@ -370,8 +376,12 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
       };
     }
 
-    // Calculate total amount for Stripe checkout
-    const totalAmount = photoQuantity * 10; // $10 per photo
+    // Calculate total amount including add-ons
+    let addOnsCount = 0;
+    if (twilightPhoto) addOnsCount++;
+    if (declutterRoom) addOnsCount++;
+    if (rushOrder) addOnsCount++;
+    const totalAmount = (photoQuantity * 10) + (addOnsCount * photoQuantity * 5); // $10 per photo + $5 per add-on per photo
     
     // Create checkout session with all metadata
     console.log("[STABILITY-CHECK] Creating Stripe checkout");
@@ -386,6 +396,9 @@ export async function handleCheckout(params: CheckoutParams): Promise<void> {
           stagingStyle: stagingStyle,
           photosCount: photoQuantity, // Use photoQuantity for correct credit amount
           sessionId: sessionId,
+          twilightPhoto: twilightPhoto,
+          declutterRoom: declutterRoom,
+          rushOrder: rushOrder,
           ...(turnstileToken && { turnstileToken }), // Only include if provided
         },
       });
