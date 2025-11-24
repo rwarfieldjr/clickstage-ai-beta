@@ -171,7 +171,7 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/pricing">
                 <Button size="lg" className="text-lg px-8">
-                  View Pricing Details
+                  Start My Order
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
