@@ -12,18 +12,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload as UploadIcon, X, ZoomIn, Coins, CreditCard } from "lucide-react";
+import { Upload as UploadIcon, X, ZoomIn, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Layout from "@/components/Layout";
 import { SEO } from "@/components/SEO";
-import { useCredits } from "@/hooks/use-credits";
 import { useTheme } from "@/hooks/use-theme";
-import { CreditsSummary } from "@/components/CreditsSummary";
 import { handleCheckout } from "@/lib/checkout";
 import { logEvent } from "@/lib/logEvent";
-import { hasEnoughCredits, deductCredits, getCredits } from "@/lib/credits";
-import { processCreditOrStripeCheckout } from "@/lib/creditCheckout";
 import { PRICING_TIERS } from "@/config/pricing";
 import { ENV } from "@/config/environment";
 import modernFarmhouse from "@/assets/style-modern-farmhouse.jpg";
@@ -47,12 +43,9 @@ const Upload = () => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [magnifiedImage, setMagnifiedImage] = useState<{ name: string; image: string } | null>(null);
   const [smsConsent, setSmsConsent] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "credits">("stripe");
   const [stagingNotes, setStagingNotes] = useState("");
   const [error, setError] = useState<string>("");
-  const { credits, creditSummary, loading: creditsLoading, refetchCredits } = useCredits(user);
   const { theme } = useTheme();
-  const [userCreditsBalance, setUserCreditsBalance] = useState<number>(0);
   const [propertyAddress, setPropertyAddress] = useState<string>("");
   const [photoQuantity, setPhotoQuantity] = useState<number>(1);
   const [twilightPhotoCount, setTwilightPhotoCount] = useState<number>(0);
@@ -124,12 +117,6 @@ const Upload = () => {
         
         if (profileData) {
           setUserProfile(profileData);
-        }
-
-        // Fetch credits from user_credits table
-        if (session.user.email) {
-          const fetchedCredits = await getCredits(session.user.email);
-          setUserCreditsBalance(fetchedCredits);
         }
       }
     });
@@ -233,7 +220,6 @@ const Upload = () => {
       fileCount: files.length,
       bundle: selectedBundle,
       style: stagingStyle,
-      paymentMethod
     });
 
     // JavaScript validation with alerts
@@ -268,18 +254,6 @@ const Upload = () => {
       return;
     }
 
-    // Check credits before processing if using credit payment
-    if (paymentMethod === "credits" && user?.email) {
-      const canProceed = await hasEnoughCredits(user.email, photoQuantity);
-      if (!canProceed) {
-        alert("You do not have enough credits. Please purchase more photo credits.");
-        return;
-      }
-
-      // REMOVED: Client-side credit deduction - now handled atomically on server
-      // The process-credit-order edge function handles atomic credit deduction with proper locking
-    }
-
     try {
       await handleCheckout({
         files,
@@ -287,14 +261,14 @@ const Upload = () => {
         selectedBundle,
         bundles,
         smsConsent,
-        paymentMethod,
+        paymentMethod: "stripe",
         stagingNotes,
-        credits,
+        credits: 0,
         user,
         userProfile,
         supabase,
         navigate,
-        refetchCredits,
+        refetchCredits: async () => {},
         setLoading,
         propertyAddress,
         photoQuantity, // Pass the quantity
@@ -348,11 +322,6 @@ const Upload = () => {
               <CardDescription className="text-base md:text-lg mt-2">
                 Start your AI virtual staging order in minutes. Simply upload your property photos, choose your bundle, and select your design style. We'll deliver photorealistic, MLS-compliant staged images within 24 hours.
               </CardDescription>
-              {user && creditSummary && (
-                <div className="mt-4">
-                  <CreditsSummary summary={creditSummary} loading={creditsLoading} compact />
-                </div>
-              )}
               <div className="mt-6 bg-muted/50 p-4 rounded-lg">
                 <h3 className="text-base font-semibold mb-3">How It Works</h3>
                 <ol className="space-y-2 text-sm text-muted-foreground">
@@ -367,11 +336,6 @@ const Upload = () => {
               </div>
             </CardHeader>
             <CardContent>
-              {user && (
-                <div className="text-right text-muted-foreground mb-3">
-                  Remaining Credits: <strong className="text-foreground">{userCreditsBalance}</strong>
-                </div>
-              )}
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Property Address */}
                 <div className="space-y-2 p-4 bg-muted/50 rounded-lg border border-border">
@@ -521,29 +485,10 @@ const Upload = () => {
                   </div>
                 )}
 
-                {/* Step 3: Payment Method */}
-                {user && credits > 0 && (
-                  <div className="space-y-3">
-                    <Label className="text-lg font-semibold">Step 3: Payment Method</Label>
-                    <Tabs value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as "stripe" | "credits")}>
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="stripe" className="flex items-center gap-2">
-                          <CreditCard className="w-4 h-4" />
-                          Credit Card
-                        </TabsTrigger>
-                        <TabsTrigger value="credits" className="flex items-center gap-2">
-                          <Coins className="w-4 h-4" />
-                          Use Credits ({credits} available)
-                        </TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                  </div>
-                )}
-
-                {/* Step 4: Select Bundle */}
+                {/* Step 3: Select Bundle */}
                 <div className="space-y-3">
                   <Label className="text-lg font-semibold">
-                    {user && credits > 0 ? "Step 4:" : "Step 3:"} Select Bundle <span className="text-destructive">*</span>
+                    Step 3: Select Bundle <span className="text-destructive">*</span>
                   </Label>
                   <RadioGroup value={selectedBundle} onValueChange={setSelectedBundle}>
                     <div className="grid grid-cols-1 gap-4 max-w-xl">
@@ -553,9 +498,6 @@ const Upload = () => {
                         const rushCost = rushOrder ? photoQuantity * 5 : 0;
                         const addOnCost = twilightCost + declutterCost + rushCost;
                         const totalCost = (10 * photoQuantity) + addOnCost;
-                        const totalCredits = photoQuantity + (twilightPhotoCount + declutterRoomCount + (rushOrder ? photoQuantity : 0));
-                        const canAffordWithCredits = paymentMethod === "credits" && credits >= totalCredits;
-                        const isDisabled = paymentMethod === "credits" && !canAffordWithCredits;
                         
                         return (
                           <div key={bundle.id} className="relative">
@@ -563,15 +505,10 @@ const Upload = () => {
                               value={bundle.id}
                               id={bundle.id}
                               className="peer sr-only"
-                              disabled={isDisabled}
                             />
                             <label
                               htmlFor={bundle.id}
-                              className={`flex flex-col p-6 border-2 rounded-xl transition-smooth ${
-                                isDisabled 
-                                  ? 'opacity-50 cursor-not-allowed' 
-                                  : 'cursor-pointer hover:border-accent'
-                              } ${
+                              className={`flex flex-col p-6 border-2 rounded-xl transition-smooth cursor-pointer hover:border-accent ${
                                 selectedBundle === bundle.id
                                   ? 'border-accent bg-accent/5'
                                   : 'border-border'
@@ -638,23 +575,12 @@ const Upload = () => {
                                   </span>
                                 </div>
                               </div>
-
-                              {paymentMethod === "credits" ? (
-                                <>
-                                  <span className="text-3xl font-bold text-accent mb-1">{totalCredits} Credits</span>
-                                  {!canAffordWithCredits && (
-                                    <span className="text-xs text-destructive">Insufficient credits (You have {credits})</span>
-                                  )}
-                                </>
-                              ) : (
-                                <>
-                                  <span className="text-3xl font-bold text-accent mb-1">${totalCost}</span>
-                                  <span className="text-sm text-muted-foreground block mb-2">
-                                    ${10 * photoQuantity} for {photoQuantity} photo{photoQuantity > 1 ? 's' : ''}
-                                    {addOnCost > 0 && <span> + ${addOnCost} add-ons</span>}
-                                  </span>
-                                </>
-                              )}
+                              
+                              <span className="text-3xl font-bold text-accent mb-1">${totalCost}</span>
+                              <span className="text-sm text-muted-foreground block mb-2">
+                                ${10 * photoQuantity} for {photoQuantity} photo{photoQuantity > 1 ? 's' : ''}
+                                {addOnCost > 0 && <span> + ${addOnCost} add-ons</span>}
+                              </span>
                               
                               {/* Add-on Options */}
                               <div className="mt-4 pt-4 border-t border-border space-y-4">
@@ -878,20 +804,6 @@ const Upload = () => {
                         return;
                       }
                       
-                      const photoCount = files.length;
-                      
-                      // Check if user wants to use credits
-                      if (user?.email) {
-                        const result = await processCreditOrStripeCheckout(user.email, photoCount);
-                        
-                        if (result.method === "credits" && result.status === "success") {
-                          toast.success(`Order placed successfully! ${photoCount} credits used.`);
-                          await refetchCredits();
-                          navigate('/dashboard');
-                          return;
-                        }
-                        // If insufficient credits, continue to Stripe checkout below
-                      }
                       
                       // Proceed with Stripe checkout using handleCheckout
                       await handleCheckout({
@@ -902,12 +814,12 @@ const Upload = () => {
                         smsConsent,
                         paymentMethod: "stripe",
                         stagingNotes,
-                        credits,
+                        credits: 0,
                         user,
                         userProfile,
                         supabase,
                         navigate,
-                        refetchCredits,
+                        refetchCredits: async () => {},
                         setLoading,
                         propertyAddress,
                         photoQuantity, // Pass the quantity
@@ -918,9 +830,7 @@ const Upload = () => {
                       
                     } catch (err: any) {
                       console.error(err);
-                      const errorMessage = err.message === "Insufficient credits" 
-                        ? "Insufficient credits. Please purchase more credits to continue."
-                        : err.message || "Something went wrong during checkout. Please try again.";
+                      const errorMessage = err.message || "Something went wrong during checkout. Please try again.";
                       setError(errorMessage);
                       toast.error(errorMessage);
                     } finally {
