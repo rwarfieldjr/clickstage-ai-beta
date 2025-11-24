@@ -79,6 +79,26 @@ const Pricing = () => {
               <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
                 Fast, photorealistic, and MLS-compliant results delivered in 24 hours.
               </p>
+              <div className="bg-primary/5 dark:bg-primary/10 rounded-lg p-6 max-w-2xl mx-auto mb-8">
+                <h2 className="text-2xl font-bold mb-4 text-primary dark:text-white">How It Works</h2>
+                <p className="text-base text-foreground dark:text-white/90 mb-4">
+                  Select the number of photos you need at $10 per photo, then customize with optional add-ons:
+                </p>
+                <ul className="text-left space-y-2 text-foreground dark:text-white/90 max-w-xl mx-auto">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                    <span><strong>Twilight Photo</strong> (front of property) - $5 per photo</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                    <span><strong>Declutter Room</strong> - $5 per room</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                    <span><strong>Rush Order</strong> (less than 24hrs) - $5 per photo</span>
+                  </li>
+                </ul>
+              </div>
             </div>
 
             {/* Pricing Tiers */}
@@ -90,21 +110,24 @@ const Pricing = () => {
                   className="shadow-custom-lg border-2 border-border transition-smooth hover:scale-105 h-full flex flex-col"
                 >
                   <CardHeader>
-                    <CardTitle className="text-2xl">1 Photo</CardTitle>
+                    <CardTitle className="text-2xl">Get Started</CardTitle>
                     <CardDescription className="text-3xl font-bold text-primary mt-2">
                       {tier.price}
                     </CardDescription>
                     <div className="min-h-[5.5rem]">
                       <p className="text-sm text-muted-foreground">$10 per photo</p>
+                      <p className="text-sm text-muted-foreground mt-2">Choose your quantity when you order</p>
                       {tier.competitive && (
-                        <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                        <p className="text-sm font-medium text-green-600 dark:text-green-400 mt-2">
                           {tier.competitive}
                         </p>
                       )}
                     </div>
                   </CardHeader>
                   <CardContent className="flex-grow flex flex-col">
-                    <p className="text-sm text-muted-foreground mt-auto mb-4">{tier.description}</p>
+                    <p className="text-sm text-muted-foreground mt-auto mb-4">
+                      Select the exact number of photos you need when ordering. Add optional services like twilight photos, decluttering, or rush delivery for $5 each.
+                    </p>
                     <Button
                       className="w-full bg-accent hover:bg-accent/90"
                       size="lg"
