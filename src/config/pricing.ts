@@ -40,7 +40,7 @@ export const PRICING_TIERS: readonly PricingTier[] = [
     perPhotoAmount: 10,
     competitive: "Save 70% vs. our competition ($30 to $40 per photo)",
     description: "Perfect for testing our service",
-    expiration: "Credits expire 6 months after purchase.",
+    expiration: "",
     checkoutUrl: "https://buy.stripe.com/7sY9AU3eU0tn4DkcHCdZ601",
   },
   {
@@ -55,7 +55,7 @@ export const PRICING_TIERS: readonly PricingTier[] = [
     perPhotoAmount: 9,
     savings: "Bundle and Save $5",
     description: "Perfect for a single listing",
-    expiration: "Credits expire 6 months after purchase.",
+    expiration: "",
     checkoutUrl: "https://buy.stripe.com/fZu4gA6r68ZT6Ls7nidZ602",
   },
   {
@@ -70,7 +70,7 @@ export const PRICING_TIERS: readonly PricingTier[] = [
     perPhotoAmount: 8.5,
     savings: "Bundle and Save $15",
     description: "Great for 2-3 listings",
-    expiration: "Credits expire 6 months after purchase.",
+    expiration: "",
     checkoutUrl: "https://buy.stripe.com/eVqaEYeXC4JDd9Q6jedZ603",
   },
   {
@@ -86,7 +86,7 @@ export const PRICING_TIERS: readonly PricingTier[] = [
     savings: "Bundle and Save $40",
     description: "Ideal for multiple projects",
     popular: true,
-    expiration: "Credits expire 12 months after purchase.",
+    expiration: "",
     checkoutUrl: "https://buy.stripe.com/3cI9AUdTyekd8TA8rmdZ604",
   },
   {
@@ -101,7 +101,7 @@ export const PRICING_TIERS: readonly PricingTier[] = [
     perPhotoAmount: 7.5,
     savings: "Bundle and Save $125",
     description: "Perfect for agencies",
-    expiration: "Credits expire 12 months after purchase.",
+    expiration: "",
     checkoutUrl: "https://buy.stripe.com/aFa14o3eUgsl8TAfTOdZ605",
   },
   {
@@ -116,7 +116,7 @@ export const PRICING_TIERS: readonly PricingTier[] = [
     perPhotoAmount: 7,
     savings: "Bundle and Save $300",
     description: "Maximum value for teams",
-    expiration: "Credits expire 12 months after purchase.",
+    expiration: "",
     checkoutUrl: "https://buy.stripe.com/7sYeVe6r64JD4Dk22YdZ606",
   },
 ] as const;
