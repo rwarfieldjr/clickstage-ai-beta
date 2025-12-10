@@ -4,15 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Search, UploadCloud } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Search, Eye, Calendar, User, Mail, Phone } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
 
 interface OrderWithUser {
   id: string;
+  order_number: string;
   created_at: string;
   status: string;
   staging_style: string;
@@ -21,11 +22,12 @@ interface OrderWithUser {
   profiles: {
     name: string;
     email: string;
+    phone: string | null;
   };
 }
 
 export default function AdminOrders() {
-  const { isAdmin, loading, requireAdmin, shouldRenderAdmin } = useAdmin();
+  const { isAdmin, loading, requireAdmin } = useAdmin();
   const [orders, setOrders] = useState<OrderWithUser[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<OrderWithUser[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,7 +56,8 @@ export default function AdminOrders() {
           *,
           profiles (
             name,
-            email
+            email,
+            phone
           )
         `)
         .order("created_at", { ascending: false });
@@ -72,16 +75,19 @@ export default function AdminOrders() {
     if (searchTerm) {
       filtered = filtered.filter(
         (order) =>
+          order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+          order.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.profiles?.phone?.includes(searchTerm)
       );
     }
 
     setFilteredOrders(filtered);
   };
 
-  const toggleOrderStatus = async (orderId: string, currentStatus: string) => {
+  const toggleOrderStatus = async (e: React.MouseEvent, orderId: string, currentStatus: string) => {
+    e.stopPropagation();
     try {
       const newStatus = currentStatus === "pending" ? "completed" : "pending";
       
@@ -100,23 +106,6 @@ export default function AdminOrders() {
     }
   };
 
-  const toggleArchiveStatus = async (orderId: string, isArchived: boolean) => {
-    try {
-      const { error } = await supabase
-        .from("orders")
-        .update({ archived: !isArchived })
-        .eq("id", orderId);
-
-      if (error) throw error;
-
-      toast.success(isArchived ? "Order unarchived" : "Order archived");
-      await fetchOrders();
-    } catch (error: any) {
-      console.error("Error archiving order:", error);
-      toast.error("Failed to archive order");
-    }
-  };
-
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -126,7 +115,7 @@ export default function AdminOrders() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="mb-6">
@@ -137,85 +126,94 @@ export default function AdminOrders() {
         </div>
 
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Order Management</h1>
-          <Button onClick={() => navigate("/admin/bulk-upload")}>
-            <UploadCloud className="mr-2 h-4 w-4" />
-            Bulk Upload
-          </Button>
-        </div>
-
-        <div className="mb-6 space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by order ID, user name, or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-bold">Orders</h1>
+          <div className="flex gap-2">
             <Button
               variant={showArchived ? "default" : "outline"}
               onClick={() => setShowArchived(!showArchived)}
               size="sm"
             >
-              {showArchived ? "Show Active Orders" : "Show Archived Orders"}
+              {showArchived ? "Viewing Archived" : "Show Archived"}
             </Button>
           </div>
         </div>
 
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Style</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-mono text-sm">{order.id.slice(0, 8)}...</TableCell>
-                  <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell>{order.profiles?.name}</TableCell>
-                  <TableCell>{order.profiles?.email}</TableCell>
-                  <TableCell className="capitalize">{order.staging_style}</TableCell>
-                  <TableCell>
-                    <Badge 
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => toggleOrderStatus(order.id, order.status)}
-                    >
-                      {order.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate(`/admin/orders/${order.id}`)}
-                      >
-                        View Details
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => toggleArchiveStatus(order.id, order.archived)}
-                      >
-                        {order.archived ? "Unarchive" : "Archive"}
-                      </Button>
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, email, phone, or order #..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {filteredOrders.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                No orders found
+              </CardContent>
+            </Card>
+          ) : (
+            filteredOrders.map((order) => (
+              <Card 
+                key={order.id} 
+                className="cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => navigate(`/admin/orders/${order.id}`)}
+              >
+                <CardContent className="py-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="font-mono text-sm font-medium">
+                          {order.order_number || order.id.slice(0, 8)}
+                        </span>
+                        <Badge 
+                          variant={order.status === "completed" ? "default" : "secondary"}
+                          className="cursor-pointer hover:opacity-80"
+                          onClick={(e) => toggleOrderStatus(e, order.id, order.status)}
+                        >
+                          {order.status}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground capitalize">
+                          {order.staging_style}
+                        </span>
+                      </div>
+                      
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <User className="h-3.5 w-3.5" />
+                          <span>{order.profiles?.name || "Unknown"}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Mail className="h-3.5 w-3.5" />
+                          <span>{order.profiles?.email}</span>
+                        </div>
+                        {order.profiles?.phone && (
+                          <div className="flex items-center gap-1.5">
+                            <Phone className="h-3.5 w-3.5" />
+                            <span>{order.profiles.phone}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5" />
+                          <span>{new Date(order.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    
+                    <Button size="sm" variant="ghost">
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       </main>
       <Footer />
