@@ -245,23 +245,36 @@ export default function AdminOrderDetail() {
   const handleDeleteImage = async (imageId: string, imageType: string, imageUrl: string) => {
     if (!confirm(`Delete this ${imageType} image?`)) return;
 
+    const toastId = toast.loading("Deleting image...");
+    
     try {
       const bucket = imageType === "original" ? "original-images" : "staged";
       const path = imageUrl.includes("storage/v1/object/public/")
         ? imageUrl.split(`storage/v1/object/public/${bucket}/`)[1]
         : imageUrl;
 
+      // Delete from storage first (ignore errors if file doesn't exist)
       if (path) {
-        await supabase.storage.from(bucket).remove([path]);
+        const { error: storageError } = await supabase.storage.from(bucket).remove([path]);
+        if (storageError) {
+          console.warn("Storage delete warning:", storageError);
+        }
       }
 
-      await supabase.from("order_images").delete().eq("id", imageId);
+      // Delete the database record
+      const { error: dbError } = await supabase.from("order_images").delete().eq("id", imageId);
+      
+      if (dbError) {
+        throw dbError;
+      }
 
+      toast.dismiss(toastId);
       toast.success("Image deleted");
       await fetchOrder();
     } catch (error: any) {
+      toast.dismiss(toastId);
       console.error("Error deleting image:", error);
-      toast.error("Failed to delete image");
+      toast.error(`Failed to delete image: ${error.message || "Unknown error"}`);
     }
   };
 
