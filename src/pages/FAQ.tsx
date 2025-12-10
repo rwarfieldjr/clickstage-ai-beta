@@ -20,19 +20,15 @@ const FAQ = () => {
       questions: [
         {
           q: "How much does virtual staging cost?",
-          a: "Pricing depends on your bundle size — as low as $7 per photo. No subscriptions, no minimums, and all orders include 24-hour turnaround."
+          a: "Virtual staging is $10 per photo — simple, flat-rate pricing with no subscriptions, no minimums, and all orders include 24-hour turnaround. Our competitors charge $30-$40 per photo."
         },
         {
           q: "What is virtual staging?",
           a: "Virtual staging uses AI to digitally furnish and decorate empty rooms. ClickStagePro creates photorealistic, MLS-compliant images that help listings stand out and sell faster."
         },
         {
-          q: "Do my credits expire?",
-          a: "Yes, photo credits are valid for 6 months on smaller bundles (1–10 photos) and 12 months on larger bundles (20–100 photos). You will receive email alerts before your credits expire."
-        },
-        {
-          q: "Can I share credits with my team?",
-          a: "Team credit sharing is available on our Premium plan and above. Contact us to set up a team account where multiple users can access and use shared credits."
+          q: "Are there any hidden fees?",
+          a: "No hidden fees. You pay $10 per photo, plus optional add-ons like rush delivery ($5/photo), twilight conversion ($5/photo), or decluttering ($5/photo). What you see at checkout is what you pay."
         }
       ]
     },
@@ -68,7 +64,7 @@ const FAQ = () => {
         },
         {
           q: "Can you remove clutter from photos?",
-          a: "Yes! We can remove small items like trash cans, cables, or minor clutter as part of the staging process. Extensive clutter removal may require additional credits."
+          a: "Yes! We can remove small items like trash cans, cables, or minor clutter as part of the staging process. Extensive clutter removal is available as an add-on for $5 per photo."
         },
         {
           q: "Can I upload my own photos?",
@@ -114,7 +110,7 @@ const FAQ = () => {
         },
         {
           q: "Is there a free version of virtual staging?",
-          a: "We don't offer a free plan, but our single-photo option for $10 lets you try AI virtual staging risk-free — no subscriptions or minimums required."
+          a: "We don't offer a free plan, but at just $10 per photo you can try AI virtual staging risk-free — no subscriptions, no minimums, no commitments required."
         },
         {
           q: "Who owns the staged images?",
