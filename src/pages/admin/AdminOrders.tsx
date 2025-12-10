@@ -205,7 +205,14 @@ export default function AdminOrders() {
                       </div>
                     </div>
                     
-                    <Button size="sm" variant="ghost">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/admin/orders/${order.id}`);
+                      }}
+                    >
                       <Eye className="h-4 w-4 mr-1" />
                       View
                     </Button>
