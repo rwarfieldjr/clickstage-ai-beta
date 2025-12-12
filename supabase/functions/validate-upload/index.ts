@@ -1,9 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { isRateLimited } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Rate limiting constants
+const RATE_LIMIT_MAX_REQUESTS = 50; // 50 requests per window
+const RATE_LIMIT_WINDOW_MINUTES = 60; // 1 hour window
 
 // File validation constants
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -49,6 +54,23 @@ serve(async (req) => {
   }
 
   try {
+    // IP-based rate limiting to prevent DoS attacks
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                     req.headers.get('x-real-ip') || 
+                     'unknown';
+    
+    if (isRateLimited(clientIp, RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MINUTES)) {
+      console.log(`[validate-upload] Rate limit exceeded for IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({ 
+          valid: false, 
+          error: "Too many validation requests. Please try again later.",
+          code: "RATE_LIMIT_EXCEEDED"
+        }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log("[validate-upload] Received validation request");
 
     const formData = await req.formData();
